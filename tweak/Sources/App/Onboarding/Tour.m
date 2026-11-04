@@ -1,4 +1,5 @@
 #import "Core/SGCore.h"
+#import "Core/SGSYNA.h"
 #import "Settings/SGPageStyle.h"
 #import "Onboarding.h"
 #import "App/About/About.h"
@@ -31,8 +32,8 @@ UIButton *SGOnboardingButton(NSString *title) {
     if (@available(iOS 26.0, *)) config = [UIButtonConfiguration prominentGlassButtonConfiguration];
     else config = [UIButtonConfiguration filledButtonConfiguration];
     config.cornerStyle = UIButtonConfigurationCornerStyleCapsule;
-    config.baseBackgroundColor = SGGreen();
-    config.baseForegroundColor = SGOnAccent();
+    config.baseBackgroundColor = [UIColor colorWithRed:0.21 green:1 blue:0.36 alpha:1];
+    config.baseForegroundColor = UIColor.blackColor;
     config.contentInsets = NSDirectionalEdgeInsetsMake(15, 20, 15, 20);
     config.attributedTitle = [[NSAttributedString alloc] initWithString:title attributes:@{NSFontAttributeName: [UIFont systemFontOfSize:17 weight:UIFontWeightSemibold]}];
     UIButton *button = [UIButton buttonWithConfiguration:config primaryAction:nil];
@@ -126,7 +127,7 @@ static UIView *tipsCard(NSArray<UIView *> *rows) {
     self.clipsToBounds = YES;
     self.layer.cornerRadius = kCardRadius;
     self.layer.cornerCurve = kCACornerCurveContinuous;
-    self.layer.borderColor = SGGreen().CGColor;
+    self.layer.borderColor = [UIColor colorWithRed:0.21 green:1 blue:0.36 alpha:1].CGColor;
     [self addSubview:_glass];
     [self addSubview:row];
     [NSLayoutConstraint activateConstraints:@[
@@ -146,8 +147,10 @@ static UIView *tipsCard(NSArray<UIView *> *rows) {
     [super setSelected:selected];
     _check.image = [UIImage systemImageNamed:selected ? @"checkmark.circle.fill" : @"circle"
                            withConfiguration:[UIImageSymbolConfiguration configurationWithPointSize:22 weight:UIImageSymbolWeightRegular]];
-    _check.tintColor = selected ? SGGreen() : SGGrey();
-    self.layer.borderWidth = selected ? 2 : 0;
+    _check.tintColor = selected ? [UIColor colorWithRed:0.21 green:1 blue:0.36 alpha:1] : SGGrey();
+    self.layer.borderWidth = selected ? 2 : 0.7;
+    self.backgroundColor = selected ? [UIColor colorWithRed:0.03 green:0.16 blue:0.07 alpha:0.7]
+                                    : [UIColor colorWithWhite:0.12 alpha:0.55];
 }
 
 - (void)setHighlighted:(BOOL)highlighted {
@@ -159,154 +162,81 @@ static UIView *tipsCard(NSArray<UIView *> *rows) {
 
 #pragma mark - the logo
 
-// Vitrine's icon in live glass: reeds of glass over a warm glow, the shop window of icons/Vitrine.png.
-// The tour opens on it, each reed flying in and landing beside the last, before the page comes in
-// under it. Glass shows and hides by its effect, never by an alpha (Redesigned/Kit/SGRGlass.h).
+// Vector traced from the user's SYNA organic brand mark. Used ONLY on the onboarding page.
 @interface SGTourLogo : UIView
-// The state before the landing: the frame alone, no glass, no glow, the reeds out of place.
 - (void)prepare;
-// Plays the landing, then runs `landed` as the last reed starts to settle; under Reduce Motion the reeds
-// and the glow fade in where they are.
 - (void)landThen:(void (^)(void))landed;
 @end
-
 @implementation SGTourLogo {
-    CAGradientLayer *_glow;
-    UIView *_pane;
-    NSArray<UIVisualEffectView *> *_reeds;
-    NSArray<CAGradientLayer *> *_flutes;
+    CAShapeLayer *_symbol;
+    UILabel *_wordmark;
+    UILabel *_domain;
 }
-
-static const NSUInteger kReeds = 5;
-
-// Clear glass, the style for what sits over something bright, so the glow keeps its light through it.
-static UIVisualEffect *reedEffect(void) {
-    Class glass = NSClassFromString(@"UIGlassEffect");
-    if ([glass respondsToSelector:@selector(effectWithStyle:)]) return [glass effectWithStyle:1];
-    return SGGlassEffect();
-}
-static const CGFloat kLogoRadius = 22;
-
 - (instancetype)initWithFrame:(CGRect)frame {
     if (!(self = [super initWithFrame:frame])) return nil;
     self.isAccessibilityElement = YES;
-    self.accessibilityLabel = @"Vitrine";
+    self.accessibilityLabel = @"SYNA, syna.lol";
     self.accessibilityTraits = UIAccessibilityTraitImage;
-
-    _pane = [UIView new];
-    _pane.clipsToBounds = YES;
-    _pane.layer.cornerRadius = kLogoRadius;
-    _pane.layer.cornerCurve = kCACornerCurveContinuous;
-    _pane.layer.borderWidth = 1;
-    _pane.layer.borderColor = [UIColor colorWithWhite:1 alpha:0.28].CGColor;
-    [self addSubview:_pane];
-
-    // The icon's palette: a light core going to Apple Music red, then violet, then the dark around it.
-    _glow = [CAGradientLayer layer];
-    _glow.type = kCAGradientLayerRadial;
-    _glow.colors = @[(id)[UIColor colorWithRed:1 green:0.93 blue:0.9 alpha:1].CGColor,
-                     (id)[UIColor colorWithRed:0.98 green:0.18 blue:0.28 alpha:1].CGColor,
-                     (id)[UIColor colorWithRed:0.55 green:0.2 blue:0.85 alpha:1].CGColor,
-                     (id)[UIColor colorWithRed:0.08 green:0.04 blue:0.1 alpha:1].CGColor];
-    _glow.locations = @[@0, @0.35, @0.7, @1];
-    _glow.startPoint = CGPointMake(0.45, 0.5);
-    _glow.endPoint = CGPointMake(1.05, 1.1);
-    [_pane.layer addSublayer:_glow];
-
-    // Each reed is a flute: shade where its curve turns away on the right, a line of light on the left.
-    NSMutableArray<UIVisualEffectView *> *reeds = [NSMutableArray array];
-    NSMutableArray<CAGradientLayer *> *flutes = [NSMutableArray array];
-    for (NSUInteger i = 0; i < kReeds; i++) {
-        UIVisualEffectView *reed = [[UIVisualEffectView alloc] initWithEffect:reedEffect()];
-        reed.userInteractionEnabled = NO;
-        reed.clipsToBounds = YES;
-        CAGradientLayer *flute = [CAGradientLayer layer];
-        flute.startPoint = CGPointMake(0, 0.5);
-        flute.endPoint = CGPointMake(1, 0.5);
-        flute.colors = @[(id)[UIColor colorWithWhite:1 alpha:0].CGColor, (id)[UIColor colorWithWhite:1 alpha:0.45].CGColor,
-                         (id)[UIColor colorWithWhite:1 alpha:0].CGColor, (id)[UIColor colorWithWhite:0 alpha:0].CGColor,
-                         (id)[UIColor colorWithWhite:0 alpha:0.35].CGColor];
-        flute.locations = @[@0.08, @0.16, @0.3, @0.6, @1];
-        [reed.contentView.layer addSublayer:flute];
-        [flutes addObject:flute];
-        [_pane addSubview:reed];
-        [reeds addObject:reed];
-    }
-    _reeds = reeds;
-    _flutes = flutes;
+    _symbol = [CAShapeLayer layer];
+    _symbol.fillColor = UIColor.whiteColor.CGColor;
+    _symbol.fillRule = kCAFillRuleEvenOdd;
+    [self.layer addSublayer:_symbol];
+    _wordmark = [UILabel new];
+    _wordmark.text = @"S Y N A";
+    _wordmark.font = [UIFont systemFontOfSize:30 weight:UIFontWeightBlack];
+    _wordmark.textColor = UIColor.whiteColor;
+    _wordmark.adjustsFontSizeToFitWidth = YES;
+    [self addSubview:_wordmark];
+    _domain = [UILabel new];
+    _domain.text = @"s y n a . l o l";
+    _domain.font = [UIFont systemFontOfSize:12 weight:UIFontWeightMedium];
+    _domain.textColor = [UIColor colorWithWhite:0.85 alpha:1];
+    [self addSubview:_domain];
     return self;
 }
-
 - (void)layoutSubviews {
     [super layoutSubviews];
-    _pane.frame = self.bounds;
-    [CATransaction begin];
-    [CATransaction setDisableActions:YES];
-    _glow.frame = _pane.bounds;
-    CGFloat width = self.bounds.size.width / kReeds, height = self.bounds.size.height;
-    for (NSUInteger i = 0; i < kReeds; i++) {
-        UIVisualEffectView *reed = _reeds[i];
-        // Frames are laid out under the identity transform the landing ends on.
-        CGAffineTransform transform = reed.transform;
-        reed.transform = CGAffineTransformIdentity;
-        reed.frame = CGRectMake(i * width, 0, width, height);
-        reed.transform = transform;
-        _flutes[i].frame = reed.bounds;
+    CGFloat scale = MIN(78.0 / 336.0, (self.bounds.size.height - 8.0) / 310.0);
+    const CGFloat outer[][2] = {
+        {182,34},{149,35},{131,45},{120,58},{114,74},{114,92},
+        {132,134},{133,150},{128,170},{105,200},{54,228},{41,243},
+        {35,258},{34,281},{43,306},{62,327},{83,338},{113,342},
+        {150,329},{172,308},{203,255},{229,234},{249,228},{266,228},
+        {308,247},{332,250},{353,241},{370,216},{370,194},{355,171},
+        {336,163},{294,162},{262,144},{236,111},{211,55},{197,41}
+    };
+    const CGFloat hole[][2] = {
+        {199,145},{245,185},{247,201},{240,209},{175,238},{163,237},
+        {154,230},{151,222},{161,184},{175,153},{183,146}
+    };
+    UIBezierPath *shape = [UIBezierPath bezierPath];
+    for (NSUInteger n = 0; n < sizeof(outer)/sizeof(outer[0]); n++) {
+        CGPoint point = CGPointMake(4 + (outer[n][0]-34)*scale, 4+(outer[n][1]-34)*scale);
+        if (n == 0) [shape moveToPoint:point]; else [shape addLineToPoint:point];
     }
-    [CATransaction commit];
+    [shape closePath];
+    for (NSUInteger n = 0; n < sizeof(hole)/sizeof(hole[0]); n++) {
+        CGPoint point = CGPointMake(4 + (hole[n][0]-34)*scale, 4+(hole[n][1]-34)*scale);
+        if (n == 0) [shape moveToPoint:point]; else [shape addLineToPoint:point];
+    }
+    [shape closePath];
+    _symbol.path = shape.CGPath;
+    _wordmark.frame = CGRectMake(92, 12, MAX(40, self.bounds.size.width-92), 40);
+    _domain.frame = CGRectMake(94, 51, MAX(40, self.bounds.size.width-94), 25);
 }
-
 - (void)prepare {
-    BOOL reduce = UIAccessibilityIsReduceMotionEnabled();
-    _glow.opacity = 0;
-    for (NSUInteger i = 0; i < kReeds; i++) {
-        _reeds[i].effect = nil;
-        _reeds[i].contentView.alpha = 0;
-        // Alternate reeds come from above and below, the middle one from furthest, so the pane closes
-        // on itself rather than sliding in from one side.
-        CGFloat from = (i % 2 ? -1 : 1) * (28 + 10 * (CGFloat)(2 - labs((long)i - 2)));
-        if (!reduce) _reeds[i].transform = CGAffineTransformScale(CGAffineTransformMakeTranslation(0, from), 0.94, 0.94);
-    }
+    self.alpha = 0;
+    if (!UIAccessibilityIsReduceMotionEnabled()) self.transform = CGAffineTransformMakeTranslation(0, 12);
 }
-
 - (void)landThen:(void (^)(void))landed {
     BOOL reduce = UIAccessibilityIsReduceMotionEnabled();
-
-    CABasicAnimation *glow = [CABasicAnimation animationWithKeyPath:@"opacity"];
-    glow.fromValue = @0;
-    glow.toValue = @1;
-    glow.duration = 0.5;
-    glow.timingFunction = [CAMediaTimingFunction functionWithControlPoints:0.23 :1 :0.32 :1];
-    _glow.opacity = 1;
-    [_glow addAnimation:glow forKey:@"in"];
-
-    if (reduce) {
-        [UIView animateWithDuration:0.3 animations:^{
-            for (UIVisualEffectView *reed in self->_reeds) {
-                reed.effect = reedEffect();
-                reed.contentView.alpha = 1;
-            }
-        }];
-        if (landed) landed();
-        return;
-    }
-    // A landing has a little give: damping 0.8, the reeds 50 ms apart.
-    const NSTimeInterval stagger = 0.05, flight = 0.55;
-    for (NSUInteger i = 0; i < kReeds; i++) {
-        UIVisualEffectView *reed = _reeds[i];
-        UIViewPropertyAnimator *animator = [[UIViewPropertyAnimator alloc] initWithDuration:flight dampingRatio:0.8 animations:^{
-            reed.transform = CGAffineTransformIdentity;
-            reed.effect = reedEffect();
-            reed.contentView.alpha = 1;
-        }];
-        [animator startAnimationAfterDelay:0.1 + i * stagger];
-    }
-    if (landed) {
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)((0.1 + (kReeds - 1) * stagger + flight * 0.5) * NSEC_PER_SEC)),
-                       dispatch_get_main_queue(), landed);
-    }
+    [UIView animateWithDuration:reduce ? 0.20 : 0.55 delay:0
+        usingSpringWithDamping:0.86 initialSpringVelocity:0
+        options:UIViewAnimationOptionCurveEaseOut animations:^{
+        self.alpha = 1;
+        self.transform = CGAffineTransformIdentity;
+    } completion:^(BOOL finished) { if (landed) landed(); }];
 }
-
 @end
 
 #pragma mark - the tour
@@ -431,7 +361,7 @@ static BOOL adFree(void) {
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.view.backgroundColor = [UIColor colorWithWhite:0 alpha:0.85];
+    self.view.backgroundColor = UIColor.blackColor;
 
     _logo = [SGTourLogo new];
     _logo.translatesAutoresizingMaskIntoConstraints = NO;
@@ -441,15 +371,15 @@ static BOOL adFree(void) {
 
     BOOL glass = SGRedesignAvailable();
     UILabel *heading = [UILabel new];
-    heading.text = @"Pick your look.";
+    heading.text = SGSYNALocalize(@"Pick your look.");
     heading.font = [UIFont systemFontOfSize:30 weight:UIFontWeightBold];
     heading.textColor = UIColor.whiteColor;
     heading.numberOfLines = 0;
 
     NSString *redesign = glass ? @"Looks like Apple Music. Better lyrics, Live Activity."
                                : [NSString stringWithFormat:@"Looks like Apple Music. Untested on iOS %@.", UIDevice.currentDevice.systemVersion];
-    _redesigned = [[SGLookCard alloc] initWithSymbol:@"sparkles" title:@"Redesigned" subtitle:redesign];
-    _legacy = [[SGLookCard alloc] initWithSymbol:@"slider.horizontal.3" title:@"Legacy" subtitle:@"More options, still looks like Spotify."];
+    _redesigned = [[SGLookCard alloc] initWithSymbol:@"sparkles" title:SGSYNALocalize(@"Redesigned") subtitle:SGSYNALocalize(redesign)];
+    _legacy = [[SGLookCard alloc] initWithSymbol:@"slider.horizontal.3" title:SGSYNALocalize(@"Legacy") subtitle:SGSYNALocalize(@"More options, still looks like Spotify.")];
     for (SGLookCard *card in @[_redesigned, _legacy]) [card addTarget:self action:@selector(picked:) forControlEvents:UIControlEventTouchUpInside];
     // The first launch offers the redesign where it is at home; below iOS 26 it waits to be asked for.
     // The tour again from the Mod page shows the stored look.
@@ -461,10 +391,10 @@ static BOOL adFree(void) {
     // Spotify without its ads: one switch for Hide ads, Hide upsells and Spoof Premium. Off leaves each as it
     // is; the tour again shows on only while all three are. They are read at launch, so on ends in a restart.
     _ads = [UISwitch new];
-    _ads.onTintColor = SGGreen();
+    _ads.onTintColor = [UIColor colorWithRed:0.21 green:1 blue:0.36 alpha:1];
     _ads.on = adFree();
-    _adsCard = [[SGLookCard alloc] initWithSymbol:@"speaker.slash" title:@"No ads"
-                                         subtitle:@"No ads, no Premium upsells, and Premium spoofed." accessory:_ads];
+    _adsCard = [[SGLookCard alloc] initWithSymbol:@"speaker.slash" title:SGSYNALocalize(@"No ads")
+                                         subtitle:SGSYNALocalize(@"No ads, no Premium upsells, and Premium spoofed.") accessory:_ads];
     [_adsCard addTarget:self action:@selector(toggleAds) forControlEvents:UIControlEventTouchUpInside];
     _adsCard.isAccessibilityElement = YES;
     _adsCard.accessibilityLabel = @"No ads";
@@ -482,7 +412,7 @@ static BOOL adFree(void) {
     adsNote.layoutMarginsRelativeArrangement = YES;
 
     UILabel *tipsHeading = [UILabel new];
-    tipsHeading.text = @"Easy to miss";
+    tipsHeading.text = SGSYNALocalize(@"Easy to miss");
     tipsHeading.font = [UIFont systemFontOfSize:17 weight:UIFontWeightSemibold];
     tipsHeading.textColor = UIColor.whiteColor;
     UIView *tips = [self tipsView];
@@ -505,10 +435,10 @@ static BOOL adFree(void) {
     [scroll addSubview:column];
     [self.view addSubview:scroll];
 
-    _primary = SGOnboardingButton(@"Start listening");
+    _primary = SGOnboardingButton(SGSYNALocalize(@"Start listening"));
     [_primary addTarget:self action:@selector(finish) forControlEvents:UIControlEventTouchUpInside];
     UILabel *footer = [UILabel new];
-    footer.text = @"Hold Home to open settings.";
+    footer.text = SGSYNALocalize(@"Hold Home to open settings.");
     footer.font = [UIFont systemFontOfSize:13];
     footer.textColor = SGGrey();
     footer.textAlignment = NSTextAlignmentCenter;
@@ -531,8 +461,8 @@ static BOOL adFree(void) {
         [_logo.leadingAnchor constraintEqualToAnchor:strip.leadingAnchor],
         [_logo.topAnchor constraintEqualToAnchor:strip.topAnchor],
         [_logo.bottomAnchor constraintEqualToAnchor:strip.bottomAnchor],
-        [_logo.widthAnchor constraintEqualToConstant:88],
-        [_logo.heightAnchor constraintEqualToConstant:88],
+        [_logo.widthAnchor constraintEqualToConstant:270],
+        [_logo.heightAnchor constraintEqualToConstant:92],
         [_primary.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:kMargin],
         [_primary.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-kMargin],
         [_primary.bottomAnchor constraintEqualToAnchor:footer.topAnchor constant:-12],
@@ -595,7 +525,7 @@ static BOOL adFree(void) {
 
 - (void)refresh {
     UIButtonConfiguration *config = _primary.configuration;
-    NSString *title = self.needsRestart ? @"Restart Spotify" : @"Start listening";
+    NSString *title = SGSYNALocalize(self.needsRestart ? @"Restart Spotify" : @"Start listening");
     config.attributedTitle = [[NSAttributedString alloc] initWithString:title attributes:@{NSFontAttributeName: [UIFont systemFontOfSize:17 weight:UIFontWeightSemibold]}];
     _primary.configuration = config;
 }
@@ -604,6 +534,7 @@ static BOOL adFree(void) {
 // going on is the warning accepted (SGSetRedesignedUI stores that).
 - (void)finish {
     SGSetEnabled(SGKeyOnboardingSeen, YES);
+    [NSUserDefaults.standardUserDefaults setBool:YES forKey:SGKeySYNAWelcomeSeen];
     SGSetRedesignedUI(_redesigned.selected);
     if (_ads.on) for (NSString *key in adKeys()) SGSetEnabled(key, YES);
     if (self.needsRestart) {
