@@ -1,5 +1,6 @@
 #import <CoreText/SFNTLayoutTypes.h>
 #import "SGModPage.h"
+#import "Core/SGSYNA.h"
 #import "SGPageStyle.h"
 #import "SGGlowSwitch.h"
 #import "Core/SGCore.h"
@@ -570,10 +571,19 @@ static void showWaiting(UITableViewCell *cell, BOOL waiting, NSString *switchTit
 
 - (instancetype)initWithTitle:(NSString *)title intro:(NSString *)intro sections:(NSArray<SGModSection *> *)sections footer:(NSString *)footer {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = title;
+    self.title = SGSYNALocalize(title);
     _sections = sections;
+    // Localize only UI labels; never change setting keys, models or persisted data.
+    for (SGModSection *section in sections) {
+        section.title = SGSYNALocalize(section.title);
+        section.footer = SGSYNALocalize(section.footer);
+        for (SGModRow *row in section.rows) {
+            row.title = SGSYNALocalize(row.title);
+            row.subtitle = SGSYNALocalize(row.subtitle);
+        }
+    }
     _shown = [self rowsToShow];
-    _intro = intro ? SGNote(intro) : nil;
+    _intro = intro ? SGNote(SGSYNALocalize(intro)) : nil;
     _footer = footer ? SGNote(footer) : nil;
     // Any row with a value, a test of when it shows, a number or a menu keeps a ticker running: a page row's
     // value can move while the page shows (a download's percentage beside the chevron), a row can come or go
