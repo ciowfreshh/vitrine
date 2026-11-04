@@ -1,0 +1,115 @@
+name: Vitrine V2 validation and IPA
+on:
+  workflow_call:
+    inputs:
+      ipa_url:
+        required: false
+        type: string
+        default: ""
+  push:
+    branches: [vitrine-i18n-translation-v2]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ipa_url:
+        description: 'Optional HTTPS download URL to your decrypted Spotify IPA; empty runs validation only'
+        required: false
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: vitrine-v2-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python3 scripts/localization.py
+      - run: python3 -m unittest discover -s tests -v
+      - run: bash scripts/check-layers.sh tweak/Sources
+      - run: bash -n scripts/pipeline.sh scripts/build-extension.sh tests/translation-store/run.sh
+  macos:
+    runs-on: macos-latest
+    env:
+      THEOS: ${{ github.workspace }}/theos
+    steps:
+      - uses: actions/checkout@v5
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - name: Native durable storage and archive tests
+        run: tests/translation-store/run.sh
+      - uses: actions/checkout@v5
+        with:
+          repository: theos/theos
+          path: theos
+          submodules: recursive
+      - name: Install build tools
+        run: |
+          brew install make dpkg ldid
+          python3 -m pip install --break-system-packages git+https://github.com/asdfzxcvbn/pyzule-rw.git
+      - name: Compile-only flag table (never used in an IPA)
+        run: |
+          cat > tweak/Sources/Shared/Flags/SGFlagList.m <<'FLAGS'
+          #import "Flags.h"
+          const SGFlagDef SGFlagTable[] = {{NULL, SGFlagUnknown, 0, 0, 0}};
+          const NSUInteger SGFlagCount = 0;
+          FLAGS
+      - name: Compile full tweak
+        run: env -u MAKELEVEL gmake -C tweak clean package
+      - name: Compile extension and App Intents metadata
+        run: |
+          mkdir -p out
+          python3 - <<'PY'
+          import plistlib
+          with open('out/test-host.plist','wb') as f:
+              plistlib.dump({'CFBundleIdentifier':'com.spotify.client','CFBundleShortVersionString':'9.1.90','CFBundleVersion':'1'},f)
+          PY
+          scripts/build-extension.sh out/test-host.plist out/test-extension
+      - name: Download supplied IPA
+        if: github.event_name == 'workflow_dispatch' && inputs.ipa_url != ''
+        env:
+          IPA_URL: ${{ inputs.ipa_url }}
+        run: |
+          python3 - <<'PY'
+          import os,urllib.parse
+          value=os.environ['IPA_URL']
+          assert '\n' not in value and '\r' not in value
+          parsed=urllib.parse.urlsplit(value)
+          assert parsed.scheme=='https' and parsed.hostname and not parsed.username and not parsed.password
+          print('::add-mask::'+value)
+          PY
+          mkdir -p ipa
+          curl --fail --location --retry 2 --proto '=https' --proto-redir '=https' "$IPA_URL" -o ipa/spotify.ipa
+          python3 scripts/validate-v2-ipa.py ipa/spotify.ipa
+      - name: Build supplied IPA
+        if: github.event_name == 'workflow_dispatch' && inputs.ipa_url != ''
+        run: |
+          make release
+          python3 scripts/validate-v2-ipa.py out/vitrine-$(cat version.txt).ipa --built --original ipa/spotify.ipa
+          shasum -a 256 out/*.ipa > out/SHA256SUMS.txt
+          git rev-parse HEAD > out/SOURCE_COMMIT.txt
+      - uses: actions/upload-artifact@v5
+        if: github.event_name == 'workflow_dispatch' && inputs.ipa_url != ''
+        with:
+          name: vitrine-v2-test-ipa
+          path: |
+            out/*.ipa
+            out/SHA256SUMS.txt
+            out/SOURCE_COMMIT.txt
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: vitrine-v2-validation
+          path: |
+            out/tests/
+            out/test-extension/
+          if-no-files-found: ignore
+          retention-days: 7
