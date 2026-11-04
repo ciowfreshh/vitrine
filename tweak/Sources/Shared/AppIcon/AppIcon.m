@@ -8,7 +8,9 @@ static NSArray<NSString *> *iconNames(void) {
     NSDictionary *icons = [NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleIcons"];
     NSDictionary *alternates = [icons isKindOfClass:NSDictionary.class] ? icons[@"CFBundleAlternateIcons"] : nil;
     if (![alternates isKindOfClass:NSDictionary.class]) return @[];
-    return [alternates.allKeys sortedArrayUsingSelector:@selector(localizedStandardCompare:)];
+    NSMutableArray<NSString *> *names = [alternates.allKeys mutableCopy];
+    [names removeObject:@"Vitrine"];
+    return [names sortedArrayUsingSelector:@selector(localizedStandardCompare:)];
 }
 
 static NSString *label(NSString *name) {
