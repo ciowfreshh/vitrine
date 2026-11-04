@@ -64,8 +64,11 @@ ICON="${ICON:-$ROOT/icons/SYNA.png}"
 # cyan skips -k with only a warning when its environment has no Pillow.
 if [ -n "$ICON" ]; then
   [ -f "$ICON" ] || { echo "no such icon: $ICON" >&2; exit 1; }
-  "$(dirname "$(readlink -f "$(command -v cyan)")")/python" -c 'import PIL' 2>/dev/null \
-    || { echo "cyan has no Pillow for --icon -> uv tool install --force --with pillow 'cyan @ git+https://github.com/asdfzxcvbn/pyzule-rw'" >&2; exit 1; }
+  # The build workflow installs cyan using python3 -m pip, so check that exact
+  # interpreter. The previous `dirname cyan` guess pointed at a nonexistent
+  # /usr/local/bin/python on macOS Intel GitHub runners.
+  python3 -c 'from PIL import Image' 2>/dev/null \
+    || { echo "Pillow is missing from python3; run: python3 -m pip install Pillow" >&2; exit 1; }
 fi
 
 APP_DIR="$(unzip -Z1 "$IN" | grep -oE '^Payload/[^/]+\.app/' | sort -u | head -1)"
