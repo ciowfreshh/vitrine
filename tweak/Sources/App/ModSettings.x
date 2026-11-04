@@ -15,6 +15,7 @@
 //   x 48, 12pt chevron on the right. A pushed page (trees/settings notifications opened.txt) is a
 //   UITableView bg #121212: header with an 11pt gray description at (16, 24), 53pt cells with the
 #import "Core/SGCore.h"
+#import "Core/SGSYNA.h"
 #import "Settings/SGPage.h"
 #import "Settings/SGPageStyle.h"
 #import "Settings/SGModPage.h"
@@ -56,6 +57,22 @@ static UIViewController *modSettingsPage(void) {
     // A free Apple ID's week runs out with no warning from iOS, so its date waits here too, not only under Mod.
     if (SGSigningWeekLong()) [warnings addObject:SGWithSymbol(SGSigningExpiryRow(), @"clock.badge.exclamationmark")];
     if (warnings.count) [sections addObject:SGSection(nil, warnings)];
+
+    // Changing the tweak language rebuilds its pages on the next launch.
+    SGModRow *language = SGMenuRow(@"Language", @[@"Tiếng Việt", @"English"], ^NSString *{
+        return SGSYNAVietnamese() ? @"Tiếng Việt" : @"English";
+    }, ^(NSInteger index) {
+        SGSetSYNALanguage(index == 0);
+        SGRestartSpotify();
+    });
+    SGModRow *backup = pageRow(@"Backup settings", @"square.and.arrow.up.on.square", UIColor.systemTealColor, ^UIViewController *{
+        return [[SGModPage alloc] initWithTitle:@"Backup settings" intro:@"API keys are stored in Keychain and are never included in exports."
+            sections:@[SGSection(nil, @[
+                SGActionRow(@"Export settings", nil, ^{ SGExportSettings(); }),
+                SGActionRow(@"Import settings", nil, ^{ SGImportSettings(); }),
+            ])] footer:nil];
+    });
+    [sections addObject:SGSection(nil, @[SGWithTile(language, @"globe", UIColor.systemGreenColor), backup])];
 
     // The rows of one look are asked again as Redesigned UI is flipped, so the page shows what the restart brings.
     BOOL (^redesigned)(void) = ^BOOL { return SGRedesignedUIStored(); };
@@ -123,7 +140,7 @@ static UIViewController *modSettingsPage(void) {
         ]),
         SGSection(nil, @[mod]),
     ]];
-    SGModPage *page = [[SGModPage alloc] initWithTitle:@"Vitrine" intro:nil sections:sections footer:nil];
+    SGModPage *page = [[SGModPage alloc] initWithTitle:@"Spotify SYNA" intro:nil sections:sections footer:nil];
     page.tiles = YES;
     return page;
 }
@@ -146,7 +163,7 @@ static UIViewController *modSettingsPage(void) {
     if (!(self = [super initWithFrame:frame])) return nil;
     _icon = SGSymbolView(@"slider.horizontal.3", 20, UIImageSymbolWeightRegular, 24);
     _title = [UILabel new];
-    _title.text = @"Mod Settings";
+    _title.text = SGSYNALocalize(@"SYNA Settings");
     _title.textColor = UIColor.whiteColor;
     _chevron = SGSymbolView(@"chevron.right", 11, UIImageSymbolWeightSemibold, 12);
     for (UIView *v in @[_icon, _title, _chevron]) [self addSubview:v];
@@ -215,13 +232,12 @@ static void placeRow(UICollectionView *list, SGModSettingsRow *row) {
     if (SGAdoptFonts(list, row, row.drawer)) [row setNeedsLayout];
     CGFloat bottom = list.contentSize.height;
     row.hidden = !row.drawer && bottom <= 0;
-    row.frame = CGRectMake(0, row.drawer ? -kRowHeight : bottom, list.bounds.size.width, kRowHeight);
+    row.frame = CGRectMake(0, bottom, list.bounds.size.width, kRowHeight);
 
     UIEdgeInsets inset = list.contentInset;
     NSValue *applied = objc_getAssociatedObject(list, &kInsetKey);
     if (applied && UIEdgeInsetsEqualToEdgeInsets(inset, applied.UIEdgeInsetsValue)) return;
-    if (row.drawer) inset.top += kRowHeight;
-    else inset.bottom += kRowHeight;
+    inset.bottom += kRowHeight;
     objc_setAssociatedObject(list, &kInsetKey, [NSValue valueWithUIEdgeInsets:inset], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     list.contentInset = inset;
 }
