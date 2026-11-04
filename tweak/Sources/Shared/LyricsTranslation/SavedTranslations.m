@@ -1,19 +1,32 @@
-// Translations kept on disk, whichever way they were made: one small JSON file a song and language in
-// Caches/Vitrine/Translations, each line's text to its translation under "lines" with who made it ("by",
-// "model") and when ("made", seconds since 1970), so a song comes back translated after
-// a relaunch and lyrics from another source still find their lines. The newest kKept files stay; iOS may
-// clear Caches when it runs low, which costs a translation again.
+// Persistent JSON per song/language under Application Support/SYNA/Translations.
+// Existing cache files are copied once; no deletion or automatic limit is applied.
 #import "Core/SGCore.h"
 #import "Settings/SGModPage.h"
 #import "Settings/SGPageStyle.h"
 #import "Shared/Lyrics/Lyrics.h"
 #import "LyricsTranslation.h"
 
-static const NSUInteger kKept = 200;
+// Translations remain until explicitly deleted. No automatic eviction cap.
 
 static NSURL *folder(void) {
-    NSURL *caches = [NSFileManager.defaultManager URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask].firstObject;
-    return [[caches URLByAppendingPathComponent:@"Vitrine" isDirectory:YES] URLByAppendingPathComponent:@"Translations" isDirectory:YES];
+    // Migrate every legacy file once, without deleting its original or replacing newer saved copies.
+    static NSURL *savedDirectory;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        NSFileManager *fm = NSFileManager.defaultManager;
+        NSURL *support = [fm URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject;
+        savedDirectory = [[support URLByAppendingPathComponent:@"SYNA" isDirectory:YES] URLByAppendingPathComponent:@"Translations" isDirectory:YES];
+        [fm createDirectoryAtURL:savedDirectory withIntermediateDirectories:YES attributes:nil error:nil];
+        NSURL *caches = [fm URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask].firstObject;
+        NSURL *old = [[caches URLByAppendingPathComponent:@"Vitrine" isDirectory:YES] URLByAppendingPathComponent:@"Translations" isDirectory:YES];
+        NSArray<NSURL *> *legacy = [fm contentsOfDirectoryAtURL:old includingPropertiesForKeys:nil options:NSDirectoryEnumerationSkipsHiddenFiles error:nil];
+        for (NSURL *file in legacy) {
+            if (![file.pathExtension.lowercaseString isEqualToString:@"json"]) continue;
+            NSURL *destination = [savedDirectory URLByAppendingPathComponent:file.lastPathComponent];
+            if (![fm fileExistsAtPath:destination.path]) [fm copyItemAtURL:file toURL:destination error:nil];
+        }
+    });
+    return savedDirectory;
 }
 
 static NSURL *fileFor(NSString *track, NSString *language) {
@@ -66,7 +79,7 @@ SGTranslationSource *SGLyricsSyncSavedTranslation(NSString *track, NSString *lan
 static dispatch_queue_t writes(void) {
     static dispatch_queue_t queue;
     static dispatch_once_t once;
-    dispatch_once(&once, ^{ queue = dispatch_queue_create("vitrine.translations", DISPATCH_QUEUE_SERIAL); });
+    dispatch_once(&once, ^{ queue = dispatch_queue_create("syna.translations", DISPATCH_QUEUE_SERIAL); });
     return queue;
 }
 
@@ -87,15 +100,7 @@ SGTranslationSource *SGLyricsSaveTranslation(NSString *track, NSString *language
     dispatch_async(writes(), ^{
         [NSFileManager.defaultManager createDirectoryAtURL:folder() withIntermediateDirectories:YES attributes:nil error:nil];
         [data writeToURL:fileFor(track, language) atomically:YES];
-        NSArray<NSURL *> *all = files();
-        if (all.count <= kKept) return;
-        NSArray<NSURL *> *oldestFirst = [all sortedArrayUsingComparator:^NSComparisonResult(NSURL *a, NSURL *b) {
-            NSDate *da, *db;
-            [a getResourceValue:&da forKey:NSURLContentModificationDateKey error:nil];
-            [b getResourceValue:&db forKey:NSURLContentModificationDateKey error:nil];
-            return [da ?: NSDate.distantPast compare:db ?: NSDate.distantPast];
-        }];
-        for (NSUInteger i = 0; i < all.count - kKept; i++) [NSFileManager.defaultManager removeItemAtURL:oldestFirst[i] error:nil];
+        // No implicit pruning: files are removed only by user action.
     });
     return [SGTranslationSource by:source.by model:source.model made:now];
 }
