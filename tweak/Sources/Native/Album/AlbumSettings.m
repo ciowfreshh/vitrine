@@ -4,22 +4,22 @@
 
 UIViewController *SGAlbumSettingsPage(void) {
     NSArray<SGModSection *> *sections = @[
-        SGSection(@"Header", @[
-            SGOptionRow(@"Artwork background", nil, SGKeyAlbumBackdrop),
+        SGSection(SGLocalized(@"Header"), @[
+            SGOptionRow(SGLocalized(@"Artwork background"), nil, SGKeyAlbumBackdrop),
         ]),
-        SGSection(@"Hide in the header", @[
-            SGHideRow(@"Explore (video deck)", nil, SGHideAlbumExplore),
-            SGHideRow(@"Add to library", nil, SGHideAlbumAddTo),
-            SGHideRow(@"Download", nil, SGHideAlbumDownload),
-            SGHideRow(@"More options", nil, SGHideAlbumMore),
+        SGSection(SGLocalized(@"Hide in the header"), @[
+            SGHideRow(SGLocalized(@"Explore (video deck)"), nil, SGHideAlbumExplore),
+            SGHideRow(SGLocalized(@"Add to library"), nil, SGHideAlbumAddTo),
+            SGHideRow(SGLocalized(@"Download"), nil, SGHideAlbumDownload),
+            SGHideRow(SGLocalized(@"More options"), nil, SGHideAlbumMore),
         ]),
-        SGNotedSection(@"Hide on the page", @[
-            SGHideRow(@"More by the artist", nil, SGHideAlbumMoreBy),
-            SGHideRow(@"Related music videos", nil, SGHideAlbumVideos),
-            SGHideRow(@"Concerts", nil, SGHideAlbumConcerts),
-            SGHideRow(@"Merch", nil, SGHideAlbumMerch),
-            SGHideRow(@"You might also like", nil, SGHideAlbumYouMightLike),
-        ], @"Works only with Spotify in English."),
+        SGNotedSection(SGLocalized(@"Hide on the page"), @[
+            SGHideRow(SGLocalized(@"More by the artist"), nil, SGHideAlbumMoreBy),
+            SGHideRow(SGLocalized(@"Related music videos"), nil, SGHideAlbumVideos),
+            SGHideRow(SGLocalized(@"Concerts"), nil, SGHideAlbumConcerts),
+            SGHideRow(SGLocalized(@"Merch"), nil, SGHideAlbumMerch),
+            SGHideRow(SGLocalized(@"You might also like"), nil, SGHideAlbumYouMightLike),
+        ], SGLocalized(@"Works only with Spotify in English.")),
     ];
-    return [[SGModPage alloc] initWithTitle:@"Album" intro:nil sections:sections footer:nil];
+    return [[SGModPage alloc] initWithTitle:SGLocalized(@"Album") intro:nil sections:sections footer:nil];
 }

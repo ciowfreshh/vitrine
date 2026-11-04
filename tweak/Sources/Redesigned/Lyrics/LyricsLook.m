@@ -1,3 +1,4 @@
+#import "Core/SGLocalization.h"
 // The lyrics' look as stored, its presets and the preview's lines. The page is LyricsLookSettings.m.
 #import "LyricsLook.h"
 
@@ -15,7 +16,7 @@ static SGRLyricsLook presets[] = {
 };
 
 NSArray<NSString *> *SGRLyricsLookPresetNames(void) {
-    return @[@"Apple Music", @"Large", @"Compact", @"Calm", @"Vivid"];
+    return @[@"Apple Music", SGLocalized(@"Large"), SGLocalized(@"Compact"), SGLocalized(@"Calm"), SGLocalized(@"Vivid")];
 }
 
 SGRLyricsLook SGRLyricsLookPreset(NSUInteger index) {
@@ -95,7 +96,7 @@ NSArray<SGKaraokeLine *> *SGRLyricsSampleLines(void) {
     static dispatch_once_t once;
     dispatch_once(&once, ^{
         lines = @[
-            sampleLine(@[@[@"Light", @600, @1000], @[@"comes", @1000, @1400], @[@"over", @1400, @1800], @[@"the", @1800, @2000], @[@"water", @2000, @2900]]),
+            sampleLine(@[@[SGLocalized(@"Light"), @600, @1000], @[@"comes", @1000, @1400], @[@"over", @1400, @1800], @[@"the", @1800, @2000], @[@"water", @2000, @2900]]),
             sampleLine(@[@[@"hold", @3100, @3500], @[@"on", @3500, @3800], @[@"to", @3800, @4000], @[@"the", @4000, @4200], @[@"night", @4200, @7200]]),
             sampleLine(@[@[@"we", @7500, @7800], @[@"sing", @7800, @8300], @[@"it", @8300, @8500], @[@"louder", @8500, @9500]]),
             sampleLine(@[@[@"all", @9800, @10100], @[@"the", @10100, @10300], @[@"way", @10300, @10700], @[@"home", @10700, @12000]]),

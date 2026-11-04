@@ -124,7 +124,7 @@ static NSArray<SGKaraokeLine *> *syllableLines(NSArray *content) {
     for (NSDictionary *item in content) {
         if (![item isKindOfClass:NSDictionary.class]) continue;
         NSDictionary *lead = item[@"Lead"];
-        SGKaraokeLine *line = syllableLine(lead, @"Text");
+        SGKaraokeLine *line = syllableLine(lead, SGLocalized(@"Text"));
         if (!line) continue;
         line.align = [item[@"OppositeAligned"] boolValue] ? SGKaraokeAlignTrailing : SGKaraokeAlignLeading;
         // A line can have several background phrases; the view has one backing line, so they share it,
@@ -138,7 +138,7 @@ static NSArray<SGKaraokeLine *> *syllableLines(NSArray *content) {
             if (stringIn(group, @"TranslatedText")) [translated addObject:stringIn(group, @"TranslatedText")];
         }
         NSDictionary *background = @{@"Syllables": backing};
-        line.backing = syllableLine(background, @"Text");
+        line.backing = syllableLine(background, SGLocalized(@"Text"));
         line.backing.align = line.align;
         line.pronunciation = spokenLine(lead, stringIn(lead, @"TransliteratedText"), line);
         if (line.backing) line.backing.pronunciation = spokenLine(background, [spelt componentsJoinedByString:@" "], line.backing);
@@ -209,14 +209,14 @@ static NSArray<SGKaraokeLine *> *staticLines(NSArray *rows, NSArray<NSString *> 
 static NSString *creditFor(NSDictionary *body, NSArray<SGLyricsLink *> **links) {
     *links = nil;
     NSString *source = stringIn(body, @"source");
-    if ([source isEqualToString:@"apple_music"]) return @"Apple Music via Spicy Lyrics";
-    if ([source isEqualToString:@"spotify"]) return @"Spotify via Spicy Lyrics";
-    if (![source isEqualToString:@"spicy_lyrics"]) return @"Spicy Lyrics, source unknown";
+    if ([source isEqualToString:@"apple_music"]) return SGLocalized(@"Apple Music via Spicy Lyrics");
+    if ([source isEqualToString:@"spotify"]) return SGLocalized(@"Spotify via Spicy Lyrics");
+    if (![source isEqualToString:@"spicy_lyrics"]) return SGLocalized(@"Spicy Lyrics, source unknown");
     NSDictionary *people = [body[@"UploadAttribution"] isKindOfClass:NSDictionary.class] ? body[@"UploadAttribution"] : nil;
     NSDictionary *makerInfo = people[@"Maker"], *uploaderInfo = people[@"Uploader"];
     NSString *maker = stringIn(makerInfo, @"username"), *uploader = stringIn(uploaderInfo, @"username");
     NSMutableArray<SGLyricsLink *> *found = [NSMutableArray array];
-    for (NSArray *person in @[@[@"Uploader", uploaderInfo ?: @{}], @[@"Maker", makerInfo ?: @{}]]) {
+    for (NSArray *person in @[@[SGLocalized(@"Uploader"), uploaderInfo ?: @{}], @[SGLocalized(@"Maker"), makerInfo ?: @{}]]) {
         NSString *name = stringIn(person[1], @"username");
         NSURL *url = [NSURL URLWithString:stringIn(person[1], @"url") ?: @""];
         NSString *scheme = url.scheme.lowercaseString;
@@ -229,9 +229,9 @@ static NSString *creditFor(NSDictionary *body, NSArray<SGLyricsLink *> **links) 
     }
     *links = found.count ? found : nil;
     if (maker && uploader && ![maker isEqualToString:uploader]) {
-        return [NSString stringWithFormat:@"Spicy Lyrics, synced by %@, uploaded by %@", maker, uploader];
+        return [NSString stringWithFormat:SGLocalized(@"Spicy Lyrics, synced by %@, uploaded by %@"), maker, uploader];
     }
-    if (maker ?: uploader) return [NSString stringWithFormat:@"Spicy Lyrics, synced by %@", maker ?: uploader];
+    if (maker ?: uploader) return [NSString stringWithFormat:SGLocalized(@"Spicy Lyrics, synced by %@"), maker ?: uploader];
     return @"Spicy Lyrics";
 }
 
@@ -333,18 +333,18 @@ NSTimeInterval SGSpicyLyricsWait(NSHTTPURLResponse *reply, NSDate *now) {
 
 // What a refusal's error code means, short enough for the source's row.
 static NSString *refusalReason(NSString *code) {
-    if ([code isEqualToString:@"origin_not_allowed"] || [code isEqualToString:@"origins_not_configured"]) return @"Key rejected: allow No origin header";
-    if ([code isEqualToString:@"application_paused"]) return @"Key rejected: paused";
-    if ([code isEqualToString:@"key_revoked"]) return @"Key rejected: revoked";
-    if ([code isEqualToString:@"key_not_found"] || [code isEqualToString:@"key_malformed"] || [code isEqualToString:@"malformed_authorization"]) return @"Key rejected: not found";
+    if ([code isEqualToString:@"origin_not_allowed"] || [code isEqualToString:@"origins_not_configured"]) return SGLocalized(@"Key rejected: allow No origin header");
+    if ([code isEqualToString:@"application_paused"]) return SGLocalized(@"Key rejected: paused");
+    if ([code isEqualToString:@"key_revoked"]) return SGLocalized(@"Key rejected: revoked");
+    if ([code isEqualToString:@"key_not_found"] || [code isEqualToString:@"key_malformed"] || [code isEqualToString:@"malformed_authorization"]) return SGLocalized(@"Key rejected: not found");
     for (NSString *word in @[@"suspended", @"disabled", @"deleted"]) {
-        if ([code containsString:word]) return @"Key rejected: disabled";
+        if ([code containsString:word]) return SGLocalized(@"Key rejected: disabled");
     }
-    return @"Key rejected";
+    return SGLocalized(@"Key rejected");
 }
 
 NSString *SGSpicyLyricsStatus(void) {
-    if (!SGSpicyLyricsKeySet()) return @"Needs a key";
+    if (!SGSpicyLyricsKeySet()) return SGLocalized(@"Needs a key");
     return sg_refused ? refusalReason(sg_refused) : nil;
 }
 
@@ -421,10 +421,10 @@ SGLyricsAsk SGSpicyLyricsAsk = ^(SGLyricsQuery *query, void (^done)(SGLyricsResu
 // ASCII, 12 characters at the least.
 NSString *SGSpicyLyricsKeyProblem(NSString *key);
 NSString *SGSpicyLyricsKeyProblem(NSString *key) {
-    if ([key hasPrefix:@"sl_sk_"]) return @"That is a secret key, which belongs on a server, not in an app.";
+    if ([key hasPrefix:@"sl_sk_"]) return SGLocalized(@"That is a secret key, which belongs on a server, not in an app.");
     NSCharacterSet *printable = [NSCharacterSet characterSetWithRange:NSMakeRange(0x21, 0x7E - 0x21 + 1)];
     if (![key hasPrefix:@"sl_pk_"] || key.length < 12 || [key rangeOfCharacterFromSet:printable.invertedSet].location != NSNotFound) {
-        return @"That is not a publishable key.";
+        return SGLocalized(@"That is not a publishable key.");
     }
     return nil;
 }
@@ -449,11 +449,11 @@ void SGSpicyLyricsForgetKey(void) {
 }
 
 static void askForKey(NSString *problem) {
-    NSString *how = @"Sign up at Spicy Lyrics for Developers, create an application, turn on client access with "
-                    @"No origin header allowed, and paste its publishable key (sl_pk_). The key stays on this iPhone.";
+    NSString *how = SGLocalized(@"Sign up at Spicy Lyrics for Developers, create an application, turn on client access with "
+                    @"No origin header allowed, and paste its publishable key (sl_pk_). The key stays on this iPhone.");
     NSString *refused = SGSpicyLyricsKeySet() ? SGSpicyLyricsStatus() : nil;
     NSString *lead = problem ?: refused ? [refused stringByAppendingString:@"."] : nil;
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Spicy Lyrics Key"
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Spicy Lyrics Key")
         message:lead ? [NSString stringWithFormat:@"%@\n\n%@", lead, how] : how
         preferredStyle:UIAlertControllerStyleAlert];
     [alert addTextFieldWithConfigurationHandler:^(UITextField *field) {
@@ -463,7 +463,7 @@ static void askForKey(NSString *problem) {
         field.autocapitalizationType = UITextAutocapitalizationTypeNone;
         field.spellCheckingType = UITextSpellCheckingTypeNo;
     }];
-    UIAlertAction *save = [UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    UIAlertAction *save = [UIAlertAction actionWithTitle:SGLocalized(@"Save") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         NSString *key = [alert.textFields.firstObject.text stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
         if (!key.length) return;
         NSString *wrong = SGSpicyLyricsKeyProblem(key);
@@ -472,20 +472,20 @@ static void askForKey(NSString *problem) {
         else setKey(key);
     }];
     [alert addAction:save];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Open Dashboard" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Open Dashboard") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         [UIApplication.sharedApplication openURL:[NSURL URLWithString:kDashboard] options:@{} completionHandler:nil];
     }]];
     if (SGSpicyLyricsKeySet()) {
-        [alert addAction:[UIAlertAction actionWithTitle:@"Remove" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+        [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Remove") style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
             setKey(nil);
         }]];
     }
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
     alert.preferredAction = save;
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
 SGModRow *SGSpicyLyricsKeyRow(void) {
-    return SGStatActionRow(@"Spicy Lyrics key", @"Community word syncs, with your own key",
-                           ^NSString *{ return !SGSpicyLyricsKeySet() ? @"Off" : sg_refused ? @"Rejected" : @"Set"; }, ^{ askForKey(nil); });
+    return SGStatActionRow(SGLocalized(@"Spicy Lyrics key"), SGLocalized(@"Community word syncs, with your own key"),
+                           ^NSString *{ return !SGSpicyLyricsKeySet() ? SGLocalized(@"Off") : sg_refused ? SGLocalized(@"Rejected") : SGLocalized(@"Set"); }, ^{ askForKey(nil); });
 }

@@ -5,16 +5,16 @@
 #import "Artist.h"
 
 UIViewController *SGRArtistSettingsPage(void) {
-    return [[SGModPage alloc] initWithTitle:@"Artists" intro:SGRestartNote sections:@[
+    return [[SGModPage alloc] initWithTitle:SGLocalized(@"Artists") intro:SGLocalized(SGRestartNote) sections:@[
         SGNotedSection(@"Apple Music", @[
-            SGSwitchRow(@"Artist logos", @"In place of the name on an artist's page", SGRKeyArtistLogo),
-        ], @"Only the artist's name is sent to Apple Music."),
-        SGSection(@"Hide on an artist's page", @[
-            SGSwitchRow(@"Videos", @"In the Music list, and in the Video tab", SGRKeyArtistHideVideos),
-            SGSwitchRow(@"Music, Video and Merch tabs", @"Without them the Music list is the page", SGRKeyArtistHideTabs),
-            SGHideRow(@"Artist pick", nil, SGRKeyArtistHidePick),
-            SGHideRow(@"Release countdown", @"The pre-save of an upcoming release", SGRKeyArtistHideCountdown),
-            SGHideRow(@"About", nil, SGRKeyArtistHideAbout),
+            SGSwitchRow(SGLocalized(@"Artist logos"), SGLocalized(@"In place of the name on an artist's page"), SGRKeyArtistLogo),
+        ], SGLocalized(@"Only the artist's name is sent to Apple Music.")),
+        SGSection(SGLocalized(@"Hide on an artist's page"), @[
+            SGSwitchRow(SGLocalized(@"Videos"), SGLocalized(@"In the Music list, and in the Video tab"), SGRKeyArtistHideVideos),
+            SGSwitchRow(SGLocalized(@"Music, Video and Merch tabs"), SGLocalized(@"Without them the Music list is the page"), SGRKeyArtistHideTabs),
+            SGHideRow(SGLocalized(@"Artist pick"), nil, SGRKeyArtistHidePick),
+            SGHideRow(SGLocalized(@"Release countdown"), SGLocalized(@"The pre-save of an upcoming release"), SGRKeyArtistHideCountdown),
+            SGHideRow(SGLocalized(@"About"), nil, SGRKeyArtistHideAbout),
         ]),
     ] footer:nil];
 }

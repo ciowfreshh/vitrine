@@ -72,7 +72,7 @@ static CGFloat height(float rms) {
     self.clipsToBounds = YES;
     _feedback = [UISelectionFeedbackGenerator new];
     self.isAccessibilityElement = YES;
-    self.accessibilityLabel = @"Vocals";
+    self.accessibilityLabel = SGLocalized(@"Vocals");
     self.accessibilityTraits = UIAccessibilityTraitAdjustable;
     return self;
 }
@@ -227,7 +227,7 @@ static CGFloat height(float rms) {
     [_column addTarget:self action:@selector(levelMoved) forControlEvents:UIControlEventValueChanged];
     [_card addSubview:_column];
 
-    _stops = [[UISegmentedControl alloc] initWithItems:@[@"Sing along", @"Original", @"Vocals only"]];
+    _stops = [[UISegmentedControl alloc] initWithItems:@[SGLocalized(@"Sing along"), SGLocalized(@"Original"), SGLocalized(@"Vocals only")]];
     [_stops addTarget:self action:@selector(stopPicked) forControlEvents:UIControlEventValueChanged];
     [self addSubview:_stops];
 
@@ -311,15 +311,15 @@ static CGFloat height(float rms) {
         _track = player.track;
         _shown = SGShownTrackNow();
     }
-    NSString *title = _shown.title ?: @"Not Playing";
-    NSString *artist = _shown ? _shown.artist ?: @"" : @"Play a song to hear Karaoke";
+    NSString *title = _shown.title ?: SGLocalized(@"Not Playing");
+    NSString *artist = _shown ? _shown.artist ?: @"" : SGLocalized(@"Play a song to hear Karaoke");
     _title.text = title;
     _artist.text = artist;
     SGSingState state = SGSingCurrentState();
     NSString *words = SGSingStatusText();
     float stored = SGSingLevel();
     if (state == SGSingStateSinging) {
-        words = stored > 0.001 && stored < 0.999 ? [NSString stringWithFormat:@"%@ · vocals at %@", words, SGSingLevelText(stored)]
+        words = stored > 0.001 && stored < 0.999 ? [NSString stringWithFormat:SGLocalized(@"%@ · vocals at %@"), words, SGSingLevelText(stored)]
                                                  : [NSString stringWithFormat:@"%@ · %@", words, SGSingLevelText(stored)];
     }
     if (SGSingStatusDetail()) words = [words stringByAppendingString:@"  ⓘ"];
@@ -334,7 +334,7 @@ static CGFloat height(float rms) {
         [_play setImage:glyph forState:UIControlStateNormal];
     }
     _play.enabled = player != nil;
-    _play.accessibilityLabel = playing ? @"Pause" : @"Play";
+    _play.accessibilityLabel = playing ? SGLocalized(@"Pause") : SGLocalized(@"Play");
 
     if (!_column.tracking) _column.level = SGSingLevel();
     float level = _column.level;
@@ -342,8 +342,8 @@ static CGFloat height(float rms) {
     if (_stops.selectedSegmentIndex != stop) _stops.selectedSegmentIndex = stop;
 
     _song.accessibilityLabel = _shown.artist.length ? [NSString stringWithFormat:@"%@, %@", title, artist] : title;
-    _song.accessibilityValue = [NSString stringWithFormat:@"Karaoke: %@. Vocals: %@", SGSingStatusText(), SGSingLevelText(level)];
-    _song.accessibilityHint = SGSingStatusDetail() ? @"Double-tap for more about Karaoke's state." : nil;
+    _song.accessibilityValue = [NSString stringWithFormat:SGLocalized(@"Karaoke: %@. Vocals: %@"), SGSingStatusText(), SGSingLevelText(level)];
+    _song.accessibilityHint = SGSingStatusDetail() ? SGLocalized(@"Double-tap for more about Karaoke's state.") : nil;
     _song.accessibilityTraits = SGSingStatusDetail() ? UIAccessibilityTraitButton : UIAccessibilityTraitStaticText;
     _song.accessibilityFrameInContainerSpace = CGRectMake(0, 0, CGRectGetMinX(_column.frame), CGRectGetMinY(_play.frame));
 }
@@ -462,12 +462,12 @@ static CGFloat height(float rms) {
     if (!detail) return;
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Karaoke" message:detail preferredStyle:UIAlertControllerStyleAlert];
     if (SGSingCurrentState() == SGSingStateFailed) {
-        [alert addAction:[UIAlertAction actionWithTitle:@"Try again" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a) {
+        [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Try again") style:UIAlertActionStyleDefault handler:^(UIAlertAction *a) {
             SGSetSingOn(NO);
             SGSetSingOn(YES);
         }]];
     }
-    [alert addAction:[UIAlertAction actionWithTitle:SGSingCurrentState() == SGSingStateFailed ? @"Cancel" : @"OK" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGSingCurrentState() == SGSingStateFailed ? SGLocalized(@"Cancel") : SGLocalized(@"OK") style:UIAlertActionStyleCancel handler:nil]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 

@@ -193,7 +193,7 @@ static UIView *lyricsView(Look look, NSInteger step) {
     if (look.withoutLyrics == SGLiveActivityWithoutLyricsNote) {
         UIStackView *note = stack(@[label(kQuietTitle, font(kHeadline, UIFontWeightSemibold), UIColor.whiteColor, 1, edge),
                                     label(kArtist, font(kSubheadline, UIFontWeightMedium), dim(0.6), 1, edge),
-                                    label(@"No synced lyrics for this song", font(kCaption, UIFontWeightMedium), dim(0.6), 1, edge)],
+                                    label(SGLocalized(@"No synced lyrics for this song"), font(kCaption, UIFontWeightMedium), dim(0.6), 1, edge)],
                                   UILayoutConstraintAxisVertical, 2);
         [note setCustomSpacing:6 afterView:note.arrangedSubviews[1]];
         return note;
@@ -212,7 +212,7 @@ static NSAttributedString *trackLine(NSString *title, NSString *artist, CGFloat 
 }
 
 static UIView *queueView(void) {
-    NSMutableArray<UIView *> *views = [NSMutableArray arrayWithObject:label(@"Up next", font(kCaption, UIFontWeightSemibold), dim(0.6), 1, NSTextAlignmentNatural)];
+    NSMutableArray<UIView *> *views = [NSMutableArray arrayWithObject:label(SGLocalized(@"Up next"), font(kCaption, UIFontWeightSemibold), dim(0.6), 1, NSTextAlignmentNatural)];
     for (NSInteger i = 0; i < 3; i++) {
         UILabel *row = label(nil, nil, nil, 1, NSTextAlignmentNatural);
         row.attributedText = trackLine(kQueue[i][0], kQueue[i][1], kSubheadline);
@@ -239,7 +239,7 @@ static UIStackView *chipRow(NSArray<UIView *> *chips, CGFloat spacing) {
 
 static UIView *panelView(Look look, NSInteger tab) {
     NSArray<NSString *> *symbols = @[@"slider.horizontal.3", @"list.bullet", @"moon.zzz"];
-    NSArray<NSString *> *titles = @[@"Controls", @"Queue", @"Timer"];
+    NSArray<NSString *> *titles = @[SGLocalized(@"Controls"), SGLocalized(@"Queue"), SGLocalized(@"Timer")];
     NSMutableArray<UIView *> *tabs = [NSMutableArray array];
     for (NSInteger i = 0; i < TabCount; i++) {
         BOOL on = i == tab;
@@ -254,9 +254,9 @@ static UIView *panelView(Look look, NSInteger tab) {
         case TabControls: {
             UILabel *track = label(nil, nil, nil, 1, NSTextAlignmentNatural);
             track.attributedText = trackLine(kTitle, kArtist, kSubheadline);
-            page = stack(@[track, chipRow(@[chip(@"backward.fill", @"Previous", NO, look), chip(@"pause.fill", @"Pause", NO, look),
-                                             chip(@"forward.fill", @"Next", NO, look), chip(@"shuffle", @"Shuffle", YES, look),
-                                             chip(@"repeat", @"Repeat", NO, look)], 10)],
+            page = stack(@[track, chipRow(@[chip(@"backward.fill", SGLocalized(@"Previous"), NO, look), chip(@"pause.fill", SGLocalized(@"Pause"), NO, look),
+                                             chip(@"forward.fill", SGLocalized(@"Next"), NO, look), chip(@"shuffle", SGLocalized(@"Shuffle"), YES, look),
+                                             chip(@"repeat", SGLocalized(@"Repeat"), NO, look)], 10)],
                          UILayoutConstraintAxisVertical, 8);
             break;
         }
@@ -274,8 +274,8 @@ static UIView *panelView(Look look, NSInteger tab) {
             break;
         }
         default:
-            page = chipRow(@[chip(@"moon", @"15m", NO, look), chip(@"moon", @"30m", NO, look), chip(@"moon", @"1h", NO, look),
-                             chip(@"music.note", @"Track", NO, look), chip(@"square.stack", @"Album", NO, look)], 8);
+            page = chipRow(@[chip(@"moon", SGLocalized(@"15m"), NO, look), chip(@"moon", SGLocalized(@"30m"), NO, look), chip(@"moon", SGLocalized(@"1h"), NO, look),
+                             chip(@"music.note", SGLocalized(@"Track"), NO, look), chip(@"square.stack", SGLocalized(@"Album"), NO, look)], 8);
     }
     UIStackView *tabRow = chipRow(tabs, 6);
     return stack(@[tabRow, page], UILayoutConstraintAxisVertical, 6);
@@ -325,12 +325,12 @@ static UIView *card(Look look, NSInteger step) {
 static NSString *stepName(NSInteger view, NSInteger step) {
     switch (view) {
         case SGLiveActivityLyrics:
-            return step < kLineCount ? [NSString stringWithFormat:@"Lyrics, line %ld of %ld", (long)step + 1, (long)kLineCount]
-                                     : @"Lyrics, a track with no synced lyrics";
+            return step < kLineCount ? [NSString stringWithFormat:SGLocalized(@"Lyrics, line %ld of %ld"), (long)step + 1, (long)kLineCount]
+                                     : SGLocalized(@"Lyrics, a track with no synced lyrics");
         case SGLiveActivityPanel:
-            return [@"Control menu, " stringByAppendingString:@[@"Controls tab", @"Queue tab", @"Timer tab"][step]];
+            return [SGLocalized(@"Control menu, ") stringByAppendingString:@[SGLocalized(@"Controls tab"), SGLocalized(@"Queue tab"), SGLocalized(@"Timer tab")][step]];
         default:
-            return @"Queue, the tracks up next";
+            return SGLocalized(@"Queue, the tracks up next");
     }
 }
 
@@ -369,7 +369,7 @@ static NSString *stepName(NSInteger view, NSInteger step) {
     _view = -1;
     [self addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(advance)]];
     self.isAccessibilityElement = YES;
-    self.accessibilityLabel = @"Preview of the Live Activity on the lock screen";
+    self.accessibilityLabel = SGLocalized(@"Preview of the Live Activity on the lock screen");
     [self reload];
     return self;
 }
@@ -451,7 +451,7 @@ static NSString *stepName(NSInteger view, NSInteger step) {
     NSInteger steps = stepsIn(_view);
     self.accessibilityValue = stepName(_view, _step);
     self.accessibilityTraits = steps > 1 ? UIAccessibilityTraitButton : UIAccessibilityTraitNone;
-    self.accessibilityHint = steps > 1 ? @"Shows the next step" : nil;
+    self.accessibilityHint = steps > 1 ? SGLocalized(@"Shows the next step") : nil;
     if (!old || !self.window) {
         [old removeFromSuperview];
         [_slice addSubview:_card];

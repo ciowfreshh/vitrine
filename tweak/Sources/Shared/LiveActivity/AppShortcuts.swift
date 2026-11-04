@@ -11,24 +11,24 @@ struct SGAppShortcuts: AppShortcutsProvider {
         AppShortcut(intent: SGLikeIntent(), phrases: [
             "Like this song in \(.applicationName)",
             "Add this song to Liked Songs in \(.applicationName)",
-        ], shortTitle: "Like This Song", systemImageName: "heart")
+        ], shortTitle: LocalizedStringResource("Like This Song", table: "Vitrine", locale: SGUIL10n.locale), systemImageName: "heart")
         AppShortcut(intent: SGPlayPauseIntent(), phrases: [
             "Play or pause \(.applicationName)",
-        ], shortTitle: "Play or Pause", systemImageName: "playpause")
+        ], shortTitle: LocalizedStringResource("Play or Pause", table: "Vitrine", locale: SGUIL10n.locale), systemImageName: "playpause")
         AppShortcut(intent: SGNextTrackIntent(), phrases: [
             "Skip this song in \(.applicationName)",
             "Next track in \(.applicationName)",
-        ], shortTitle: "Next Track", systemImageName: "forward")
+        ], shortTitle: LocalizedStringResource("Next Track", table: "Vitrine", locale: SGUIL10n.locale), systemImageName: "forward")
         AppShortcut(intent: SGPreviousTrackIntent(), phrases: [
             "Previous track in \(.applicationName)",
-        ], shortTitle: "Previous Track", systemImageName: "backward")
+        ], shortTitle: LocalizedStringResource("Previous Track", table: "Vitrine", locale: SGUIL10n.locale), systemImageName: "backward")
         AppShortcut(intent: SGSingIntent(), phrases: [
             "\(\.$mode) Karaoke in \(.applicationName)",
             "Sing along in \(.applicationName)",
-        ], shortTitle: "Karaoke", systemImageName: "music.mic")
+        ], shortTitle: LocalizedStringResource("Karaoke", table: "Vitrine", locale: SGUIL10n.locale), systemImageName: "music.mic")
         AppShortcut(intent: SGSleepTimerIntent(), phrases: [
             "Set a sleep timer in \(.applicationName)",
             "Sleep timer \(\.$length) in \(.applicationName)",
-        ], shortTitle: "Sleep Timer", systemImageName: "moon.zzz")
+        ], shortTitle: LocalizedStringResource("Sleep Timer", table: "Vitrine", locale: SGUIL10n.locale), systemImageName: "moon.zzz")
     }
 }

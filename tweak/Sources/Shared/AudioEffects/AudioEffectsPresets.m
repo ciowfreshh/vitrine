@@ -1,3 +1,4 @@
+#import "Core/SGLocalization.h"
 // The presets: built-in ones over a reset, and the user's own as a copy of every dsp key. Everything goes back
 // in through AudioEffects.h's setters, so it is clamped and applied the way the page's own changes are.
 #import "AudioEffects.h"
@@ -58,7 +59,7 @@ static NSArray<NSNumber *> *equalizer(NSString *preset) {
 static NSDictionary<NSString *, id> *builtInValues(NSInteger index) {
     switch (index) {
         case 0: return @{SGKeyDSPBass: @YES, SGKeyDSPBassGain: @8};
-        case 1: return @{SGKeyDSPEqualizer: @YES, SGKeyDSPEqualizerGains: equalizer(@"Vocal"),
+        case 1: return @{SGKeyDSPEqualizer: @YES, SGKeyDSPEqualizerGains: equalizer(SGLocalized(@"Vocal")),
                          SGKeyDSPCompander: @YES, SGKeyDSPCompanderGains: @[@0, @0.2, @0.3, @0.3, @0.3, @0.2, @0]};
         // The compander over 0 lifts the quiet parts and holds the loud ones; the gain brings the level back.
         case 2: return @{SGKeyDSPCompander: @YES, SGKeyDSPCompanderGains: @[@0.6, @0.7, @0.8, @0.8, @0.8, @0.7, @0.6],
@@ -67,7 +68,7 @@ static NSDictionary<NSString *, id> *builtInValues(NSInteger index) {
                          SGKeyDSPPostGain: @3, SGKeyDSPLimiterThreshold: @-3};
         case 3: return @{SGKeyDSPReverb: @YES, SGKeyDSPReverbPreset: @7, SGKeyDSPReverbAmount: @40,
                          SGKeyDSPStereoWide: @YES, SGKeyDSPStereoWideLevel: @65};
-        case 4: return @{SGKeyDSPTube: @YES, SGKeyDSPTubeDrive: @6, SGKeyDSPEqualizer: @YES, SGKeyDSPEqualizerGains: equalizer(@"Warm")};
+        case 4: return @{SGKeyDSPTube: @YES, SGKeyDSPTubeDrive: @6, SGKeyDSPEqualizer: @YES, SGKeyDSPEqualizerGains: equalizer(SGLocalized(@"Warm"))};
         case 5: return @{SGKeyDSPCrossfeed: @YES, SGKeyDSPCrossfeedMode: @2, SGKeyDSPEqualizer: @YES,
                          SGKeyDSPEqualizerGains: @[@0, @0, @0, @0, @0, @0, @0, @0, @0, @0, @-1, @-2, @-2, @-3, @-3]};
         case 6: return @{SGKeyDSPStereoWide: @YES, SGKeyDSPStereoWideLevel: @75};

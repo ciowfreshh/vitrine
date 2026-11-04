@@ -1,3 +1,4 @@
+#import "Core/SGLocalization.h"
 // Spotify's own sleep timer, the one set from the player's ⋯ menu (its sheet of times and End of track),
 // faded out the way the mod's own is (SleepTimer.h): the same Fade out choice, curve and gain. Spotify's
 // player core keeps that timer and pauses at its end; this only reads it off the player's state
@@ -108,7 +109,7 @@ static void follow(SPTPlayerState *state, SGSpotifyTimer timer, NSDate *at) {
         return;
     }
     if (state.isPaused && sg_lowered && left >= 0 && left < kUpWithin) {
-        wentOff(@"Spotify paused");
+        wentOff(SGLocalized(@"Spotify paused"));
         return;
     }
     NSTimeInterval fade = SGSleepTimerFade();

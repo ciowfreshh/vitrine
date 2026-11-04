@@ -42,9 +42,9 @@ typedef struct {
     NSString *(*answer)(NSDictionary *reply, NSString *speaker, NSString **stopped);
 } SGAIProvider;
 
-static NSString *filtered(NSString *speaker) { return [NSString stringWithFormat:@"%@'s filters blocked this song's lyrics.", speaker]; }
-static NSString *tooLong(NSString *speaker) { return [NSString stringWithFormat:@"The song is too long for one answer from %@.", speaker]; }
-static NSString *declined(NSString *speaker) { return [NSString stringWithFormat:@"%@ declined to translate the song.", speaker]; }
+static NSString *filtered(NSString *speaker) { return [NSString stringWithFormat:SGLocalized(@"%@'s filters blocked this song's lyrics."), speaker]; }
+static NSString *tooLong(NSString *speaker) { return [NSString stringWithFormat:SGLocalized(@"The song is too long for one answer from %@."), speaker]; }
+static NSString *declined(NSString *speaker) { return [NSString stringWithFormat:SGLocalized(@"%@ declined to translate the song."), speaker]; }
 
 static id dig(id root, NSArray *path) {
     for (id step in path) {
@@ -110,10 +110,10 @@ static NSMutableURLRequest *geminiRequest(NSString *model, NSString *prompt, NSS
 
 // Why Gemini stopped short, as finishReason or promptFeedback.blockReason name it.
 static NSString *geminiStop(NSString *reason, NSString *speaker) {
-    if ([reason isEqualToString:@"RECITATION"]) return [NSString stringWithFormat:@"%@ stopped because its answer repeated published lyrics.", speaker];
+    if ([reason isEqualToString:@"RECITATION"]) return [NSString stringWithFormat:SGLocalized(@"%@ stopped because its answer repeated published lyrics."), speaker];
     if ([@[@"SAFETY", @"PROHIBITED_CONTENT", @"BLOCKLIST", @"SPII"] containsObject:reason]) return filtered(speaker);
     if ([reason isEqualToString:@"MAX_TOKENS"]) return tooLong(speaker);
-    return [NSString stringWithFormat:@"%@ stopped before translating the song (%@).", speaker, reason];
+    return [NSString stringWithFormat:SGLocalized(@"%@ stopped before translating the song (%@)."), speaker, reason];
 }
 
 static NSString *geminiAnswer(NSDictionary *reply, NSString *speaker, NSString **stopped) {
@@ -256,7 +256,7 @@ static NSString *serverHost(void) {
 
 // Who the messages name: the provider, or for an OpenAI-compatible one its server's host.
 static NSString *speaker(const SGAIProvider *p) {
-    return isOpenAI(p) ? serverHost() ?: @"The server" : p->name;
+    return isOpenAI(p) ? serverHost() ?: @"The server" : SGLocalized(p->name);
 }
 
 #pragma mark - the keys
@@ -412,7 +412,7 @@ BOOL SGAITranslatorReady(void) {
 
 NSString *SGAITranslatorName(void) {
     const SGAIProvider *p = chosen();
-    return isOpenAI(p) && model(p) ? model(p) : p->name;
+    return isOpenAI(p) && model(p) ? model(p) : SGLocalized(p->name);
 }
 
 NSString *SGAITranslatorRecipient(void) {
@@ -437,10 +437,10 @@ SGTranslationSource *SGAITranslatorSource(void) {
 
 - (NSString *)name {
     const SGAIProvider *p = providerFor(_by);
-    if (p) return _model.length ? [NSString stringWithFormat:@"%@ (%@)", p->name, _model] : p->name;
-    if ([_by isEqualToString:SGTranslatedOnDevice]) return @"Translate on iPhone";
+    if (p) return _model.length ? [NSString stringWithFormat:@"%@ (%@)", SGLocalized(p->name), _model] : SGLocalized(p->name);
+    if ([_by isEqualToString:SGTranslatedOnDevice]) return SGLocalized(@"Translate on iPhone");
     if ([_by isEqualToString:SGTranslatedByAppleIntelligence]) return @"Apple Intelligence";
-    return @"Unknown";
+    return SGLocalized(@"Unknown");
 }
 
 // Asking the iPhone again costs nothing, and its translation is the same.
@@ -456,7 +456,7 @@ NSString *SGLyricsSongName(NSString *trackID) {
     SPTPlayerTrack *track = trackID && !local ? SGKaraokeTrackFor(trackID) : nil;
     NSString *title = local ? local[@"title"] : track.trackTitle, *artist = local ? local[@"artist"] : track.artistName;
     if (![title isKindOfClass:NSString.class] || !title.length) return nil;
-    return [artist isKindOfClass:NSString.class] && artist.length ? [NSString stringWithFormat:@"“%@” by %@", title, artist]
+    return [artist isKindOfClass:NSString.class] && artist.length ? [NSString stringWithFormat:SGLocalized(@"“%@” by %@"), title, artist]
                                                                      : [NSString stringWithFormat:@"“%@”", title];
 }
 
@@ -501,26 +501,26 @@ NSArray<NSString *> *SGAITranslationsIn(NSString *provider, id root, NSInteger s
     NSString *says = string(dig(reply, @[@"error", @"message"])) ?: string(reply[@"error"]);
     if (error) {
         *problem = error.code == NSURLErrorTimedOut
-            ? [NSString stringWithFormat:@"%@ timed out. Try a longer timeout on the Lyrics page.", who]
-            : [NSString stringWithFormat:@"%@ could not be reached.", who];
+            ? [NSString stringWithFormat:SGLocalized(@"%@ timed out. Try a longer timeout on the Lyrics page."), who]
+            : [NSString stringWithFormat:SGLocalized(@"%@ could not be reached."), who];
     } else if (status == 401 || status == 403 || (status == 400 && [says localizedCaseInsensitiveContainsString:@"API key"])) {
-        *problem = [NSString stringWithFormat:@"%@ turned the key down. Check it on the Lyrics page.", who];
+        *problem = [NSString stringWithFormat:SGLocalized(@"%@ turned the key down. Check it on the Lyrics page."), who];
     } else if (status == 400 || status == 404) {
-        *problem = says.length ? [NSString stringWithFormat:@"%@ did not take the request: %@", who, says]
-                               : [NSString stringWithFormat:@"%@ did not take the request (%ld).", who, (long)status];
+        *problem = says.length ? [NSString stringWithFormat:SGLocalized(@"%@ did not take the request: %@"), who, says]
+                               : [NSString stringWithFormat:SGLocalized(@"%@ did not take the request (%ld)."), who, (long)status];
     } else if (status == 429) {
-        *problem = [NSString stringWithFormat:@"%@'s limit for this key is reached for now.", who];
+        *problem = [NSString stringWithFormat:SGLocalized(@"%@'s limit for this key is reached for now."), who];
     } else if (status >= 500) {
-        *problem = [NSString stringWithFormat:@"%@ is busy right now. Try again in a minute.", who];
+        *problem = [NSString stringWithFormat:SGLocalized(@"%@ is busy right now. Try again in a minute."), who];
     } else if (status != 200) {
-        *problem = [NSString stringWithFormat:@"%@ did not translate the song (%ld).", who, (long)status];
+        *problem = [NSString stringWithFormat:SGLocalized(@"%@ did not translate the song (%ld)."), who, (long)status];
     } else if (stopped) {
         *problem = stopped;
     } else if (lines) {
-        *problem = [NSString stringWithFormat:@"%@ answered %lu lines for the song's %lu. Try again.", who,
+        *problem = [NSString stringWithFormat:SGLocalized(@"%@ answered %lu lines for the song's %lu. Try again."), who,
                     (unsigned long)lines.count, (unsigned long)count];
     } else {
-        *problem = [NSString stringWithFormat:@"%@'s answer could not be read. Try again.", who];
+        *problem = [NSString stringWithFormat:SGLocalized(@"%@'s answer could not be read. Try again."), who];
     }
     return nil;
 }
@@ -569,7 +569,7 @@ void SGLyricsTranslateWithAI(NSString *trackID, NSArray<SGKaraokeLine *> *lines,
     const SGAIProvider *p = chosen();
     NSString *key = storedSecret(p, kKeyAccount), *modelID = model(p), *template = promptTemplate();
     if (!key || !modelID) {
-        done(nil, [NSString stringWithFormat:@"Add a %@ API key%@ in Mod Settings > Lyrics first.", p->name, modelID ? @"" : @" and choose a model"]);
+        done(nil, [NSString stringWithFormat:SGLocalized(@"Add a %@ API key%@ in Mod Settings > Lyrics first."), p->name, modelID ? @"" : SGLocalized(@" and choose a model")]);
         return;
     }
     if (!sg_done) sg_done = [NSMutableDictionary dictionary];
@@ -593,7 +593,7 @@ void SGLyricsTranslateWithAI(NSString *trackID, NSArray<SGKaraokeLine *> *lines,
     NSString *prompt = [NSString stringWithFormat:@"%@\n\n%@", instructions, [[NSString alloc] initWithData:input encoding:NSUTF8StringEncoding]];
     NSURLRequest *request = p->request(modelID, prompt, key, NO), *plain = p->request(modelID, prompt, key, YES);
     if (!request) {
-        done(nil, @"The server URL is invalid. Check it in Mod Settings > Lyrics.");
+        done(nil, SGLocalized(@"The server URL is invalid. Check it in Mod Settings > Lyrics."));
         return;
     }
     SGLog(@"ai: asking %@ %@ at %@, prompt %@%@", p->tag, modelID, request.URL.host, fingerprint(template),
@@ -984,7 +984,7 @@ void SGLyricsTranslateBatchWithAI(NSDictionary<NSString *, NSArray<NSString *> *
     const SGAIProvider *p = chosen();
     NSString *key = storedSecret(p, kKeyAccount), *modelID = model(p), *template = SGLyricsBatchPromptTemplate();
     if (!key || !modelID) {
-        done(nil, [NSString stringWithFormat:@"Set up %@ in Mod Settings", p->name]);
+        done(nil, [NSString stringWithFormat:SGLocalized(@"Set up %@ in Mod Settings"), p->name]);
         return;
     }
     if (!songs.count) {
@@ -1003,7 +1003,7 @@ void SGLyricsTranslateBatchWithAI(NSDictionary<NSString *, NSArray<NSString *> *
     NSURLRequest *request = batchRequest(p, modelID, prompt, key, NO, YES);
     NSURLRequest *plain = batchRequest(p, modelID, prompt, key, YES, YES);
     if (!request) {
-        done(nil, @"Invalid server URL");
+        done(nil, SGLocalized(@"Invalid server URL"));
         return;
     }
     SGLog(@"ai batch: asking %@ %@ (%lu songs, streaming) into %@, prompt %@", p->tag, modelID, (unsigned long)songs.count, languageTag, fingerprint(template));
@@ -1064,22 +1064,22 @@ void SGLyricsTranslateBatchWithAI(NSDictionary<NSString *, NSArray<NSString *> *
             // All songs in the chunk completed.
         } else if (error) {
             problem = error.code == NSURLErrorTimedOut
-                ? [NSString stringWithFormat:@"%@ timed out", who]
-                : [NSString stringWithFormat:@"Could not reach %@", who];
+                ? [NSString stringWithFormat:SGLocalized(@"%@ timed out"), who]
+                : [NSString stringWithFormat:SGLocalized(@"Could not reach %@"), who];
         } else if (status == 401 || status == 403) {
-            problem = [NSString stringWithFormat:@"%@ rejected API key", who];
+            problem = [NSString stringWithFormat:SGLocalized(@"%@ rejected API key"), who];
         } else if (status == 429) {
-            problem = [NSString stringWithFormat:@"%@ rate limit reached", who];
+            problem = [NSString stringWithFormat:SGLocalized(@"%@ rate limit reached"), who];
         } else if (status >= 500) {
-            problem = [NSString stringWithFormat:@"%@ is busy, try again", who];
+            problem = [NSString stringWithFormat:SGLocalized(@"%@ is busy, try again"), who];
         } else if (status != 200) {
-            problem = [NSString stringWithFormat:@"%@ error (%ld)", who, (long)status];
+            problem = [NSString stringWithFormat:SGLocalized(@"%@ error (%ld)"), who, (long)status];
         } else if (stopped) {
-            problem = [NSString stringWithFormat:@"%@ stopped early", who];
+            problem = [NSString stringWithFormat:SGLocalized(@"%@ stopped early"), who];
         } else if (!answered) {
-            problem = @"Could not read reply";
+            problem = SGLocalized(@"Could not read reply");
         } else {
-            problem = [NSString stringWithFormat:@"%@ translated %lu of %lu songs", who, (unsigned long)answered, (unsigned long)songs.count];
+            problem = [NSString stringWithFormat:SGLocalized(@"%@ translated %lu of %lu songs"), who, (unsigned long)answered, (unsigned long)songs.count];
         }
         
         SGLog(@"ai batch: %@ answered %lu of %lu songs into %@: %@", p->tag, (unsigned long)answered, (unsigned long)songs.count, languageTag, problem ?: @"ok");
@@ -1094,7 +1094,7 @@ void SGLyricsTranslateBatchWithAI(NSDictionary<NSString *, NSArray<NSString *> *
 NSNotificationName const SGLyricsTranslationsDidChangeNotification = @"spotifyglass.lyricsTranslationsDidChange";
 
 SGModRow *SGTranslateEverySongRow(void) {
-    SGModRow *row = SGOptionRow(@"Translate any song", @"The lyrics' translate menu for songs that already read as your language",
+    SGModRow *row = SGOptionRow(SGLocalized(@"Translate any song"), SGLocalized(@"The lyrics' translate menu for songs that already read as your language"),
                                 SGKeyLyricsTranslateEverySong);
     row.changed = ^(BOOL on) {
         [NSNotificationCenter.defaultCenter postNotificationName:SGLyricsTranslationsDidChangeNotification object:nil];
@@ -1108,8 +1108,8 @@ static void translatorChanged(void) {
 }
 
 NSArray<SGModRow *> *SGOnDeviceTranslatorRows(void) {
-    SGModRow *onDevice = SGSwitchRow(@"Translate on iPhone", @"Apple's Translate in the lyrics' translate menu", SGKeyLyricsTranslateOnDevice);
-    SGModRow *intelligence = SGSwitchRow(@"Apple Intelligence", @"Apple Intelligence in the lyrics' translate menu", SGKeyLyricsAppleIntelligence);
+    SGModRow *onDevice = SGSwitchRow(SGLocalized(@"Translate on iPhone"), SGLocalized(@"Apple's Translate in the lyrics' translate menu"), SGKeyLyricsTranslateOnDevice);
+    SGModRow *intelligence = SGSwitchRow(@"Apple Intelligence", SGLocalized(@"Apple Intelligence in the lyrics' translate menu"), SGKeyLyricsAppleIntelligence);
     onDevice.changed = intelligence.changed = ^(BOOL on) { translatorChanged(); };
     return @[onDevice, intelligence];
 }
@@ -1136,8 +1136,8 @@ static void configure(UITextField *field, NSString *placeholder) {
 static void askForKey(void) {
     const SGAIProvider *p = chosen();
     BOOL server = isOpenAI(p), stored = storedSecret(p, kKeyAccount) != nil;
-    NSString *message = [p->keyNote stringByAppendingString:@"\n\nCopy the key, then tap Paste Key."];
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:[NSString stringWithFormat:@"%@ API key", p->name]
+    NSString *message = [SGLocalized(p->keyNote) stringByAppendingString:SGLocalized(@"\n\nCopy the key, then tap Paste Key.")];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:[NSString stringWithFormat:SGLocalized(@"%@ API key"), p->name]
                                                                    message:message preferredStyle:UIAlertControllerStyleAlert];
     alert.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;   // over the dark settings, whatever the system's
     __weak UIAlertController *weakAlert = alert;
@@ -1146,18 +1146,18 @@ static void askForKey(void) {
         NSString *url = SGAIServerIn(weakAlert.textFields.firstObject.text);
         storeSecret(p, kServerAccount, [url isEqualToString:kOpenAIDefaultURL] ? nil : url);
     };
-    UIAlertAction *paste = [UIAlertAction actionWithTitle:@"Paste Key" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    UIAlertAction *paste = [UIAlertAction actionWithTitle:SGLocalized(@"Paste Key") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         // A key copied with the quotes around it, as from a code sample, is turned down as it stands.
         NSMutableCharacterSet *around = [NSMutableCharacterSet whitespaceAndNewlineCharacterSet];
         [around addCharactersInString:@"\"'“”‘’"];
         UIPasteboard *board = UIPasteboard.generalPasteboard;
         NSString *key = [board.string stringByTrimmingCharactersInSet:around];
         if (!key.length || [key rangeOfCharacterFromSet:NSCharacterSet.whitespaceAndNewlineCharacterSet].location != NSNotFound) {
-            UIAlertController *none = [UIAlertController alertControllerWithTitle:@"No key on the clipboard"
-                                                                          message:@"Copy the API key, then tap Paste Key again."
+            UIAlertController *none = [UIAlertController alertControllerWithTitle:SGLocalized(@"No key on the clipboard")
+                                                                          message:SGLocalized(@"Copy the API key, then tap Paste Key again.")
                                                                    preferredStyle:UIAlertControllerStyleAlert];
             none.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
-            [none addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
+            [none addAction:[UIAlertAction actionWithTitle:SGLocalized(@"OK") style:UIAlertActionStyleCancel handler:nil]];
             [SGTopController() presentViewController:none animated:YES completion:nil];
             return;
         }
@@ -1167,7 +1167,7 @@ static void askForKey(void) {
         board.items = @[];
         translatorChanged();
     }];
-    UIAlertAction *save = server && stored ? [UIAlertAction actionWithTitle:@"Save Server" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    UIAlertAction *save = server && stored ? [UIAlertAction actionWithTitle:SGLocalized(@"Save Server") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         saveServer();
         translatorChanged();
     }] : nil;
@@ -1189,24 +1189,24 @@ static void askForKey(void) {
     [alert addAction:paste];
     if (save) [alert addAction:save];
     if (stored) {
-        [alert addAction:[UIAlertAction actionWithTitle:@"Remove" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+        [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Remove") style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
             storeSecret(p, kKeyAccount, nil);
             storeSecret(p, kServerAccount, nil);
             translatorChanged();
         }]];
     }
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
 static void askForModel(void) {
     const SGAIProvider *p = chosen();
-    NSString *example = p->models[1] ?: p->models[0] ?: @"gpt-6-astra, or a model your server lists";
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:[NSString stringWithFormat:@"%@ model", p->name]
-        message:[NSString stringWithFormat:@"A model id, such as %@.", example] preferredStyle:UIAlertControllerStyleAlert];
+    NSString *example = p->models[1] ?: p->models[0] ?: SGLocalized(@"gpt-6-astra, or a model your server lists");
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:[NSString stringWithFormat:SGLocalized(@"%@ model"), p->name]
+        message:[NSString stringWithFormat:SGLocalized(@"A model id, such as %@."), example] preferredStyle:UIAlertControllerStyleAlert];
     alert.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
     __weak UIAlertController *weakAlert = alert;
-    UIAlertAction *save = [UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    UIAlertAction *save = [UIAlertAction actionWithTitle:SGLocalized(@"Save") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         NSString *modelID = modelIDIn(weakAlert.textFields.firstObject.text, p);
         if (modelID) [NSUserDefaults.standardUserDefaults setObject:modelID forKey:modelKey(p)];
         translatorChanged();
@@ -1214,21 +1214,21 @@ static void askForModel(void) {
     save.enabled = NO;
     __weak UIAlertAction *weakSave = save;
     [alert addTextFieldWithConfigurationHandler:^(UITextField *field) {
-        configure(field, p->models[0] ?: @"Model id");
+        configure(field, p->models[0] ?: SGLocalized(@"Model id"));
         field.text = storedString(modelKey(p));
         __weak UITextField *weakField = field;
         [field addAction:[UIAction actionWithHandler:^(UIAction *action) { weakSave.enabled = modelIDIn(weakField.text, p) != nil; }]
         forControlEvents:UIControlEventEditingChanged];
     }];
     [alert addAction:save];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
 static NSArray<NSString *> *modelMenu(const SGAIProvider *p) {
     NSMutableArray<NSString *> *names = [NSMutableArray array];
-    for (NSUInteger i = 0; i < 4 && p->modelNames[i]; i++) [names addObject:p->modelNames[i]];
-    [names addObject:@"Other…"];
+    for (NSUInteger i = 0; i < 4 && p->modelNames[i]; i++) [names addObject:SGLocalized(p->modelNames[i])];
+    [names addObject:SGLocalized(@"Other…")];
     return names;
 }
 
@@ -1251,7 +1251,7 @@ static NSArray<NSString *> *modelMenu(const SGAIProvider *p) {
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.title = _batch ? @"Batch prompt" : @"Translation prompt";
+    self.title = _batch ? SGLocalized(@"Batch prompt") : SGLocalized(@"Translation prompt");
     self.view.backgroundColor = UIColor.systemGroupedBackgroundColor;
     _text = [UITextView new];
     _text.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
@@ -1264,10 +1264,10 @@ static NSArray<NSString *> *modelMenu(const SGAIProvider *p) {
     _text.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:_text];
     UILabel *note = [UILabel new];
-    note.text = _batch ? @"For multi-song batch translations. {language} and {count} are filled in for each batch; "
-                         @"the songs' lines follow as a JSON object mapping track IDs to arrays of lines."
-                       : @"For every AI translator. {language} and {count} are filled in for each song; the translator is then "
-                         @"told the shape of its answer, and the song's lines follow as a JSON array.";
+    note.text = _batch ? SGLocalized(@"For multi-song batch translations. {language} and {count} are filled in for each batch; "
+                         @"the songs' lines follow as a JSON object mapping track IDs to arrays of lines.")
+                       : SGLocalized(@"For every AI translator. {language} and {count} are filled in for each song; the translator is then "
+                         @"told the shape of its answer, and the song's lines follow as a JSON array.");
     note.font = [UIFont preferredFontForTextStyle:UIFontTextStyleFootnote];
     note.adjustsFontForContentSizeCategory = YES;
     note.textColor = UIColor.secondaryLabelColor;
@@ -1287,8 +1287,8 @@ static NSArray<NSString *> *modelMenu(const SGAIProvider *p) {
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemClose target:self action:@selector(close)];
     // Plain: Spotify's white tint fills a Done item's glass and hides its glyph.
     UIBarButtonItem *done = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"checkmark"] style:UIBarButtonItemStylePlain target:self action:@selector(save)];
-    done.accessibilityLabel = @"Save";
-    UIBarButtonItem *reset = [[UIBarButtonItem alloc] initWithTitle:@"Default" style:UIBarButtonItemStylePlain target:self action:@selector(reset)];
+    done.accessibilityLabel = SGLocalized(@"Save");
+    UIBarButtonItem *reset = [[UIBarButtonItem alloc] initWithTitle:SGLocalized(@"Default") style:UIBarButtonItemStylePlain target:self action:@selector(reset)];
     self.navigationItem.rightBarButtonItems = @[done, reset];
 }
 
@@ -1313,13 +1313,13 @@ static NSArray<NSString *> *modelMenu(const SGAIProvider *p) {
 
 NSArray<SGModRow *> *SGAITranslatorRows(void) {
     NSMutableArray<NSString *> *names = [NSMutableArray array];
-    for (NSUInteger i = 0; i < kProviderCount; i++) [names addObject:kProviders[i].name];
+    for (NSUInteger i = 0; i < kProviderCount; i++) [names addObject:SGLocalized(kProviders[i].name)];
     // A pick in a menu row reloads the page's rows; the model row's menu is the chosen provider's presets.
-    SGModRow *models = SGMenuRow(@"Model", modelMenu(chosen()), ^NSString *{
+    SGModRow *models = SGMenuRow(SGLocalized(@"Model"), modelMenu(chosen()), ^NSString *{
         const SGAIProvider *p = chosen();
         NSString *current = model(p);
-        for (NSUInteger i = 0; i < 4 && p->models[i]; i++) if ([p->models[i] isEqualToString:current]) return p->modelNames[i];
-        return current ?: @"Not set";
+        for (NSUInteger i = 0; i < 4 && p->models[i]; i++) if ([p->models[i] isEqualToString:current]) return SGLocalized(p->modelNames[i]);
+        return current ?: SGLocalized(@"Not set");
     }, nil);
     __weak SGModRow *weakModels = models;
     models.chosen = ^(NSInteger index) {
@@ -1329,28 +1329,28 @@ NSArray<SGModRow *> *SGAITranslatorRows(void) {
         else askForModel();
         translatorChanged();
     };
-    SGModRow *provider = SGMenuRow(@"AI translator", names, ^NSString *{ return chosen()->name; }, ^(NSInteger index) {
+    SGModRow *provider = SGMenuRow(SGLocalized(@"AI translator"), names, ^NSString *{ return SGLocalized(chosen()->name); }, ^(NSInteger index) {
         if (index == 0) [NSUserDefaults.standardUserDefaults removeObjectForKey:SGKeyAITranslator];
         else [NSUserDefaults.standardUserDefaults setObject:kProviders[index].tag forKey:SGKeyAITranslator];
         weakModels.menu = modelMenu(chosen());
         SGLog(@"ai: translator %@", chosen()->tag);
         translatorChanged();
     });
-    SGModRow *key = SGStatActionRow(@"API key", @"Translate any song from the lyrics' corner menu", ^NSString *{
+    SGModRow *key = SGStatActionRow(@"API key", SGLocalized(@"Translate any song from the lyrics' corner menu"), ^NSString *{
         const SGAIProvider *p = chosen();
-        if (!storedSecret(p, kKeyAccount)) return @"Off";
-        return isOpenAI(p) ? serverHost() ?: @"Server not usable" : @"Set";
+        if (!storedSecret(p, kKeyAccount)) return SGLocalized(@"Off");
+        return isOpenAI(p) ? serverHost() ?: @"Server not usable" : SGLocalized(@"Set");
     }, ^{ askForKey(); });
-    SGModRow *prompt = SGStatActionRow(@"Translation prompt", @"What the AI translator is told to do with a song's lines",
-                                       ^NSString *{ return storedString(SGKeyAIPrompt) ? @"Edited" : @"Default"; }, ^{
+    SGModRow *prompt = SGStatActionRow(SGLocalized(@"Translation prompt"), SGLocalized(@"What the AI translator is told to do with a song's lines"),
+                                       ^NSString *{ return storedString(SGKeyAIPrompt) ? SGLocalized(@"Edited") : SGLocalized(@"Default"); }, ^{
         UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:[SGPromptEditor new]];
         nav.modalPresentationStyle = UIModalPresentationPageSheet;
         SGPresentDark(nav);
         [SGTopController() presentViewController:nav animated:YES completion:nil];
     });
     // Low first: 3.8 Flash refuses minimal.
-    NSArray<NSString *> *thinkingLevels = @[@"Low", @"Medium", @"High"];
-    SGModRow *thinking = SGMenuRow(@"Thinking", thinkingLevels, ^NSString *{
+    NSArray<NSString *> *thinkingLevels = @[SGLocalized(@"Low"), SGLocalized(@"Medium"), SGLocalized(@"High")];
+    SGModRow *thinking = SGMenuRow(SGLocalized(@"Thinking"), thinkingLevels, ^NSString *{
         return geminiThinkingLevel().capitalizedString;
     }, ^(NSInteger index) {
         if (index == 0) [NSUserDefaults.standardUserDefaults removeObjectForKey:SGKeyAIThinking];
@@ -1362,8 +1362,8 @@ NSArray<SGModRow *> *SGAITranslatorRows(void) {
     NSArray<NSNumber *> *timeoutSeconds = @[@30, @60, @90, @(kDefaultAITimeout), @180, @240, @300];
     NSMutableArray<NSString *> *timeouts = [NSMutableArray array];
     for (NSNumber *seconds in timeoutSeconds) [timeouts addObject:[NSString stringWithFormat:@"%@ s", seconds]];
-    SGModRow *timeout = SGMenuRow(@"Timeout", timeouts, ^NSString *{
-        return [NSString stringWithFormat:@"%ld s", (long)aiTimeout()];
+    SGModRow *timeout = SGMenuRow(SGLocalized(@"Timeout"), timeouts, ^NSString *{
+        return [NSString stringWithFormat:SGLocalized(@"%ld s"), (long)aiTimeout()];
     }, ^(NSInteger index) {
         NSInteger seconds = timeoutSeconds[index].integerValue;
         if (seconds == kDefaultAITimeout) [NSUserDefaults.standardUserDefaults removeObjectForKey:SGKeyAITimeout];
@@ -1371,8 +1371,8 @@ NSArray<SGModRow *> *SGAITranslatorRows(void) {
     });
 
     NSArray<NSNumber *> *batchSizes = @[@10, @20, @30, @40, @50, @0];
-    NSArray<NSString *> *batchSizeOptions = @[@"10 songs", @"20 songs", @"30 songs", @"40 songs", @"50 songs", @"All at once"];
-    SGModRow *batchSizeRow = SGMenuRow(@"Songs per batch", batchSizeOptions, ^NSString *{
+    NSArray<NSString *> *batchSizeOptions = @[SGLocalized(@"10 songs"), SGLocalized(@"20 songs"), SGLocalized(@"30 songs"), SGLocalized(@"40 songs"), SGLocalized(@"50 songs"), SGLocalized(@"All at once")];
+    SGModRow *batchSizeRow = SGMenuRow(SGLocalized(@"Songs per batch"), batchSizeOptions, ^NSString *{
         NSUInteger idx = [batchSizes indexOfObject:@(SGLyricsBatchSize())];
         return batchSizeOptions[idx != NSNotFound ? idx : 1];
     }, ^(NSInteger index) {
@@ -1380,13 +1380,13 @@ NSArray<SGModRow *> *SGAITranslatorRows(void) {
         if (size == 20) [NSUserDefaults.standardUserDefaults removeObjectForKey:SGKeyLyricsBatchSize];
         else [NSUserDefaults.standardUserDefaults setInteger:size forKey:SGKeyLyricsBatchSize];
     });
-    SGModRow *batchPromptRow = SGStatActionRow(@"Batch prompt", @"Prompt used when translating multiple songs at once",
-                                               ^NSString *{ return storedString(SGKeyLyricsBatchPrompt) ? @"Edited" : @"Default"; }, ^{
+    SGModRow *batchPromptRow = SGStatActionRow(SGLocalized(@"Batch prompt"), SGLocalized(@"Prompt used when translating multiple songs at once"),
+                                               ^NSString *{ return storedString(SGKeyLyricsBatchPrompt) ? SGLocalized(@"Edited") : SGLocalized(@"Default"); }, ^{
         UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:[[SGPromptEditor alloc] initWithBatch:YES]];
         nav.modalPresentationStyle = UIModalPresentationPageSheet;
         SGPresentDark(nav);
         [SGTopController() presentViewController:nav animated:YES completion:nil];
     });
-    SGModRow *skipSavedRow = SGSwitchRow(@"Skip saved translations", @"Skip songs that already have a saved translation", SGKeyLyricsBatchSkipSaved);
+    SGModRow *skipSavedRow = SGSwitchRow(SGLocalized(@"Skip saved translations"), SGLocalized(@"Skip songs that already have a saved translation"), SGKeyLyricsBatchSkipSaved);
     return @[provider, key, models, thinking, timeout, prompt, batchSizeRow, batchPromptRow, skipSavedRow];
 }

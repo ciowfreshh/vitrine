@@ -85,7 +85,7 @@ static NSString *longDate(NSString *published) {    // 18 September 2026
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Updates";
+    self.title = SGLocalized(@"Updates");
     _groups = [self build];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(checkLanded)
                                                name:SGUpdateCheckedNotification object:nil];
@@ -113,14 +113,14 @@ static NSArray<SGUpdateRelease *> *releasesToShow(void) {
 - (NSString *)introText {
     SGUpdateRelease *newest = SGUpdateNewestRelease();
     if (!newest) return SGUpdateChecked()
-        ? [NSString stringWithFormat:@"This build is %s. GitHub has no newer release.", SG_VERSION]
-        : [NSString stringWithFormat:@"This build is %s. Nothing has been asked of GitHub yet.", SG_VERSION];
+        ? [NSString stringWithFormat:SGLocalized(@"This build is %s. GitHub has no newer release."), SG_VERSION]
+        : [NSString stringWithFormat:SGLocalized(@"This build is %s. Nothing has been asked of GitHub yet."), SG_VERSION];
     NSString *date = longDate(newest.date);
-    NSString *when = date.length ? [@" came out on " stringByAppendingString:date] : @" is out";
+    NSString *when = date.length ? [SGLocalized(@" came out on ") stringByAppendingString:date] : SGLocalized(@" is out");
     if (SGUpdateVersion())
-        return [NSString stringWithFormat:@"%@%@, and this build is %s. Everything in between is below.",
+        return [NSString stringWithFormat:SGLocalized(@"%@%@, and this build is %s. Everything in between is below."),
                 newest.version, when, SG_VERSION];
-    return [NSString stringWithFormat:@"This build, %s, is GitHub's newest release; it%@. What went into it is below.",
+    return [NSString stringWithFormat:SGLocalized(@"This build, %s, is GitHub's newest release; it%@. What went into it is below."),
             SG_VERSION, when];
 }
 
@@ -128,22 +128,22 @@ static NSArray<SGUpdateRelease *> *releasesToShow(void) {
 - (NSArray<SGUpdateGroup *> *)build {
     NSMutableArray<SGUpdateGroup *> *groups = [NSMutableArray array];
     SGUpdateRow *check = [SGUpdateRow new];
-    check.title = @"Check now";
+    check.title = SGLocalized(@"Check now");
     check.symbol = @"arrow.clockwise";
     check.value = ^NSString *{ return SGUpdateStatus(); };
     check.action = ^{ SGCheckForUpdate(YES); };
     NSMutableArray<SGUpdateRow *> *top = [NSMutableArray arrayWithObject:check];
     SGUpdateRelease *newest = SGUpdateNewestRelease();
     if (SGUpdateVersion() && newest.url.length)
-        [top addObject:linkRow([@"Get " stringByAppendingString:newest.version],
-                               newest.prerelease ? @"A beta, on GitHub with its .deb" : @"The release on GitHub, where its .deb is",
+        [top addObject:linkRow([SGLocalized(@"Get ") stringByAppendingString:newest.version],
+                               newest.prerelease ? SGLocalized(@"A beta, on GitHub with its .deb") : SGLocalized(@"The release on GitHub, where its .deb is"),
                                @"arrow.down.circle", newest.url)];
-    if (SGRepoURL) [top addObject:linkRow(@"All releases", @"Every version, this one and the ones before it",
+    if (SGRepoURL) [top addObject:linkRow(SGLocalized(@"All releases"), SGLocalized(@"Every version, this one and the ones before it"),
                            @"clock.arrow.circlepath", [SGRepoURL stringByAppendingString:@"/releases"])];
     [groups addObject:group(nil, top)];
 
     SGUpdateRow *notice = [SGUpdateRow new];
-    notice.title = @"Auto check updates";
+    notice.title = SGLocalized(@"Auto check updates");
     notice.symbol = @"bell";
     notice.key = SGKeyUpdateNotice;
     [groups addObject:group(nil, @[notice])];
@@ -166,8 +166,8 @@ static NSArray<SGUpdateRelease *> *releasesToShow(void) {
         NSString *date = shortDate(release.date);
         if (!kinds.count) {
             SGUpdateRow *empty = [SGUpdateRow new];
-            empty.title = @"Nothing written down";
-            empty.subtitle = release.url.length ? @"Tap to read the release on GitHub" : nil;
+            empty.title = SGLocalized(@"Nothing written down");
+            empty.subtitle = release.url.length ? SGLocalized(@"Tap to read the release on GitHub") : nil;
             if (release.url.length) empty.action = ^{ SGOpenURL(release.url); };
             [groups addObject:group([NSString stringWithFormat:@"%@%@", release.version,
                                      date.length ? [@" · " stringByAppendingString:date] : @""], @[empty])];

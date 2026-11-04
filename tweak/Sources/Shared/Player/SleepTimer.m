@@ -1,3 +1,4 @@
+#import "Core/SGLocalization.h"
 // The sleep timer (SleepTimer.h): a check four times a second while one is set, which fades the gain over
 // the last seconds (the Fade out choice) and pauses once it is up.
 //
@@ -33,7 +34,7 @@ static NSTimer *sg_timer;
 static BOOL sg_fading;
 
 NSArray<NSString *> *SGSleepTimerFadeNames(void) {
-    return @[@"Off", @"10 s", @"30 s", @"1 minute", @"2 minutes"];
+    return @[SGLocalized(@"Off"), @"10 s", @"30 s", SGLocalized(@"1 minute"), SGLocalized(@"2 minutes")];
 }
 
 NSInteger SGSleepTimerFadeChoice(void) {

@@ -1024,7 +1024,7 @@ static const NSUInteger kLinesPerFrame = 4;
 - (void)markMeaning:(NSArray<SGLyricsMeaning *> *)meanings {
     NSString *text = SGKaraokeLineText(self.line);
     self.accessibilityCustomActions = meanings.count ? @[[[UIAccessibilityCustomAction alloc]
-        initWithName:@"Show Meaning" actionHandler:^BOOL(UIAccessibilityCustomAction *action) {
+        initWithName:SGLocalized(@"Show Meaning") actionHandler:^BOOL(UIAccessibilityCustomAction *action) {
             SGRShowMeanings(text, meanings);
             return YES;
         }]] : nil;
@@ -1057,7 +1057,7 @@ static const NSUInteger kLinesPerFrame = 4;
         _bubble.alpha = kBubbleAlpha;
         _bubble.frame = CGRectMake(x, last.center.y - kBubbleSide / 2, kBubbleSide, kBubbleSide);
         _bubble.isAccessibilityElement = YES;
-        _bubble.accessibilityLabel = @"Meaning from the artist";
+        _bubble.accessibilityLabel = SGLocalized(@"Meaning from the artist");
         [self addSubview:_bubble];
         return;
     }
@@ -2001,7 +2001,7 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
         _extras.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         _extras.showsMenuAsPrimaryAction = YES;
         _extras.preferredMenuElementOrder = UIContextMenuConfigurationElementOrderFixed;
-        _extras.accessibilityLabel = @"Pronunciation and translation";
+        _extras.accessibilityLabel = SGLocalized(@"Pronunciation and translation");
         [_extrasBox addSubview:_extras];
         [self addSubview:_extrasBox];
         self.extrasHidden = _extrasHidden;
@@ -2012,18 +2012,18 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
     if (config.showsActivityIndicator != translating) {
         config.showsActivityIndicator = translating;
         _extras.configuration = config;
-        _extras.accessibilityValue = translating ? @"Translating" : nil;
+        _extras.accessibilityValue = translating ? SGLocalized(@"Translating") : nil;
     }
     NSMutableArray<UIMenuElement *> *items = [NSMutableArray array];
     if (_hasSpoken) {
         BOOL on = SGFlag(SGRKeyLyricsPronunciation, NO);
-        [items addObject:[UIAction actionWithTitle:on ? @"Hide Pronunciation" : @"Show Pronunciation"
+        [items addObject:[UIAction actionWithTitle:on ? SGLocalized(@"Hide Pronunciation") : SGLocalized(@"Show Pronunciation")
                                              image:[UIImage systemImageNamed:@"character.phonetic"] identifier:nil
                                            handler:^(UIAction *action) { SGRSetLyricsTextShown(SGRLyricsTextPronunciation, !on); }]];
     }
     if (_hasTranslation) {
         BOOL on = SGFlag(SGRKeyLyricsTranslation, NO);
-        [items addObject:[UIAction actionWithTitle:on ? @"Hide Translation" : @"Show Translation"
+        [items addObject:[UIAction actionWithTitle:on ? SGLocalized(@"Hide Translation") : SGLocalized(@"Show Translation")
                                              image:[UIImage systemImageNamed:@"character.bubble"] identifier:nil
                                            handler:^(UIAction *action) { SGRSetLyricsTextShown(SGRLyricsTextTranslation, !on); }]];
     }
@@ -2031,18 +2031,18 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
     if (_saved && _hasTranslation) {
         UIAction *source = [UIAction actionWithTitle:_saved.name image:[UIImage systemImageNamed:@"info.circle"] identifier:nil handler:^(UIAction *action) {}];
         source.subtitle = _saved.made ? [NSDateFormatter localizedStringFromDate:_saved.made dateStyle:NSDateFormatterMediumStyle timeStyle:NSDateFormatterShortStyle]
-                                      : @"Date unknown";
+                                      : SGLocalized(@"Date unknown");
         source.attributes = UIMenuElementAttributesDisabled;
         NSMutableArray<UIMenuElement *> *about = [NSMutableArray arrayWithObject:source];
         // Not while a translator works: its next batch would save the file again.
         if (_saved.deletable && !translating) {
             NSString *track = _track, *language = _savedLanguage;
-            UIAction *delete = [UIAction actionWithTitle:@"Delete This Translation" image:[UIImage systemImageNamed:@"trash"] identifier:nil
+            UIAction *delete = [UIAction actionWithTitle:SGLocalized(@"Delete This Translation") image:[UIImage systemImageNamed:@"trash"] identifier:nil
                                                  handler:^(UIAction *action) { SGLyricsDeleteSavedTranslation(track, language); }];
             delete.attributes = UIMenuElementAttributesDestructive;
             [about addObject:delete];
         }
-        [items addObject:[UIMenu menuWithTitle:@"Translated by" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:about]];
+        [items addObject:[UIMenu menuWithTitle:SGLocalized(@"Translated by") image:nil identifier:nil options:UIMenuOptionsDisplayInline children:about]];
     }
     // Also for a song a source translated in part, as Musixmatch's community often has: the rest is filled in.
     // Said in each item: whether the song's words stay on the phone.
@@ -2056,22 +2056,22 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
             [items addObject:action];
         };
         if (onDevice) {
-            offer(@"Translate on iPhone", @"translate", @"Apple's Translate, on this iPhone",
+            offer(SGLocalized(@"Translate on iPhone"), @"translate", SGLocalized(@"Apple's Translate, on this iPhone"),
                   ^{ return [SGTranslationSource by:SGTranslatedOnDevice model:nil made:nil]; },
                   ^(NSArray<SGKaraokeLine *> *lines, NSString *track, NSString *to, SGRTranslated progress, SGRTranslated done) {
                 [SGOnDeviceTranslation translate:textsOf(lines) to:to from:weakSelf done:done];
             });
         }
         if (intelligence) {
-            offer(@"Translate with Apple Intelligence", @"apple.intelligence", @"On this iPhone",
+            offer(SGLocalized(@"Translate with Apple Intelligence"), @"apple.intelligence", SGLocalized(@"On this iPhone"),
                   ^{ return [SGTranslationSource by:SGTranslatedByAppleIntelligence model:nil made:nil]; },
                   ^(NSArray<SGKaraokeLine *> *lines, NSString *track, NSString *to, SGRTranslated progress, SGRTranslated done) {
                 [SGOnDeviceTranslation translateWithAppleIntelligence:textsOf(lines) to:to song:SGLyricsSongName(track) progress:^(NSArray<NSString *> *soFar) { progress(soFar, nil); } done:done];
             });
         }
         // The provider and model are read as the item is tapped, which is when the request is made.
-        if (ai) offer([@"Translate with " stringByAppendingString:SGAITranslatorName()], @"sparkles",
-                      [@"Sends the lyrics to " stringByAppendingString:SGAITranslatorRecipient()], ^{ return SGAITranslatorSource(); },
+        if (ai) offer([SGLocalized(@"Translate with ") stringByAppendingString:SGAITranslatorName()], @"sparkles",
+                      [SGLocalized(@"Sends the lyrics to ") stringByAppendingString:SGAITranslatorRecipient()], ^{ return SGAITranslatorSource(); },
                       ^(NSArray<SGKaraokeLine *> *lines, NSString *track, NSString *to, SGRTranslated progress, SGRTranslated done) {
             SGLyricsTranslateWithAI(track, lines, to, done);
         });
@@ -2105,21 +2105,21 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
         }
         [self offerExtras];
         if (error) {
-            BOOL needsDownload = [source.by isEqualToString:SGTranslatedOnDevice] && [error hasPrefix:@"Download "];
-            NSString *title = needsDownload ? @"Language not downloaded" : (translations ? @"Partly translated" : @"No translation");
+            BOOL needsDownload = [source.by isEqualToString:SGTranslatedOnDevice] && [error hasPrefix:SGLocalized(@"Download ")];
+            NSString *title = needsDownload ? SGLocalized(@"Language not downloaded") : (translations ? SGLocalized(@"Partly translated") : SGLocalized(@"No translation"));
             UIAlertController *alert = [UIAlertController alertControllerWithTitle:title
                                                                            message:error preferredStyle:UIAlertControllerStyleAlert];
             // Over the player, which is dark whatever the system's appearance.
             alert.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
             if (needsDownload) {
-                [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-                UIAlertAction *open = [UIAlertAction actionWithTitle:@"Open Settings" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+                [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
+                UIAlertAction *open = [UIAlertAction actionWithTitle:SGLocalized(@"Open Settings") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
                     [SGOnDeviceTranslation openTranslateSettings];
                 }];
                 [alert addAction:open];
                 alert.preferredAction = open;
             } else {
-                [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
+                [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"OK") style:UIAlertActionStyleCancel handler:nil]];
             }
             [SGTopController() presentViewController:alert animated:YES completion:nil];
         }
@@ -2389,7 +2389,7 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
 - (void)creditTo:(NSString *)source {
     _creditSource = source;
     BOOL shown = source.length && (_crediting || SGLyricsCreditRequired(source));
-    NSString *text = shown ? [NSString stringWithFormat:@"Lyrics from %@", source] : nil;
+    NSString *text = shown ? [NSString stringWithFormat:SGLocalized(@"Lyrics from %@"), source] : nil;
     _creditLinks = shown ? SGLyricsCreditLinks(source) : nil;
     _credit.accessibilityTraits = _creditLinks.count ? UIAccessibilityTraitLink : UIAccessibilityTraitStaticText;
     if (text == _credit.text || [text isEqualToString:_credit.text]) return;

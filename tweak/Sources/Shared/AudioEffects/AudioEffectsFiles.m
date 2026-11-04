@@ -12,11 +12,11 @@ static NSString *const SGDSPFileErrorDomain = @"spotifyglass.dsp.files";
 
 static NSString *libraryName(SGDSPFileKind kind) {
     switch (kind) {
-    case SGDSPFileImpulseResponse: return @"Convolver";
+    case SGDSPFileImpulseResponse: return SGLocalized(@"Convolver");
     case SGDSPFileDDC: return @"DDC";
     case SGDSPFileLiveprog: return @"Liveprog";
     }
-    return @"Other";
+    return SGLocalized(@"Other");
 }
 
 // The key naming the file an effect uses, and its switch, for a library.
@@ -125,9 +125,9 @@ static BOOL looksLike(SGDSPFileKind kind, NSData *data) {
 NSString *SGDSPImportFile(SGDSPFileKind kind, NSURL *url, NSError **error) {
     NSString *name = url.lastPathComponent;
     NSArray<NSString *> *extensions = SGDSPFileExtensions(kind);
-    NSString *kindName = kind == SGDSPFileImpulseResponse ? @"an impulse response" : kind == SGDSPFileDDC ? @"a DDC file" : @"a Liveprog script";
+    NSString *kindName = kind == SGDSPFileImpulseResponse ? SGLocalized(@"an impulse response") : kind == SGDSPFileDDC ? SGLocalized(@"a DDC file") : SGLocalized(@"a Liveprog script");
     if (!name.length || [name hasPrefix:@"."] || ![extensions containsObject:name.pathExtension.lowercaseString]) {
-        if (error) *error = fileError([NSString stringWithFormat:@"%@ is not %@ (.%@)", name ?: @"The file", kindName,
+        if (error) *error = fileError([NSString stringWithFormat:SGLocalized(@"%@ is not %@ (.%@)"), name ?: SGLocalized(@"The file"), kindName,
                                        [extensions componentsJoinedByString:@", ."]]);
         return nil;
     }
@@ -136,11 +136,11 @@ NSString *SGDSPImportFile(SGDSPFileKind kind, NSURL *url, NSError **error) {
     NSData *data = [NSData dataWithContentsOfURL:url options:NSDataReadingMappedIfSafe error:&readError];
     if (scoped) [url stopAccessingSecurityScopedResource];
     if (!data) {
-        if (error) *error = readError ?: fileError([NSString stringWithFormat:@"%@ could not be read", name]);
+        if (error) *error = readError ?: fileError([NSString stringWithFormat:SGLocalized(@"%@ could not be read"), name]);
         return nil;
     }
     if (!looksLike(kind, data)) {
-        if (error) *error = fileError([NSString stringWithFormat:@"%@ is not %@", name, kindName]);
+        if (error) *error = fileError([NSString stringWithFormat:SGLocalized(@"%@ is not %@"), name, kindName]);
         return nil;
     }
     NSString *path = [SGDSPLibraryDirectory(kind) stringByAppendingPathComponent:name];

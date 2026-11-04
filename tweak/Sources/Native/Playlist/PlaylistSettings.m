@@ -1,27 +1,28 @@
+#import "Core/SGLocalization.h"
 #import "Settings/SGModPage.h"
 #import "Playlist.h"
 
 UIViewController *SGPlaylistSettingsPage(void) {
-    return [[SGModPage alloc] initWithTitle:@"Playlists" intro:nil sections:@[
-        SGSection(@"Header", @[
-            SGOptionRow(@"Artwork background", nil, SGKeyPlaylistBackdrop),
+    return [[SGModPage alloc] initWithTitle:SGLocalized(@"Playlists") intro:nil sections:@[
+        SGSection(SGLocalized(@"Header"), @[
+            SGOptionRow(SGLocalized(@"Artwork background"), nil, SGKeyPlaylistBackdrop),
         ]),
-        SGSection(@"Hide in the playlist header", @[
-            SGHideRow(@"Cover artwork", nil, SGHidePlaylistArtwork),
-            SGHideRow(@"Description", nil, SGHidePlaylistDescription),
-            SGHideRow(@"Creator and collaborators", nil, SGHidePlaylistCreator),
-            SGHideRow(@"Length and saves", nil, SGHidePlaylistLength),
+        SGSection(SGLocalized(@"Hide in the playlist header"), @[
+            SGHideRow(SGLocalized(@"Cover artwork"), nil, SGHidePlaylistArtwork),
+            SGHideRow(SGLocalized(@"Description"), nil, SGHidePlaylistDescription),
+            SGHideRow(SGLocalized(@"Creator and collaborators"), nil, SGHidePlaylistCreator),
+            SGHideRow(SGLocalized(@"Length and saves"), nil, SGHidePlaylistLength),
         ]),
-        SGSection(@"Hide playlist buttons", @[
+        SGSection(SGLocalized(@"Hide playlist buttons"), @[
             SGHideRow(@"Video", nil, SGHidePlaylistVideo),
-            SGHideRow(@"Add to library", nil, SGHidePlaylistAddTo),
-            SGHideRow(@"Download", nil, SGHidePlaylistDownload),
-            SGHideRow(@"Share", nil, SGHidePlaylistShare),
-            SGHideRow(@"More", nil, SGHidePlaylistMore),
+            SGHideRow(SGLocalized(@"Add to library"), nil, SGHidePlaylistAddTo),
+            SGHideRow(SGLocalized(@"Download"), nil, SGHidePlaylistDownload),
+            SGHideRow(SGLocalized(@"Share"), nil, SGHidePlaylistShare),
+            SGHideRow(SGLocalized(@"More"), nil, SGHidePlaylistMore),
         ]),
-        SGSection(@"Hide above the tracks", @[
-            SGHideRow(@"Curation pills", nil, SGHidePlaylistPills),
-            SGHideRow(@"Find and sort bar", nil, SGHidePlaylistFind),
+        SGSection(SGLocalized(@"Hide above the tracks"), @[
+            SGHideRow(SGLocalized(@"Curation pills"), nil, SGHidePlaylistPills),
+            SGHideRow(SGLocalized(@"Find and sort bar"), nil, SGHidePlaylistFind),
         ]),
     ] footer:nil];
 }

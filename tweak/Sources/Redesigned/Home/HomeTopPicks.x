@@ -763,7 +763,7 @@ BOOL SGRHomeInTopPicks(UIView *view) {
 }
 
 SGModRow *SGRHomeTopPicksRow(void) {
-    return SGWithSymbol(SGSwitchRow(@"Top picks", @"Home's first shelf above the shortcuts, as large cards in their covers' colors", SGRKeyHomeTopPicks), @"rectangle.stack");
+    return SGWithSymbol(SGSwitchRow(SGLocalized(@"Top picks"), SGLocalized(@"Home's first shelf above the shortcuts, as large cards in their covers' colors"), SGRKeyHomeTopPicks), @"rectangle.stack");
 }
 
 %ctor {

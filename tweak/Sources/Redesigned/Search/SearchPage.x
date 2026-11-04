@@ -84,7 +84,7 @@ static NSString *titleText(UIStackView *row) {
     for (UIView *sub in label.subviews) {
         if ([sub isKindOfClass:UILabel.class] && ((UILabel *)sub).text.length) return ((UILabel *)sub).text;
     }
-    return @"Search";
+    return SGLocalized(@"Search");
 }
 
 static UILabel *titleIn(UIStackView *row) {

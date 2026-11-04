@@ -41,6 +41,10 @@ public final class SGOnDeviceTranslation: NSObject {
         Locale.current.localizedString(forIdentifier: language.minimalIdentifier) ?? language.minimalIdentifier
     }
 
+    private static func uiName(_ language: Locale.Language) -> String {
+        SGUIL10n.locale.localizedString(forIdentifier: language.minimalIdentifier) ?? language.minimalIdentifier
+    }
+
     // A line's language when the recognizer is sure of it; short lines ("yeah") guess wildly otherwise.
     private static func languageOf(_ line: String) -> Locale.Language? {
         let recognizer = NLLanguageRecognizer()
@@ -132,19 +136,19 @@ public final class SGOnDeviceTranslation: NSObject {
 
     // One translation per line, "" for a line with no words; or nil and why not.
     @objc public static func translate(_ lines: [String], to languageTag: String, from view: UIView, done: @escaping ([String]?, String?) -> Void) {
-        guard #available(iOS 26.0, *) else { return finish(done, nil, "Translating on this iPhone needs iOS 26.") }
+        guard #available(iOS 26.0, *) else { return finish(done, nil, SGUIL10n.string("Translating on this iPhone needs iOS 26.")) }
         let target = Locale.Language(identifier: languageTag)
-        guard let source = sourceLanguage(lines, target: target) else { return finish(done, nil, "The song's language could not be told from its words.") }
-        if same(source, target) { return finish(done, nil, "The song is already in \(name(target)).") }
+        guard let source = sourceLanguage(lines, target: target) else { return finish(done, nil, SGUIL10n.string("The song's language could not be told from its words.")) }
+        if same(source, target) { return finish(done, nil, SGUIL10n.format("The song is already in %@.", uiName(target))) }
         Task {
             switch await LanguageAvailability().status(from: source, to: target) {
             case .unsupported:
-                return finish(done, nil, "Apple's Translate does not translate \(name(source)) into \(name(target)).")
+                return finish(done, nil, SGUIL10n.format("Apple's Translate does not translate %@ into %@.", uiName(source), uiName(target)))
             case .supported:
                 await prepareLanguageDownload(source: source, target: target, from: view)
                 if await LanguageAvailability().status(from: source, to: target) != .installed {
                     // SGRKaraokeView offers Open Settings for the message that starts "Download ".
-                    return finish(done, nil, "Download \(name(source)) and \(name(target)) in Settings > Apps > Translate > Languages, then try again.")
+                    return finish(done, nil, SGUIL10n.format("Download %@ and %@ in Settings > Apps > Translate > Languages, then try again.", uiName(source), uiName(target)))
                 }
             case .installed:
                 break
@@ -169,7 +173,7 @@ public final class SGOnDeviceTranslation: NSObject {
                     return finish(done, out, nil)
                 } catch {
                     log.error("translate: \(source.minimalIdentifier, privacy: .public) to \(target.minimalIdentifier, privacy: .public), try \(attempt) failed: \(String(describing: error), privacy: .public)")
-                    if attempt == 2 { return finish(done, nil, "Apple's Translate could not translate the song (\(error.localizedDescription)).") }
+                    if attempt == 2 { return finish(done, nil, SGUIL10n.format("Apple's Translate could not translate the song (%@).", SGUIL10n.error(error))) }
                     try? await Task.sleep(for: .seconds(1))
                 }
             }
@@ -192,7 +196,7 @@ public final class SGOnDeviceTranslation: NSObject {
 
     @objc public static func translateWithAppleIntelligence(_ lines: [String], to languageTag: String, song: String?, progress: @escaping ([String]) -> Void,
                                                             done: @escaping ([String]?, String?) -> Void) {
-        guard #available(iOS 26.0, *) else { return finish(done, nil, "Apple Intelligence needs iOS 26.") }
+        guard #available(iOS 26.0, *) else { return finish(done, nil, SGUIL10n.string("Apple Intelligence needs iOS 26.")) }
         let language = name(Locale.Language(identifier: languageTag))
         // Only the lines given text ("" for those translated already or with no words), 12 to a batch. A batch
         // the model refuses is asked again in halves (translateSplitting), and one that fails is left out while
@@ -227,7 +231,7 @@ public final class SGOnDeviceTranslation: NSObject {
             if translated == 0, let failure { return finish(done, nil, problem(failure)) }
             let left = wanted.count - translated
             finish(done, out, left == 0 ? nil
-                : "Apple Intelligence left \(left) of the song's \(wanted.count) lines untranslated. Ask again to try those lines once more.")
+                : SGUIL10n.format("Apple Intelligence left %ld of the song's %ld lines untranslated. Ask again to try those lines once more.", left, wanted.count))
         }
     }
 
@@ -271,9 +275,9 @@ public final class SGOnDeviceTranslation: NSObject {
     // (Swift 6.4), and the release build has the iOS 26 one; GenerationOptions' sampling: label is in both.
     @available(iOS 26.0, *)
     private static func problem(_ error: Error) -> String {
-        let declined = "Apple Intelligence declined to translate this song's lyrics."
-        let tooLong = "The song is too long for Apple Intelligence."
-        let language = "Apple Intelligence does not work in this language."
+        let declined = SGUIL10n.string("Apple Intelligence declined to translate this song's lyrics.")
+        let tooLong = SGUIL10n.string("The song is too long for Apple Intelligence.")
+        let language = SGUIL10n.string("Apple Intelligence does not work in this language.")
         #if compiler(>=6.4)
         if #available(iOS 27.0, *), let error = error as? LanguageModelError {
             switch error {
@@ -292,7 +296,7 @@ public final class SGOnDeviceTranslation: NSObject {
             default: break
             }
         }
-        return "Apple Intelligence could not translate the song (\(error.localizedDescription))."
+        return SGUIL10n.format("Apple Intelligence could not translate the song (%@).", SGUIL10n.error(error))
     }
 
     // Exactly one string per line, held to the count by the schema rather than read out of free text. The batch

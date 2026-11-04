@@ -181,7 +181,7 @@ static char kHoldKey, kBadgeGlassKey;
         SGSetPlayerSpeed(kHoldSpeed);
         SGPlayFeedback(SGFeedbackGrab);
         [self showBadge:YES on:cover];
-        UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, @"Playing at 2 times speed");
+        UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, SGLocalized(@"Playing at 2 times speed"));
     } else if (self.state == UIGestureRecognizerStateEnded || self.state == UIGestureRecognizerStateCancelled
                || self.state == UIGestureRecognizerStateFailed) {
         if (_before > 0) SGSetPlayerSpeed(_before);

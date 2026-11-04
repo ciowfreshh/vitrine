@@ -61,7 +61,7 @@ static void arm(void) {
         // Spotify's handler, if the flag had it on one, would like the song on the same tap.
         [like removeTarget:nil];
         sg_target = [like addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent *event) { return tapped(); }];
-        like.localizedTitle = @"Lock screen lyrics";
+        like.localizedTitle = SGLocalized(@"Lock screen lyrics");
         sg_like = like;
         SGLog(@"lock star: on the like command");
     }

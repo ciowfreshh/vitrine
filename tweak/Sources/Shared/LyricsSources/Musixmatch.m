@@ -276,9 +276,9 @@ static void ask(NSString *trackID, NSDictionary<NSString *, NSString *> *match, 
             noteCommontrack(trackID, dig(calls, @"matcher.track.get/message/body/track/commontrack_id"));
             SGLyricsResult *lyrics = fromCalls(calls);
             SGLog(@"musixmatch: %@ has %@", trackID, !lyrics ? @"no lyrics it may show"
-                  : lyrics.wordTimed ? [NSString stringWithFormat:@"%lu word timed lines", (unsigned long)lyrics.karaokeLines.count]
-                  : lyrics.synced ? [NSString stringWithFormat:@"%lu line timed lines", (unsigned long)lyrics.karaokeLines.count]
-                  : [NSString stringWithFormat:@"%lu untimed lines", (unsigned long)lyrics.texts.count]);
+                  : lyrics.wordTimed ? [NSString stringWithFormat:SGLocalized(@"%lu word timed lines"), (unsigned long)lyrics.karaokeLines.count]
+                  : lyrics.synced ? [NSString stringWithFormat:SGLocalized(@"%lu line timed lines"), (unsigned long)lyrics.karaokeLines.count]
+                  : [NSString stringWithFormat:SGLocalized(@"%lu untimed lines"), (unsigned long)lyrics.texts.count]);
             finish(trackID, withTrack(lyrics, dig(calls, @"matcher.track.get/message/body/track")), YES);
         });
     });

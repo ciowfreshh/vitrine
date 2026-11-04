@@ -16,9 +16,9 @@ static NSString *keyOf(SGRLyricsText text) {
 
 NSString *SGRLyricsTextName(SGRLyricsText text) {
     switch (text) {
-        case SGRLyricsTextLyrics: return @"Lyrics";
-        case SGRLyricsTextPronunciation: return @"Pronunciation";
-        case SGRLyricsTextTranslation: return @"Translation";
+        case SGRLyricsTextLyrics: return SGLocalized(@"Lyrics");
+        case SGRLyricsTextPronunciation: return SGLocalized(@"Pronunciation");
+        case SGRLyricsTextTranslation: return SGLocalized(@"Translation");
     }
     return nil;
 }

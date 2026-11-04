@@ -22,7 +22,7 @@ static NSString *switchKeyOf(SGDSPFileKind kind) {
 
 NSString *SGDSPChosenFile(SGDSPFileKind kind) {
     NSString *name = SGDSPString(fileKeyOf(kind));
-    return name.length ? name : @"None";
+    return name.length ? name : SGLocalized(@"None");
 }
 
 // ".eel", ".vdc", ".wav, .flac or .irs".
@@ -32,18 +32,18 @@ static NSString *extensionList(SGDSPFileKind kind) {
     if (dotted.count < 2) return dotted.firstObject ?: @"";
     NSString *last = dotted.lastObject;
     [dotted removeLastObject];
-    return [NSString stringWithFormat:@"%@ or %@", [dotted componentsJoinedByString:@", "], last];
+    return [NSString stringWithFormat:SGLocalized(@"%@ or %@"), [dotted componentsJoinedByString:@", "], last];
 }
 
 static void showAlert(UIViewController *owner, NSString *title, NSString *message) {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"OK") style:UIAlertActionStyleCancel handler:nil]];
     [owner presentViewController:alert animated:YES completion:nil];
 }
 
 static UITableViewCell *errorCell(UITableView *table, NSString *text) {
     UITableViewCell *cell = SGDequeueCell(table, @"error");
-    SGFillCell(cell, @"Not applied", text, SGRed(), @"exclamationmark.triangle.fill");
+    SGFillCell(cell, SGLocalized(@"Not applied"), text, SGRed(), @"exclamationmark.triangle.fill");
     UIListContentConfiguration *content = (UIListContentConfiguration *)cell.contentConfiguration;
     content.secondaryTextProperties.color = SGRed();
     cell.contentConfiguration = content;
@@ -151,13 +151,13 @@ static UITableViewCell *tiledCell(UITableView *table, NSString *title, NSString 
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
     _kind = kind;
     self.errorKey = switchKeyOf(kind);
-    self.title = kind == SGDSPFileImpulseResponse ? @"Impulse responses" : kind == SGDSPFileDDC ? @"DDC files" : @"Scripts";
+    self.title = kind == SGDSPFileImpulseResponse ? SGLocalized(@"Impulse responses") : kind == SGDSPFileDDC ? SGLocalized(@"DDC files") : SGLocalized(@"Scripts");
     return self;
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    _footer = SGNote(@"Choosing a file uses it straight away. Swipe left on one to delete it.");
+    _footer = SGNote(SGLocalized(@"Choosing a file uses it straight away. Swipe left on one to delete it."));
     self.tableView.tableFooterView = _footer;
 }
 
@@ -184,12 +184,12 @@ static UITableViewCell *tiledCell(UITableView *table, NSString *title, NSString 
 - (UITableViewCell *)tableView:(UITableView *)table cellForRowAtIndexPath:(NSIndexPath *)path {
     if (path.section == 0) return [self errorCellIn:table];
     if (path.section == 2) {
-        NSString *subtitle = [NSString stringWithFormat:@"A %@ file from Files", extensionList(_kind)];
-        return tiledCell(table, @"Import file…", subtitle, @"square.and.arrow.down", nil);
+        NSString *subtitle = [NSString stringWithFormat:SGLocalized(@"A %@ file from Files"), extensionList(_kind)];
+        return tiledCell(table, SGLocalized(@"Import file…"), subtitle, @"square.and.arrow.down", nil);
     }
     UITableViewCell *cell = SGDequeueCell(table, @"file");
     if (!_files.count) {
-        SGFillCell(cell, @"No files yet", nil, SGGrey(), nil);
+        SGFillCell(cell, SGLocalized(@"No files yet"), nil, SGGrey(), nil);
         cell.accessibilityTraits = UIAccessibilityTraitNone;
         return cell;
     }
@@ -224,7 +224,7 @@ static UITableViewCell *tiledCell(UITableView *table, NSString *title, NSString 
 - (UISwipeActionsConfiguration *)tableView:(UITableView *)table trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)path {
     if (path.section != 1 || !_files.count) return nil;
     NSString *name = _files[(NSUInteger)path.row];
-    UIContextualAction *delete = [UIContextualAction contextualActionWithStyle:UIContextualActionStyleDestructive title:@"Delete"
+    UIContextualAction *delete = [UIContextualAction contextualActionWithStyle:UIContextualActionStyleDestructive title:SGLocalized(@"Delete")
         handler:^(UIContextualAction *action, UIView *view, void (^done)(BOOL)) {
             [self deleteFile:name at:path];
             done(YES);
@@ -236,7 +236,7 @@ static UITableViewCell *tiledCell(UITableView *table, NSString *title, NSString 
 // The chosen file going leaves the effect with none, rather than naming a file that is not there.
 - (void)deleteFile:(NSString *)name at:(NSIndexPath *)path {
     if (!SGDSPDeleteFile(_kind, name)) {
-        showAlert(self, @"Could not delete the file", nil);
+        showAlert(self, SGLocalized(@"Could not delete the file"), nil);
         return;
     }
     if ([name isEqualToString:SGDSPString(fileKeyOf(_kind))]) SGDSPSetString(fileKeyOf(_kind), @"");
@@ -257,13 +257,13 @@ static UITableViewCell *tiledCell(UITableView *table, NSString *title, NSString 
     NSURL *url = urls.firstObject;
     if (!url) return;
     if (![SGDSPFileExtensions(_kind) containsObject:url.pathExtension.lowercaseString]) {
-        showAlert(self, @"Not a file this effect takes", [NSString stringWithFormat:@"Pick a %@ file.", extensionList(_kind)]);
+        showAlert(self, SGLocalized(@"Not a file this effect takes"), [NSString stringWithFormat:SGLocalized(@"Pick a %@ file."), extensionList(_kind)]);
         return;
     }
     NSError *error = nil;
     NSString *name = SGDSPImportFile(_kind, url, &error);
     if (!name) {
-        showAlert(self, @"Could not import the file", error.localizedDescription);
+        showAlert(self, SGLocalized(@"Could not import the file"), SGLocalizedError(error));
         return;
     }
     SGDSPSetString(fileKeyOf(_kind), name);
@@ -299,15 +299,15 @@ typedef NS_ENUM(NSInteger, SGGraphicEqRow) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Graphic EQ";
+    self.title = SGLocalized(@"Graphic EQ");
     self.errorKey = SGKeyDSPGraphicEq;
     return self;
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    _intro = SGNote(@"AutoEq's GraphicEQ format: \"GraphicEQ:\", then a frequency and a gain in dB per point, "
-                     "separated by semicolons. Paste the GraphicEQ file for your headphones, or edit the text and save.");
+    _intro = SGNote(SGLocalized(@"AutoEq's GraphicEQ format: \"GraphicEQ:\", then a frequency and a gain in dB per point, "
+                     "separated by semicolons. Paste the GraphicEQ file for your headphones, or edit the text and save."));
     self.tableView.tableHeaderView = _intro;
     self.tableView.keyboardDismissMode = UIScrollViewKeyboardDismissModeInteractive;
 
@@ -362,18 +362,18 @@ typedef NS_ENUM(NSInteger, SGGraphicEqRow) {
         [cell.contentView addSubview:_text];
         return cell;
     }
-    if (path.section == 3) return tiledCell(table, @"AutoEq", @"GraphicEQ files for thousands of headphones", @"safari", nil);
+    if (path.section == 3) return tiledCell(table, @"AutoEq", SGLocalized(@"GraphicEQ files for thousands of headphones"), @"safari", nil);
     switch (path.row) {
         case SGGraphicEqSave: {
             BOOL edited = [self edited];
-            UITableViewCell *cell = tiledCell(table, @"Save", edited ? @"Use the text above" : @"Nothing changed", @"checkmark", edited ? nil : SGGrey());
+            UITableViewCell *cell = tiledCell(table, SGLocalized(@"Save"), edited ? SGLocalized(@"Use the text above") : SGLocalized(@"Nothing changed"), @"checkmark", edited ? nil : SGGrey());
             cell.accessibilityTraits = edited ? UIAccessibilityTraitButton : UIAccessibilityTraitButton | UIAccessibilityTraitNotEnabled;
             return cell;
         }
         case SGGraphicEqPaste:
-            return tiledCell(table, @"Paste", @"Replace the text with what you copied, and use it", @"doc.on.clipboard", nil);
+            return tiledCell(table, SGLocalized(@"Paste"), SGLocalized(@"Replace the text with what you copied, and use it"), @"doc.on.clipboard", nil);
         default:
-            return tiledCell(table, @"Reset", @"Back to flat", @"arrow.counterclockwise", nil);
+            return tiledCell(table, SGLocalized(@"Reset"), SGLocalized(@"Back to flat"), @"arrow.counterclockwise", nil);
     }
 }
 
@@ -396,8 +396,8 @@ typedef NS_ENUM(NSInteger, SGGraphicEqRow) {
 - (void)save:(NSString *)text {
     NSString *line = SGDSPGraphicEqLine(text);
     if (!line) {
-        showAlert(self, text.length ? @"Not a GraphicEQ line" : @"Nothing to paste",
-                  @"It starts with \"GraphicEQ:\", then pairs of a frequency and a gain: GraphicEQ: 20 -1.2; 21 -1.1; …");
+        showAlert(self, text.length ? SGLocalized(@"Not a GraphicEQ line") : SGLocalized(@"Nothing to paste"),
+                  SGLocalized(@"It starts with \"GraphicEQ:\", then pairs of a frequency and a gain: GraphicEQ: 20 -1.2; 21 -1.1; …"));
         return;
     }
     [_text resignFirstResponder];

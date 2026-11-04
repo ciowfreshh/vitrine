@@ -182,7 +182,7 @@ static void fetch(NSURLRequest *request, id (^parse)(NSData *data), void (^done)
     [[NSURLSession.sharedSession dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
         NSInteger status = !error && [response isKindOfClass:NSHTTPURLResponse.class] ? ((NSHTTPURLResponse *)response).statusCode : 0;
         id result = status == 200 && data ? parse(data) : nil;
-        if (status != 200) SGLog(@"motion: %@%@ failed (%ld, %@)", request.URL.host, request.URL.path, (long)status, error.localizedDescription);
+        if (status != 200) SGLog(@"motion: %@%@ failed (%ld, %@)", request.URL.host, request.URL.path, (long)status, SGLocalizedError(error));
         dispatch_async(dispatch_get_main_queue(), ^{ done(result, status); });
     }] resume];
 }

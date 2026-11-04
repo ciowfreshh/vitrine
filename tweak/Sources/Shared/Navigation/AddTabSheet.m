@@ -64,7 +64,7 @@ static UIView *withChevron(UIView *view) {
 
 static void showProblem(UIViewController *page, NSString *title, NSString *message) {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"OK") style:UIAlertActionStyleCancel handler:nil]];
     [page presentViewController:alert animated:YES completion:nil];
 }
 
@@ -81,7 +81,7 @@ static void showProblem(UIViewController *page, NSString *title, NSString *messa
 
 - (instancetype)initWithDraft:(SGTabDraft *)draft presets:(NSArray<NSDictionary *> *)presets {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Choose a Link";
+    self.title = SGLocalized(@"Choose a Link");
     _draft = draft;
     _presets = presets;
     return self;
@@ -96,7 +96,7 @@ static void showProblem(UIViewController *page, NSString *title, NSString *messa
 }
 
 - (UIView *)tableView:(UITableView *)table viewForHeaderInSection:(NSInteger)section {
-    return SGSectionHeader(table, section == 0 ? @"Spotify's pages" : @"Custom link");
+    return SGSectionHeader(table, section == 0 ? SGLocalized(@"Spotify's pages") : SGLocalized(@"Custom link"));
 }
 
 - (CGFloat)tableView:(UITableView *)table heightForHeaderInSection:(NSInteger)section {
@@ -104,11 +104,11 @@ static void showProblem(UIViewController *page, NSString *title, NSString *messa
 }
 
 - (UIView *)tableView:(UITableView *)table viewForFooterInSection:(NSInteger)section {
-    return section == 1 ? SGSectionFooter(table, @"Paste a share link or a spotify: URI.") : nil;
+    return section == 1 ? SGSectionFooter(table, SGLocalized(@"Paste a share link or a spotify: URI.")) : nil;
 }
 
 - (CGFloat)tableView:(UITableView *)table heightForFooterInSection:(NSInteger)section {
-    return section == 1 ? SGSectionFooterHeight(table, @"Paste a share link or a spotify: URI.") : CGFLOAT_MIN;
+    return section == 1 ? SGSectionFooterHeight(table, SGLocalized(@"Paste a share link or a spotify: URI.")) : CGFLOAT_MIN;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)table cellForRowAtIndexPath:(NSIndexPath *)path {
@@ -119,7 +119,7 @@ static void showProblem(UIViewController *page, NSString *title, NSString *messa
         SGFillCell(cell, tab[SGTabTitle], tab[SGTabURI], nil, nil);
         cell.accessoryView = current ? SGSymbolView(@"checkmark", 15, UIImageSymbolWeightSemibold, 24) : previewOf(tab[SGTabIcon], NO, 24);
     } else {
-        SGFillCell(cell, @"Enter a custom link…", nil, nil, @"link");
+        SGFillCell(cell, SGLocalized(@"Enter a custom link…"), nil, nil, @"link");
     }
     cell.selectionStyle = UITableViewCellSelectionStyleDefault;
     return cell;
@@ -138,7 +138,7 @@ static void showProblem(UIViewController *page, NSString *title, NSString *messa
         [self.navigationController popViewControllerAnimated:YES];
         return;
     }
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Custom Link" message:@"A share link or a spotify: URI." preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Custom Link") message:SGLocalized(@"A share link or a spotify: URI.") preferredStyle:UIAlertControllerStyleAlert];
     [alert addTextFieldWithConfigurationHandler:^(UITextField *field) {
         field.placeholder = @"spotify:playlist:…";
         field.text = self->_draft.uri;
@@ -147,8 +147,8 @@ static void showProblem(UIViewController *page, NSString *title, NSString *messa
         field.autocapitalizationType = UITextAutocapitalizationTypeNone;
         field.autocorrectionType = UITextAutocorrectionTypeNo;
     }];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Use Link" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Use Link") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         [self useLink:alert.textFields.firstObject.text];
     }]];
     [self presentViewController:alert animated:YES completion:nil];
@@ -160,9 +160,9 @@ static void showProblem(UIViewController *page, NSString *title, NSString *messa
     BOOL spotify = [url.scheme.lowercaseString isEqualToString:@"spotify"];
     if (!spotify || routeOf(url, @"custom") == SGLinkRouteNone) {
         NSString *what = text.length ? text : @"nothing";
-        showProblem(self, @"Can't Use That Link",
-                    spotify ? [NSString stringWithFormat:@"Spotify has nowhere to open %@, so it would not work as a tab.", url.absoluteString]
-                            : [NSString stringWithFormat:@"%@ is not a share link or a spotify: URI.", what]);
+        showProblem(self, SGLocalized(@"Can't Use That Link"),
+                    spotify ? [NSString stringWithFormat:SGLocalized(@"Spotify has nowhere to open %@, so it would not work as a tab."), url.absoluteString]
+                            : [NSString stringWithFormat:SGLocalized(@"%@ is not a share link or a spotify: URI."), what]);
         return;
     }
     _draft.uri = url.absoluteString;
@@ -192,7 +192,7 @@ static void showProblem(UIViewController *page, NSString *title, NSString *messa
 
 - (instancetype)initWithDraft:(SGTabDraft *)draft {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Choose an Icon";
+    self.title = SGLocalized(@"Choose an Icon");
     _draft = draft;
     return self;
 }
@@ -208,7 +208,7 @@ static void showProblem(UIViewController *page, NSString *title, NSString *messa
     _search.searchResultsUpdater = self;
     _search.delegate = self;
     _search.obscuresBackgroundDuringPresentation = NO;
-    _search.searchBar.placeholder = @"Search icons";
+    _search.searchBar.placeholder = SGLocalized(@"Search icons");
     _search.searchBar.autocapitalizationType = UITextAutocapitalizationTypeNone;
     _search.searchBar.autocorrectionType = UITextAutocorrectionTypeNo;
     self.navigationItem.searchController = _search;
@@ -279,18 +279,18 @@ static void showProblem(UIViewController *page, NSString *title, NSString *messa
         NSArray<NSString *> *found = [pool filteredArrayUsingPredicate:match];
         _sections = @[found];
         _headers = @[@""];
-        if (!found.count) _footer = symbols && !_symbols ? @"Still reading the list of SF Symbols…" : @"No icon has that in its name.";
+        if (!found.count) _footer = symbols && !_symbols ? SGLocalized(@"Still reading the list of SF Symbols…") : SGLocalized(@"No icon has that in its name.");
     } else if (symbols) {
         _sections = @[SGCommonTabSymbols()];
         _headers = @[@"Suggested"];
-        _footer = @"Search finds any SF Symbol.";
+        _footer = SGLocalized(@"Search finds any SF Symbol.");
     } else {
         NSArray<NSString *> *common = SGCommonTabGlyphs();
         NSMutableArray<NSString *> *rest = [SGEncoreGlyphNames() mutableCopy];
         [rest removeObjectsInArray:common];
         _sections = @[common, rest];
-        _headers = @[@"Suggested", @"All glyphs"];
-        if (!SGEncoreGlyphNames().count) _footer = @"This version of Spotify has no glyphs to offer. SF Symbols still work.";
+        _headers = @[SGLocalized(@"Suggested"), SGLocalized(@"All glyphs")];
+        if (!SGEncoreGlyphNames().count) _footer = SGLocalized(@"This version of Spotify has no glyphs to offer. SF Symbols still work.");
     }
     [self.tableView reloadData];
 }
@@ -330,7 +330,7 @@ static void showProblem(UIViewController *page, NSString *title, NSString *messa
     NSString *name = _sections[(NSUInteger)path.section][(NSUInteger)path.row];
     BOOL symbols = _sets.selectedSegmentIndex == 1;
     BOOL current = symbols == _draft.symbols && [name isEqualToString:_draft.icon];
-    SGFillCell(cell, name, current ? @"Current icon" : nil, nil, nil);
+    SGFillCell(cell, name, current ? SGLocalized(@"Current icon") : nil, nil, nil);
     // A preview is one of Spotify's views; setting a new accessory takes the old one off the reused cell.
     cell.accessoryView = previewOf(name, symbols, 28);
     cell.selectionStyle = UITableViewCellSelectionStyleDefault;
@@ -377,7 +377,7 @@ typedef NS_ENUM(NSInteger, SGAddTabSection) {
 // The same sheet over a tab already on the bar: its name, link and icon filled in, Save in place of Add.
 - (instancetype)initWithTab:(NSDictionary *)tab presets:(NSArray<NSDictionary *> *)presets save:(void (^)(NSDictionary *tab))save remove:(void (^)(void))remove {
     if (!(self = [self initWithPresets:presets add:save])) return nil;
-    self.title = @"Edit Tab";
+    self.title = SGLocalized(@"Edit Tab");
     _draft.title = tab[SGTabTitle];
     _draft.uri = tab[SGTabURI];
     _draft.icon = tab[SGTabIcon] ?: @"star";
@@ -390,7 +390,7 @@ typedef NS_ENUM(NSInteger, SGAddTabSection) {
 
 - (instancetype)initWithPresets:(NSArray<NSDictionary *> *)presets add:(void (^)(NSDictionary *tab))add {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Add a Tab";
+    self.title = SGLocalized(@"Add a Tab");
     _draft = [SGTabDraft new];
     _draft.icon = @"star";
     _add = [add copy];
@@ -405,12 +405,12 @@ typedef NS_ENUM(NSInteger, SGAddTabSection) {
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(cancel)];
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:_remove ? @"Save" : @"Add" style:UIBarButtonItemStyleDone target:self action:@selector(addTab)];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:_remove ? SGLocalized(@"Save") : SGLocalized(@"Add") style:UIBarButtonItemStyleDone target:self action:@selector(addTab)];
     self.tableView.keyboardDismissMode = UIScrollViewKeyboardDismissModeInteractive;
 
     _name = [UITextField new];
-    _name.placeholder = @"Name";
-    _name.accessibilityLabel = @"Name";
+    _name.placeholder = SGLocalized(@"Name");
+    _name.accessibilityLabel = SGLocalized(@"Name");
     _name.font = SGTitleFont();
     _name.textColor = UIColor.whiteColor;
     _name.clearButtonMode = UITextFieldViewModeWhileEditing;
@@ -462,7 +462,7 @@ typedef NS_ENUM(NSInteger, SGAddTabSection) {
 
 - (UIView *)tableView:(UITableView *)table viewForHeaderInSection:(NSInteger)section {
     if (section == SGAddTabSectionRemove) return nil;
-    return SGSectionHeader(table, section == SGAddTabSectionName ? @"Name" : @"Customize");
+    return SGSectionHeader(table, section == SGAddTabSectionName ? SGLocalized(@"Name") : SGLocalized(@"Customize"));
 }
 
 - (CGFloat)tableView:(UITableView *)table heightForHeaderInSection:(NSInteger)section {
@@ -492,17 +492,17 @@ typedef NS_ENUM(NSInteger, SGAddTabSection) {
     }
     if (path.section == SGAddTabSectionRemove) {
         UITableViewCell *cell = SGDequeueCell(table, @"remove");
-        SGFillCell(cell, @"Remove Tab", nil, SGRed(), nil);
+        SGFillCell(cell, SGLocalized(@"Remove Tab"), nil, SGRed(), nil);
         cell.selectionStyle = UITableViewCellSelectionStyleDefault;
         cell.accessibilityTraits = UIAccessibilityTraitButton;
         return cell;
     }
     UITableViewCell *cell = SGDequeueCell(table, @"customize");
     if (path.row == 0) {
-        SGFillCell(cell, @"Link", _draft.uri ?: @"Choose a page or paste a link", nil, @"link");
+        SGFillCell(cell, SGLocalized(@"Link"), _draft.uri ?: SGLocalized(@"Choose a page or paste a link"), nil, @"link");
         cell.accessoryView = SGSymbolView(@"chevron.right", 13, UIImageSymbolWeightSemibold, 16);
     } else {
-        SGFillCell(cell, @"Icon", iconSummary(_draft), nil, @"square.grid.2x2");
+        SGFillCell(cell, SGLocalized(@"Icon"), iconSummary(_draft), nil, @"square.grid.2x2");
         cell.accessoryView = withChevron(previewOf(_draft.icon, _draft.symbols, 24));
     }
     cell.selectionStyle = UITableViewCellSelectionStyleDefault;
@@ -527,15 +527,15 @@ typedef NS_ENUM(NSInteger, SGAddTabSection) {
 
 // The tab, its link and its icon go with it, so the sheet asks first.
 - (void)confirmRemove {
-    NSString *name = _draft.title.length ? _draft.title : @"this tab";
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:[NSString stringWithFormat:@"Remove %@ from the tab bar?", name]
+    NSString *name = _draft.title.length ? _draft.title : SGLocalized(@"this tab");
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:[NSString stringWithFormat:SGLocalized(@"Remove %@ from the tab bar?"), name]
                                                             preferredStyle:UIAlertControllerStyleActionSheet];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Remove Tab" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Remove Tab") style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         void (^remove)(void) = self->_remove;
         [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
         if (remove) remove();
     }]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
     alert.popoverPresentationController.sourceView = [self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:SGAddTabSectionRemove]];
     [self presentViewController:alert animated:YES completion:nil];
 }

@@ -75,10 +75,10 @@ static UILabel *label(NSString *text, UIFontTextStyle style, UIFontWeight weight
     // iOS 26 gives a sheet its own material; before it the sheet takes the mod's page color.
     if (@available(iOS 26.0, *)) {} else self.view.backgroundColor = SGPageBackground();
 
-    UILabel *title = label(@"What's New in Vitrine", UIFontTextStyleLargeTitle, UIFontWeightBold, UIColor.whiteColor);
+    UILabel *title = label(SGLocalized(@"What's New in Vitrine"), UIFontTextStyleLargeTitle, UIFontWeightBold, UIColor.whiteColor);
     title.textAlignment = NSTextAlignmentCenter;
     title.accessibilityTraits = UIAccessibilityTraitHeader;
-    UILabel *version = label([NSString stringWithFormat:@"Version %s", SG_VERSION], UIFontTextStyleSubheadline, UIFontWeightRegular, SGGrey());
+    UILabel *version = label([NSString stringWithFormat:SGLocalized(@"Version %s"), SG_VERSION], UIFontTextStyleSubheadline, UIFontWeightRegular, SGGrey());
     version.textAlignment = NSTextAlignmentCenter;
 
     UIStackView *column = [[UIStackView alloc] initWithArrangedSubviews:@[title, version]];
@@ -107,7 +107,7 @@ static UILabel *label(NSString *text, UIFontTextStyle style, UIFontWeight weight
     [scroll addSubview:column];
     [self.view addSubview:scroll];
 
-    UIButton *done = SGOnboardingButton(@"Continue");
+    UIButton *done = SGOnboardingButton(SGLocalized(@"Continue"));
     [done addAction:[UIAction actionWithHandler:^(UIAction *action) {
         [self dismissViewControllerAnimated:YES completion:nil];
     }] forControlEvents:UIControlEventTouchUpInside];

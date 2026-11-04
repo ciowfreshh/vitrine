@@ -68,6 +68,7 @@ private func accentOf(_ state: State) -> Color {
 private extension View {
     func accented(_ state: State) -> some View {
         environment(\.accent, accentOf(state))
+            .environment(\.locale, Locale(identifier: state.uiLanguage ?? SGUIL10n.language))
     }
 }
 
@@ -86,7 +87,7 @@ private struct Cover: View {
             .aspectRatio(contentMode: .fill)
             .frame(width: side, height: side)
             .clipShape(RoundedRectangle(cornerRadius: side / 6, style: .continuous))
-            .accessibilityLabel("Album artwork")
+            .accessibilityLabel(Text("Album artwork", tableName: "Vitrine"))
     }
 }
 
@@ -429,7 +430,7 @@ private struct LyricsView: View {
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: frameEdge)
                 .direction(of: state.artist)
-            Text("No synced lyrics for this song")
+            Text("No synced lyrics for this song", tableName: "Vitrine")
                 .font(.caption.weight(.medium))
                 .foregroundStyle(.white.opacity(0.6))
                 .lineLimit(1)
@@ -504,11 +505,11 @@ private struct QueueView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Up next")
+            Text("Up next", tableName: "Vitrine")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.white.opacity(0.6))
             if state.tracks.isEmpty {
-                Text("Nothing up next")
+                Text("Nothing up next", tableName: "Vitrine")
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.6))
             }
@@ -539,16 +540,16 @@ private struct Summary: View {
             case .controls:
                 Text("\(state.title) · \(state.artist)")
             case .queue:
-                Text(state.tracks.first.map { "Next: \($0.title)" } ?? "Nothing up next")
+                Text(state.tracks.first.map { String(format: SGUIL10n.string("Next: %@", language: state.uiLanguage), $0.title) } ?? SGUIL10n.string("Nothing up next", language: state.uiLanguage))
             case .timer:
                 if let end = state.timerEnd, end > Date() {
-                    Text("Music stops in \(Text(timerInterval: Date()...end, countsDown: true))")
+                    Text("Music stops in \(Text(timerInterval: Date()...end, countsDown: true))", tableName: "Vitrine")
                 } else if state.timerEndOfTrack {
-                    Text("Music stops at the end of this track")
+                    Text("Music stops at the end of this track", tableName: "Vitrine")
                 } else if state.timerEndOfAlbum == true {
-                    Text("Music stops at the end of this album")
+                    Text("Music stops at the end of this album", tableName: "Vitrine")
                 } else {
-                    Text("No sleep timer")
+                    Text("No sleep timer", tableName: "Vitrine")
                 }
             }
         }
@@ -566,11 +567,11 @@ private struct PanelView: View {
             HStack(spacing: 6) {
                 ForEach(Tab.allCases, id: \.self) { tab in
                     Toggle(isOn: tab == state.tab, intent: SGLiveActivityActionIntent("tab:\(tab.rawValue)")) {
-                        Text(tab.title)
+                        Text(LocalizedStringKey(tab.title), tableName: "Vitrine")
                     }
                     .toggleStyle(TabStyle(tab: tab))
-                    .accessibilityLabel(tab.title)
-                    .accessibilityValue(tab == state.tab ? "Selected" : "Not selected")
+                    .accessibilityLabel(Text(LocalizedStringKey(tab.title), tableName: "Vitrine"))
+                    .accessibilityValue(Text(LocalizedStringKey(tab == state.tab ? "Selected" : "Not selected"), tableName: "Vitrine"))
                 }
             }
             Group {
@@ -612,7 +613,7 @@ private struct ChipLabel: View {
         VStack(spacing: 3) {
             Image(systemName: symbol)
                 .font(.body.weight(.semibold))
-            Text(label)
+            Text(LocalizedStringKey(label), tableName: "Vitrine")
                 .font(.caption2.weight(.medium))
                 .lineLimit(1)
         }
@@ -654,7 +655,7 @@ private struct ChipButton: View {
                 .foregroundStyle(lit ? accent : .white)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(spoken ?? label)
+        .accessibilityLabel(Text(LocalizedStringKey(spoken ?? label), tableName: "Vitrine"))
     }
 }
 
@@ -675,18 +676,18 @@ private struct ControlsPage: View {
             HStack(spacing: 10) {
                 ChipButton(action: "previous", symbol: "backward.fill", label: "Previous")
                 // Named for what it shows, so Voice Control's "Tap Pause" finds it while it plays.
-                Toggle(isOn: !state.paused, intent: SGLiveActivityActionIntent("toggle")) { Text(state.paused ? "Play" : "Pause") }
-                    .accessibilityLabel(state.paused ? "Play" : "Pause")
+                Toggle(isOn: !state.paused, intent: SGLiveActivityActionIntent("toggle")) { Text(LocalizedStringKey(state.paused ? "Play" : "Pause"), tableName: "Vitrine") }
+                    .accessibilityLabel(Text(LocalizedStringKey(state.paused ? "Play" : "Pause"), tableName: "Vitrine"))
                     .toggleStyle(ChipStyle(symbol: "play.fill", onSymbol: "pause.fill", label: "Play", onLabel: "Pause", lights: false))
                 ChipButton(action: "next", symbol: "forward.fill", label: "Next")
-                Toggle(isOn: state.shuffle, intent: SGLiveActivityActionIntent("shuffle")) { Text("Shuffle") }
-                    .accessibilityLabel("Shuffle")
-                    .accessibilityValue(state.shuffle ? "On" : "Off")
+                Toggle(isOn: state.shuffle, intent: SGLiveActivityActionIntent("shuffle")) { Text("Shuffle", tableName: "Vitrine") }
+                    .accessibilityLabel(Text("Shuffle", tableName: "Vitrine"))
+                    .accessibilityValue(Text(LocalizedStringKey(state.shuffle ? "On" : "Off"), tableName: "Vitrine"))
                     .toggleStyle(ChipStyle(symbol: "shuffle", label: "Shuffle"))
                 // Three states, so a button: the new one shows once the render lands.
                 ChipButton(action: "repeat", symbol: state.repeatMode == 2 ? "repeat.1" : "repeat",
                            label: "Repeat", lit: state.repeatMode != 0)
-                    .accessibilityValue(["Off", "All", "One"][min(max(state.repeatMode, 0), 2)])
+                    .accessibilityValue(Text(LocalizedStringKey(["Off", "All", "One"][min(max(state.repeatMode, 0), 2)]), tableName: "Vitrine"))
                     .invalidatableContent()
             }
         }
@@ -700,7 +701,7 @@ private struct QueuePage: View {
     var body: some View {
         VStack(spacing: 4) {
             if state.tracks.isEmpty {
-                Text("Nothing up next")
+                Text("Nothing up next", tableName: "Vitrine")
                     .font(.footnote)
                     .foregroundStyle(.white.opacity(0.6))
                     .frame(maxWidth: .infinity, minHeight: 60)
@@ -740,7 +741,7 @@ private struct TimerPage: View {
             if (state.timerEnd.map { $0 > Date() } ?? false) || state.timerEndOfTrack || state.timerEndOfAlbum == true {
                 HStack(alignment: .center, spacing: 12) {
                     VStack(alignment: .leading, spacing: 0) {
-                        Text("Music stops")
+                        Text("Music stops", tableName: "Vitrine")
                             .font(.caption)
                             .foregroundStyle(.white.opacity(0.6))
                         if let end = state.timerEnd {
@@ -748,7 +749,7 @@ private struct TimerPage: View {
                                 .font(.system(size: 34, weight: .bold).monospacedDigit())
                                 .foregroundStyle(accent)
                         } else {
-                            Text(state.timerEndOfAlbum == true ? "End of album" : "End of track")
+                            Text(LocalizedStringKey(state.timerEndOfAlbum == true ? "End of album" : "End of track"), tableName: "Vitrine")
                                 .font(.title2.weight(.bold))
                                 .foregroundStyle(accent)
                         }

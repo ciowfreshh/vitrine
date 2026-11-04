@@ -815,7 +815,7 @@ static OSStatus setProperty(AudioUnit unit, AudioUnitPropertyID property, AudioU
     OSStatus status = why ? sg_setProperty(unit, property, scope, element, data, size) : noErr;
     SGLog(@"audio: Spotify connects mixer %p (bus %u) to output %p, %@%@", connection->sourceAudioUnit, (unsigned)connection->sourceOutputNumber,
           unit, formatText(&client), why ? [@"; its own connection kept: " stringByAppendingString:why] : @"; fed through the mod's callback");
-    reselect(NO, @"Spotify connected it last");
+    reselect(NO, SGLocalized(@"Spotify connected it last"));
     pthread_mutex_unlock(&sg_outputsLock);
     return status;
 }
@@ -862,11 +862,11 @@ static OSStatus startOutput(AudioUnit unit) {
             AudioUnitAddPropertyListener(unit, kAudioUnitProperty_StreamFormat, formatChanged, output);
         }
         // Every start of the music's output is told, so what holds sound from before the pause starts over.
-        reselect(music() == output, @"Spotify started it last");
+        reselect(music() == output, SGLocalized(@"Spotify started it last"));
         AudioUnit source = atomic_load(&output->source);
         SGLog(@"audio: output %p started: Spotify's side %@, the hardware's %@, %@; the processors are on %@", unit, formatText(&client),
               formatText(&hardware), !source ? @"fed by Spotify itself" : why ? [NSString stringWithFormat:@"mixer %p through Spotify's connection (%@)", source, why]
-              : [NSString stringWithFormat:@"mixer %p through the mod's callback", source], music() == output ? @"this one" : describe(music()));
+              : [NSString stringWithFormat:@"mixer %p through the mod's callback", source], music() == output ? SGLocalized(@"this one") : describe(music()));
     }
     pthread_mutex_unlock(&sg_outputsLock);
     return sg_startOutput(unit);

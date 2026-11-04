@@ -151,7 +151,7 @@ static void styleFooter(UIViewController *unit) {
         SGRPlayerCoverConnect(connectHolder, glyph);
     }
 
-    SGRGlyphButton *queue = glyphButtonIn(host, &kQueueKey, @"list.bullet", @"Queue", SGRPrimary(), ^{
+    SGRGlyphButton *queue = glyphButtonIn(host, &kQueueKey, @"list.bullet", SGLocalized(@"Queue"), SGRPrimary(), ^{
         SGOpenSpotifyURI([NSURL URLWithString:@"spotify:now-playing:queue"]);
     });
     queue.bounds = CGRectMake(0, 0, 44, 44);

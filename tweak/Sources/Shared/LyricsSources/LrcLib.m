@@ -209,9 +209,9 @@ SGLyricsAsk SGLrcLibAsk = ^(SGLyricsQuery *query, void (^done)(SGLyricsResult *r
         SGLyricsGetJSON(SGLyricsURL(kSearch, search), headers(), ^(id found) {
             resultFor(matching(found, query), query.seconds, ^(SGLyricsResult *result) {
                 SGLog(@"lrclib: search for %@ by %@ gave %@", query.title, query.artist,
-                      !result ? @"nothing" : result.instrumental ? @"an instrumental"
+                      !result ? @"nothing" : result.instrumental ? SGLocalized(@"an instrumental")
                       : result.synced ? [NSString stringWithFormat:@"%lu %@ lines", (unsigned long)result.karaokeLines.count, result.wordTimed ? @"word timed" : @"timed"]
-                      : [NSString stringWithFormat:@"%lu untimed lines", (unsigned long)result.texts.count]);
+                      : [NSString stringWithFormat:SGLocalized(@"%lu untimed lines"), (unsigned long)result.texts.count]);
                 done(result);
             });
         });

@@ -205,6 +205,7 @@ public final class SGLiveActivityBridge: NSObject {
             translation: translation, cover: cover, textSize: textSize, timerEndOfAlbum: timerEndOfAlbum,
             alignment: alignment, noLyrics: noLyrics, withoutLyrics: withoutLyrics, colors: colors, accent: accent,
             progressBar: progressBar)
+        state.uiLanguage = SGUIL10n.language
         // ActivityKit drops a state over 4 KB without a word and the card freezes, so with long lines and
         // a busy cover the cover gives way.
         if cover != nil, let size = try? JSONEncoder().encode(state).count, size > maxStateBytes {

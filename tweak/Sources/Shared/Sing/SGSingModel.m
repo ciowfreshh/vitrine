@@ -92,7 +92,7 @@ static long long totalBytes(const SGSingModelFiles *model) {
 
 static NSURL *singFolder(void) {
     NSURL *support = [NSFileManager.defaultManager URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject;
-    return [[support URLByAppendingPathComponent:@"Vitrine" isDirectory:YES] URLByAppendingPathComponent:@"Sing" isDirectory:YES];
+    return [[support URLByAppendingPathComponent:@"Vitrine" isDirectory:YES] URLByAppendingPathComponent:SGLocalized(@"Sing") isDirectory:YES];
 }
 
 static NSURL *modelFolder(const SGSingModelFiles *model) {
@@ -267,7 +267,7 @@ static NSUInteger sg_removals[2];
     [files removeItemAtURL:modelFolder(self.model) error:nil];
     NSError *error;
     BOOL moved = [files moveItemAtURL:stagingFolder(self.model) toURL:modelFolder(self.model) error:&error];
-    [self endWithError:moved ? nil : [NSString stringWithFormat:@"The model could not be put in place (%@)", error.localizedDescription]];
+    [self endWithError:moved ? nil : [NSString stringWithFormat:SGLocalized(@"The model could not be put in place (%@)"), SGLocalizedError(error)]];
 }
 
 - (void)endWithError:(NSString *)error {
@@ -339,8 +339,8 @@ static NSUInteger sg_removals[2];
     if (big) dispatch_async(dispatch_get_main_queue(), ^{ sg_checking = NO; announce(); });
     SGLog(@"sing: %@ came in, %ld, %lld bytes", file.path, (long)status, size);
     if (!answered || size != file.size || ![hash isEqualToString:@(file.sha256)]) {
-        self.error = !answered ? [NSString stringWithFormat:@"The server answered %ld for %@", (long)status, file.path]
-                                 : [NSString stringWithFormat:@"%@ is not the file Karaoke expects (%lld bytes%@)", file.path, size, hash ? @", another checksum" : @""];
+        self.error = !answered ? [NSString stringWithFormat:SGLocalized(@"The server answered %ld for %@"), (long)status, file.path]
+                                 : [NSString stringWithFormat:SGLocalized(@"%@ is not the file Karaoke expects (%lld bytes%@)"), file.path, size, hash ? @", another checksum" : @""];
         return;
     }
     NSURL *target = [stagingFolder(self.model) URLByAppendingPathComponent:file.path];
@@ -348,7 +348,7 @@ static NSUInteger sg_removals[2];
     [NSFileManager.defaultManager removeItemAtURL:target error:nil];
     NSError *error;
     if (![NSFileManager.defaultManager moveItemAtURL:location toURL:target error:&error]) {
-        self.error = [NSString stringWithFormat:@"%@ could not be kept (%@)", file.path, error.localizedDescription];
+        self.error = [NSString stringWithFormat:@"%@ could not be kept (%@)", file.path, SGLocalizedError(error)];
     }
 }
 
@@ -372,11 +372,11 @@ static NSUInteger sg_removals[2];
     }
     NSData *resume = error.userInfo[NSURLSessionDownloadTaskResumeData];
     if (++_attempts <= kRetries) {
-        SGLog(@"sing: %@ stopped (%@), trying again%@", self.model->files[self.file].path, error.localizedDescription, resume ? @" from where it was" : @"");
+        SGLog(@"sing: %@ stopped (%@), trying again%@", self.model->files[self.file].path, SGLocalizedError(error), resume ? @" from where it was" : @"");
         [self download:[self fileURL] resumeData:resume];
         return;
     }
-    [self endWithError:error.localizedDescription];
+    [self endWithError:SGLocalizedError(error)];
 }
 
 @end
@@ -427,7 +427,7 @@ void SGSetSingChosenModel(SGSingModelKind kind) {
     sg_lastError = nil;
     sg_modelGeneration++;
     SGLog(@"sing: the voice model is now %@ (%@)", kModels[kind].folder,
-          SGSingModelURL() ? @"on the iPhone, Karaoke loads it" : @"not downloaded");
+          SGSingModelURL() ? @"on the iPhone, Karaoke loads it" : SGLocalized(@"not downloaded"));
     // Sing.x loads it in place of the one before, or lets that one go if this one is not here.
     announce();
 }
@@ -475,7 +475,7 @@ void SGSingDownloadModel(void) {
     long long wanted = bytesToCome() + kSpareSpace;
     if (free && free.longLongValue < wanted) {
         NSByteCountFormatterCountStyle style = NSByteCountFormatterCountStyleFile;
-        sg_lastError = [NSString stringWithFormat:@"The iPhone has %@ free, and the voice model needs %@ more.",
+        sg_lastError = [NSString stringWithFormat:SGLocalized(@"The iPhone has %@ free, and the voice model needs %@ more."),
                         [NSByteCountFormatter stringFromByteCount:free.longLongValue countStyle:style],
                         [NSByteCountFormatter stringFromByteCount:wanted - free.longLongValue countStyle:style]];
         SGLog(@"sing: the download does not start: %@", sg_lastError);
@@ -634,7 +634,7 @@ NSString *SGSingModelInUseSizeText(void) {
 }
 
 NSArray<NSString *> *SGSingComputeUnitNames(void) {
-    return @[@"Automatic", @"CPU only"];
+    return @[SGLocalized(@"Automatic"), SGLocalized(@"CPU only")];
 }
 
 BOOL SGSingOSSupported(void) {

@@ -1,9 +1,10 @@
+#import "Core/SGLocalization.h"
 #import "SGTranslationArchive.h"
 #import "SGTranslationStore.h"
 #import <zlib.h>
 
 static NSError *invalid(void) {
-    return [NSError errorWithDomain:SGTranslationStoreErrorDomain code:2 userInfo:@{NSLocalizedDescriptionKey:@"Invalid or unsupported translation archive."}];
+    return [NSError errorWithDomain:SGTranslationStoreErrorDomain code:2 userInfo:@{NSLocalizedDescriptionKey:SGLocalized(@"Invalid or unsupported translation archive.")}];
 }
 static void u16(NSMutableData *d, uint16_t n) { uint8_t b[]={(uint8_t)n,(uint8_t)(n>>8)}; [d appendBytes:b length:2]; }
 static void u32(NSMutableData *d, uint32_t n) { u16(d,(uint16_t)n); u16(d,(uint16_t)(n>>16)); }

@@ -26,8 +26,8 @@ static void notify(void) {
 
 static void showFailure(NSError *error) {
     dispatch_async(dispatch_get_main_queue(), ^{
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Translation storage error" message:error.localizedDescription preferredStyle:UIAlertControllerStyleAlert];
-        [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Translation storage error") message:SGLocalizedError(error) preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"OK") style:UIAlertActionStyleCancel handler:nil]];
         [SGTopController() presentViewController:alert animated:YES completion:nil];
     });
 }
@@ -96,11 +96,11 @@ void SGLyricsDeleteSavedTranslation(NSString *track, NSString *language) {
 }
 
 SGModRow *SGSavedTranslationsRow(void) {
-    SGModRow *row = SGPageRow(@"Saved translations", ^UIViewController *{ return SGSavedTranslationsPage(); });
+    SGModRow *row = SGPageRow(SGLocalized(@"Saved translations"), ^UIViewController *{ return SGSavedTranslationsPage(); });
     row.value = ^NSString *{
         NSError *error = nil;
         NSArray *all = [SGSavedTranslationStore() summaries:&error];
-        return error ? @"Unavailable" : [NSString stringWithFormat:@"%lu songs saved", (unsigned long)all.count];
+        return error ? SGLocalized(@"Unavailable") : [NSString stringWithFormat:SGLocalized(@"%lu songs saved"), (unsigned long)all.count];
     };
     return row;
 }
