@@ -1,4 +1,5 @@
 #import "Core/SGCore.h"
+#import "Core/SGSYNA.h"
 #import "Shared/AppIcon/AppIcon.h"
 #import "Shared/Fonts/Fonts.h"
 #import "Shared/LyricsTranslation/LyricsTranslation.h"
@@ -24,7 +25,7 @@
 #import "Redesigned/NowPlayingBar/NowPlayingBar.h"
 #import "Redesigned/Kit/SGRAccent.h"
 
-NSString *const SGRedesignedUIInfo = @"The newest version of Vitrine, leaning toward Apple Music's style. It is not compatible with the legacy look's settings.\n\nThe legacy look gives you more freedom, yet still looks like Spotify.";
+NSString *const SGRedesignedUIInfo = @"The modern interface of Spotify SYNA, leaning toward Apple Music's style. It is not compatible with the legacy look's settings.\n\nThe legacy look gives you more freedom, yet still looks like Spotify.";
 
 // Below iOS 26 the redesign also needs SGKeyRedesignUntested (Core/SGUIMode.h): whoever calls this has
 // shown the warning. Turning it off takes that back, so turning it on again warns again.
@@ -91,6 +92,29 @@ SGModRow *SGRedesignedUIRow(void) {
 // Redesigned UI itself leads Mod Settings' main page.
 UIViewController *SGAppearancePage(void) {
     NSMutableArray<SGModRow *> *everywhere = [NSMutableArray arrayWithArray:SGAppFontRows()];
+    SGModRow *theme = SGMenuRow(@"Theme", @[@"Default", @"Graphite", @"Silver"], ^NSString *{
+        NSInteger current = SGInt(SGKeySYNATheme, 0);
+        return current == 1 ? @"Graphite" : current == 2 ? @"Silver" : @"Default";
+    }, ^(NSInteger index) {
+        NSInteger previous = SGInt(SGKeySYNATheme, 0);
+        NSUserDefaults *store = NSUserDefaults.standardUserDefaults;
+        if (index && !previous) {
+            [store setInteger:SGInt(SGKeyAccent, -1) forKey:@"spotifyglass.syna.previous.native"];
+            [store setInteger:SGInt(SGRKeyAccent, SGRDefaultAccent) forKey:@"spotifyglass.syna.previous.redesign"];
+        }
+        if (!index && previous) {
+            SGSetInt(SGKeyAccent, [store integerForKey:@"spotifyglass.syna.previous.native"]);
+            SGSetInt(SGRKeyAccent, [store integerForKey:@"spotifyglass.syna.previous.redesign"]);
+            [store removeObjectForKey:@"spotifyglass.syna.previous.native"];
+            [store removeObjectForKey:@"spotifyglass.syna.previous.redesign"];
+        } else if (index) {
+            NSInteger color = index == 1 ? 0x858993 : 0xD1D8DF;
+            SGSetInt(SGKeyAccent, color);
+            SGSetInt(SGRKeyAccent, color);
+        }
+        SGSetInt(SGKeySYNATheme, index);
+    });
+    [everywhere insertObject:SGWithSymbol(theme, @"circle.lefthalf.filled") atIndex:0];
     SGModRow *icon = SGAppIconRow();
     if (icon) [everywhere addObject:icon];
     return [[SGModPage alloc] initWithTitle:@"Appearance" intro:SGRestartNote sections:@[
