@@ -73,12 +73,16 @@ static UIViewController *modSettingsPage(void) {
                 SGActionRow(@"Import settings", nil, ^{ SGImportSettings(); }),
             ])] footer:nil];
     });
-        SGModRow *translations = SGSavedTranslationsRow();
+        SGModRow *apiCheck = SGWithTile(SGActionRow(@"Check API connection",
+        @"Uses the API key and model currently saved under Lyrics",
+        ^{ SGTestAIConnection(); }), @"network", UIColor.systemBlueColor);
+    SGModRow *translations = SGSavedTranslationsRow();
     translations.title = @"Saved translation storage";
     translations.symbol = @"externaldrive.fill";
     [sections addObject:SGSection(nil, @[
         SGWithTile(language, @"globe", UIColor.systemGreenColor),
         backup,
+        apiCheck,
         SGWithTile(translations, @"externaldrive.fill", UIColor.systemOrangeColor),
     ])];
 
