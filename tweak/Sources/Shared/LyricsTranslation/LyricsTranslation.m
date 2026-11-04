@@ -2,6 +2,7 @@
 #import <NaturalLanguage/NaturalLanguage.h>
 #import <Security/Security.h>
 #import "Core/SGCore.h"
+#import "Core/SGSYNA.h"
 #import "Settings/SGModPage.h"
 #import "Settings/SGPageStyle.h"
 #import "Shared/Lyrics/Lyrics.h"
@@ -1316,8 +1317,8 @@ void SGTestAIConnection(void) {
     NSString *key = storedSecret(p, kKeyAccount);
     NSString *modelID = model(p);
     if (!key.length || !modelID.length || (isOpenAI(p) && !openAIServer())) {
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Chưa đủ cấu hình API"
-            message:@"Hãy cài khóa API, mô hình và địa chỉ máy chủ hợp lệ trước khi kiểm tra."
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGSYNAVietnamese() ? @"Chưa đủ cấu hình API" : @"API configuration incomplete"
+            message:SGSYNAVietnamese() ? @"Hãy cài khóa API, mô hình và địa chỉ máy chủ hợp lệ trước khi kiểm tra." : @"Set a valid API key, model and server URL before testing."
             preferredStyle:UIAlertControllerStyleAlert];
         [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
         [SGTopController() presentViewController:alert animated:YES completion:nil];
@@ -1337,11 +1338,11 @@ void SGTestAIConnection(void) {
         NSString *problem = nil;
         NSArray<NSString *> *lines = SGAITranslationsIn(provider, json, status, error, 1, &problem);
         BOOL succeeded = lines.count == 1;
-        NSString *message = succeeded ? @"Máy chủ, khóa API và mô hình đã trả lời yêu cầu thử nghiệm."
-            : (problem ?: error.localizedDescription ?: @"Không xác minh được kết nối API.");
+        NSString *message = succeeded ? (SGSYNAVietnamese() ? @"Máy chủ, khóa API và mô hình đã trả lời yêu cầu thử nghiệm." : @"The API server, key and model responded successfully.")
+            : (problem ?: error.localizedDescription ?: (SGSYNAVietnamese() ? @"Không xác minh được kết nối API." : @"API connection could not be verified."));
         dispatch_async(dispatch_get_main_queue(), ^{
             UIAlertController *alert = [UIAlertController
-                alertControllerWithTitle:succeeded ? @"Kết nối thành công" : @"Kiểm tra thất bại"
+                alertControllerWithTitle:succeeded ? (SGSYNAVietnamese() ? @"Kết nối thành công" : @"Connected") : (SGSYNAVietnamese() ? @"Kiểm tra thất bại" : @"Connection test failed")
                 message:message preferredStyle:UIAlertControllerStyleAlert];
             [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
             [SGTopController() presentViewController:alert animated:YES completion:nil];
