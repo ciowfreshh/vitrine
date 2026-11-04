@@ -1,4 +1,4 @@
-name: Build IPA from your own Spotify IPA
+name: Build Spotify SYNA IPA from your own Spotify IPA
 
 on:
   workflow_dispatch:
@@ -40,9 +40,11 @@ jobs:
           python3 -m pip install --break-system-packages git+https://github.com/asdfzxcvbn/pyzule-rw.git
 
       - name: Download IPA
+        env:
+          IPA_URL: ${{ inputs.ipa_url }}
         run: |
           mkdir -p ipa
-          curl -fsSL "${{ inputs.ipa_url }}" -o ipa/spotify.ipa
+          curl -fsSL "$IPA_URL" -o ipa/spotify.ipa
           case "$(file --mime-type -b ipa/spotify.ipa)" in application/zip|application/x-ios-app) ;; *) echo "::error::Not an IPA"; exit 1 ;; esac
 
       - run: make release
@@ -50,14 +52,14 @@ jobs:
       - uses: actions/upload-artifact@v5
         if: inputs.upload_method != 'filebin'
         with:
-          name: vitrine.ipa
+          name: Spotify_SYNA_V1
           path: out/*.ipa
           if-no-files-found: error
 
       - name: Upload to filebin.net
         if: inputs.upload_method != 'artifacts'
         run: |
-          BIN="vitrine-${{ github.run_id }}"
+          BIN="spotify-syna-${{ github.run_id }}"
           echo "### filebin.net download" >> "$GITHUB_STEP_SUMMARY"
           for f in out/*.ipa; do
             curl -fsS -X POST -H "Content-Type: application/octet-stream" --data-binary "@$f" "https://filebin.net/$BIN/$(basename "$f")" >/dev/null
