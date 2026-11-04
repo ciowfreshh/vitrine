@@ -116,5 +116,5 @@ void SGLyricsDeleteSavedTranslation(NSString *track, NSString *language);
 // A saved file read: its lines (text to translation) and its source, or nil. A file from before sources were
 // kept is the lines alone.
 NSDictionary<NSString *, NSString *> *SGSavedTranslationLines(id json, SGTranslationSource **source);
-// The Lyrics page's row: how many songs are kept, and a tap to delete them.
+// The Lyrics page's row: durable translation library, import and export.
 SGModRow *SGSavedTranslationsRow(void);

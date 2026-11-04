@@ -32,7 +32,7 @@ SG_DRIVER ?= 0
 spotifyglass_CFLAGS += -DSG_DRIVER=$(SG_DRIVER)
 spotifyglass_FRAMEWORKS := UIKit QuartzCore UniformTypeIdentifiers MediaPlayer CoreImage AudioToolbox AVFoundation CoreHaptics Accelerate CoreMotion CoreML CoreText OSLog
 # zlib unpacks KuGou's KRC lyrics (Shared/LyricsSources/KuGou.m).
-spotifyglass_LIBRARIES := z
+spotifyglass_LIBRARIES := z sqlite3
 # Runtime swizzling instead of Substrate so the dylib has no extra dependency inside the IPA.
 spotifyglass_LOGOS_DEFAULT_GENERATOR := internal
 
