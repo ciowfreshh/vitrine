@@ -57,6 +57,10 @@ need cyan "uv tool install 'cyan @ git+https://github.com/asdfzxcvbn/pyzule-rw'"
 { ls -d "$THEOS"/sdks/iPhoneOS*.sdk "$(xcode-select -p 2>/dev/null)"/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS*.sdk 2>/dev/null || true; } \
   | grep -qE 'iPhoneOS(2[6-9]|[3-9][0-9])\.' \
   || { echo "no iPhoneOS 26+ SDK: xcode-select an Xcode 26 or newer, or put the SDK in $THEOS/sdks" >&2; exit 1; }
+# Generate Spotify SYNA's default icon before validating the requested --icon.
+[ -f "$ROOT/icons/SYNA.png" ] || python3 "$ROOT/scripts/generate-syna-icon.py" "$ROOT/icons/SYNA.png"
+NAME="${NAME:-Spotify SYNA}"
+ICON="${ICON:-$ROOT/icons/SYNA.png}"
 # cyan skips -k with only a warning when its environment has no Pillow.
 if [ -n "$ICON" ]; then
   [ -f "$ICON" ] || { echo "no such icon: $ICON" >&2; exit 1; }
@@ -73,8 +77,8 @@ rm -f "$ROOT/out/.info.plist"
 # a fork left behind by a release is named for the version it really is.
 MOD_VERSION="$(cat "$ROOT/version.txt" 2>/dev/null || true)"
 : "${MOD_VERSION:=0.0.0}"
-OUT="${OUT:-$ROOT/out/vitrine-$MOD_VERSION.ipa}"
-echo "==> Vitrine $MOD_VERSION on Spotify $SPOTIFY_VERSION -> $OUT"
+OUT="${OUT:-$ROOT/out/spotify-syna-$MOD_VERSION.ipa}"
+echo "==> Spotify SYNA $MOD_VERSION on Spotify $SPOTIFY_VERSION -> $OUT"
 
 # The flag table is generated rather than committed, so it always matches the IPA being built: again whenever
 # the Spotify it was read from (its first line) is not this one.
@@ -185,7 +189,11 @@ fi
 rm -rf "$PATCH"
 
 shopt -s nullglob
-ICONS=("$ROOT"/icons/*.png)
+ICONS=()
+for png in "$ROOT"/icons/*.png; do
+  [ "$(basename "$png")" = "Vitrine.png" ] && continue
+  ICONS+=("$png")
+done
 shopt -u nullglob
 if [ ${#ICONS[@]} -gt 0 ]; then
   echo "==> adding ${#ICONS[@]} alternate icons from icons/"
