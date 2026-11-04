@@ -43,7 +43,7 @@ void SGExportSettings(void) {
         @"settings": settings,
     };
     NSData *data = [NSJSONSerialization dataWithJSONObject:file options:NSJSONWritingPrettyPrinted | NSJSONWritingSortedKeys error:nil];
-    NSURL *url = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:@"spotifyglass-settings.json"]];
+    NSURL *url = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:@"spotify-syna-settings.json"]];
     [data writeToURL:url atomically:YES];
 
     UIViewController *top = SGTopController();
@@ -56,7 +56,7 @@ void SGShareDiagnostics(void) {
     NSMutableString *text = [NSMutableString string];
     struct utsname machine;
     uname(&machine);
-    [text appendFormat:@"Vitrine %s, Spotify %@, iOS %@, %s\n", SG_VERSION,
+    [text appendFormat:@"Spotify SYNA %s, Spotify %@, iOS %@, %s\n", SG_VERSION,
         [NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"unknown",
         UIDevice.currentDevice.systemVersion, machine.machine];
     [text appendFormat:@"look %@, hide ads %d, hide upsells %d, spoof premium %d, EeveeSpotify %d\n\n",
@@ -88,7 +88,7 @@ void SGShareDiagnostics(void) {
                                                 encoding:NSUTF8StringEncoding error:nil];
     [text appendFormat:@"\n\n== config Spotify's server last sent\n%@", config ?: @"(none yet: Spoof Premium is off, or no fetch so far)\n"];
 
-    NSURL *url = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:@"vitrine-diagnostics.txt"]];
+    NSURL *url = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:@"spotify-syna-diagnostics.txt"]];
     [text writeToURL:url atomically:YES encoding:NSUTF8StringEncoding error:nil];
     UIViewController *top = SGTopController();
     UIActivityViewController *sheet = [[UIActivityViewController alloc] initWithActivityItems:@[url] applicationActivities:nil];
