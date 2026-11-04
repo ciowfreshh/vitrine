@@ -39,6 +39,11 @@ jobs:
         run: |
           brew install make dpkg ldid
           python3 -m pip install --break-system-packages git+https://github.com/asdfzxcvbn/pyzule-rw.git
+          # cyan may run from a different interpreter than python3; install Pillow
+          # into the exact interpreter used by scripts/pipeline.sh's --icon check.
+          CYAN_PY="$(dirname "$(readlink -f "$(command -v cyan)")")/python"
+          "$CYAN_PY" -m pip install --break-system-packages 'Pillow>=10'
+          "$CYAN_PY" -c 'from PIL import Image; print("cyan icon support ready:", Image.__version__)'
 
       - name: Download IPA
         env:
