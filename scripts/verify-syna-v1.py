@@ -40,6 +40,11 @@ def validate():
     has("scripts/pipeline.sh", "Spotify SYNA")
     has("scripts/pipeline.sh", '"Vitrine.png"')
     has("scripts/pipeline.sh", "scripts/generate-syna-icon.py")
+    # The package entrypoint must use the same Python environment as CI's pip.
+    # Guessing a sibling /usr/local/bin/python from `cyan` is broken on macOS.
+    pipeline = source("scripts/pipeline.sh")
+    assert "python3 -c 'from PIL import Image'" in pipeline
+    assert 'readlink -f "$(command -v cyan)"' not in pipeline
     has("tweak/Sources/App/Pages.m", "SGKeySYNATheme")
     run("bash", "-n", "scripts/pipeline.sh")
     run(sys.executable, "-m", "py_compile", "scripts/generate-syna-icon.py")
