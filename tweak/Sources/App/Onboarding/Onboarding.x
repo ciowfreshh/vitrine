@@ -17,7 +17,7 @@ static BOOL newVersion(void) {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.8 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             BOOL fresh = newVersion();
             [NSUserDefaults.standardUserDefaults setObject:@(SG_VERSION) forKey:SGKeyWhatsNewSeen];
-            if (!SGFlag(SGKeyOnboardingSeen, NO)) SGShowOnboarding();
+            if (!SGFlag(SGKeyOnboardingSeen, NO) || ![NSUserDefaults.standardUserDefaults boolForKey:SGKeySYNAWelcomeSeen]) SGShowOnboarding();
             else if (fresh) SGShowWhatsNew();
         });
     });
@@ -26,7 +26,7 @@ static BOOL newVersion(void) {
 
 %ctor {
     SGCheckEnvironmentOnce();
-    if (SGFlag(SGKeyOnboardingSeen, NO) && !newVersion()) return;
+    if (SGFlag(SGKeyOnboardingSeen, NO) && [NSUserDefaults.standardUserDefaults boolForKey:SGKeySYNAWelcomeSeen] && !newVersion()) return;
     %init;
     SGRequireClasses(@[@"_TtC19Home_FunkisPageImpl20FunkisViewController"]);
 }
