@@ -1,14 +1,11 @@
-# Alternate icons
+# Spotify SYNA app icon
 
-Each `NAME.png` here becomes an app icon that Appearance > App icon offers. `scripts/pipeline.sh`
-scales it for iPhone and iPad and adds it to Spotify's `Info.plist`.
+The iOS packaging pipeline generates `icons/SYNA.png` with
+`scripts/generate-syna-icon.py` when it does not already exist.
+It uses this opaque 1024×1024 logo as the primary home-screen icon
+and also registers it under **Appearance > App icon**.
 
-- Square, 1024 × 1024, no transparency.
-- `NAME` is letters, digits, `_` and `-`. An `_` shows as a space in the list.
+The previous `Vitrine.png` is retained only as an upstream source artifact,
+but the pipeline deliberately skips it when registering alternate icons.
 
-`Vitrine.png` is drawn by `source/reeded-light.html` (the idea is in `source/reeded-light.md`). Open the
-page to try other seeds and settings, or render one headless at 1024 × 1024:
-
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars \
-      --window-size=1024,1024 --virtual-time-budget=60000 --screenshot=icons/Vitrine.png \
-      "file://$PWD/icons/source/reeded-light.html?render=1&seed=7"
+Other square 1024×1024 PNGs in `icons/` continue to work as alternates.
