@@ -22,6 +22,7 @@
 #import "Native/Home/Home.h"
 #import "Redesigned/Home/Home.h"
 #import "Shared/AdBlock/AdBlock.h"
+#import "Shared/LyricsTranslation/LyricsTranslation.h"
 #import "Shared/Flags/Flags.h"
 #import "Shared/AudioEffects/AudioEffectsPage.h"
 #import "Shared/AutoMix/AutoMix.h"
@@ -72,7 +73,14 @@ static UIViewController *modSettingsPage(void) {
                 SGActionRow(@"Import settings", nil, ^{ SGImportSettings(); }),
             ])] footer:nil];
     });
-    [sections addObject:SGSection(nil, @[SGWithTile(language, @"globe", UIColor.systemGreenColor), backup])];
+        SGModRow *translations = SGSavedTranslationsRow();
+    translations.title = @"Saved translation storage";
+    translations.symbol = @"externaldrive.fill";
+    [sections addObject:SGSection(nil, @[
+        SGWithTile(language, @"globe", UIColor.systemGreenColor),
+        backup,
+        SGWithTile(translations, @"externaldrive.fill", UIColor.systemOrangeColor),
+    ])];
 
     // The rows of one look are asked again as Redesigned UI is flipped, so the page shows what the restart brings.
     BOOL (^redesigned)(void) = ^BOOL { return SGRedesignedUIStored(); };
@@ -140,7 +148,7 @@ static UIViewController *modSettingsPage(void) {
         ]),
         SGSection(nil, @[mod]),
     ]];
-    SGModPage *page = [[SGModPage alloc] initWithTitle:@"Spotify SYNA" intro:nil sections:sections footer:nil];
+    SGModPage *page = [[SGModPage alloc] initWithTitle:@"SYNA Settings" intro:nil sections:sections footer:nil];
     page.tiles = YES;
     return page;
 }
