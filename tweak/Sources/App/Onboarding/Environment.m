@@ -1,4 +1,4 @@
-// What about the install itself can work against the mod, said once and kept at the top of Mod Settings
+// What about the install itself can work against the mod, said once and kept at the top of Cài đặt SYNA
 // while it lasts: EeveeSpotify injected beside it, a Spotify other than the one it is made for, the redesign without
 // the app changes the IPA build makes, and a
 // redesign below iOS 26 that did not start (Core/SGUIMode.h), which turned itself off. Also what Chroma, installed
@@ -34,7 +34,7 @@ static BOOL otherVersion(void) {
 
 static SGProblem eevee(void) {
     return @[@"EeveeSpotify is injected too",
-             @"Vitrine already blocks ads and brings lyrics, and EeveeSpotify hooks the same parts of Spotify. With both, Spotify can freeze as it starts or show the wrong lyrics. Sign Spotify again without EeveeSpotify."];
+             @"Spotify SYNA already blocks ads and brings lyrics, and EeveeSpotify hooks the same parts of Spotify. With both, Spotify can freeze as it starts or show the wrong lyrics. Sign Spotify again without EeveeSpotify."];
 }
 
 // "a", "a and b", "a, b and c", with `word` for the last join.
@@ -48,13 +48,13 @@ static SGProblem version(void) {
     NSArray<NSString *> *likely = SGSpotifyLikelyWorksVersions;
     NSString *also = !likely.count ? @""
         : [NSString stringWithFormat:@", and %@ likely %@ too", joined(likely, @"and"), likely.count == 1 ? @"works" : @"work"];
-    return @[[NSString stringWithFormat:@"Spotify %@ is not the version Vitrine is made for", SGSpotifyVersion()],
-             [NSString stringWithFormat:@"Vitrine is made for Spotify %@%@. On another version some of its changes find nothing to change, and some screens can look wrong or crash. Inject Vitrine into Spotify %@.",
+    return @[[NSString stringWithFormat:@"Spotify %@ is not the version Spotify SYNA is made for", SGSpotifyVersion()],
+             [NSString stringWithFormat:@"Spotify SYNA is made for Spotify %@%@. On another version some of its changes find nothing to change, and some screens can look wrong or crash. Inject Spotify SYNA into Spotify %@.",
                  joined(SGSpotifySupportedVersions, @"and"), also,
                  joined([SGSpotifySupportedVersions arrayByAddingObjectsFromArray:likely], @"or")]];
 }
 
-// What this install lacks of the app changes Vitrine's IPA build makes (scripts/pipeline.sh: plist/liquid-glass.plist),
+// What this install lacks of the app changes Spotify SYNA's IPA build makes (scripts/pipeline.sh: plist/liquid-glass.plist),
 // as when its .deb is injected by hand, each said as what it costs. Spotify's own plist opting out of the system's glass
 // (9.1.88's) costs the redesign its glass bars. 9.1.90 has no such key, and none is the same as glass on. The Live
 // Activity and Music Haptics keys matter in either look, and their own settings say so too.
@@ -74,14 +74,14 @@ static BOOL withoutAppChanges(void) {
 }
 
 static SGProblem appChanges(void) {
-    return @[@"Installed without Vitrine's app changes",
-             [NSString stringWithFormat:@"Some of what Vitrine does needs changes to the app that only its IPA build makes. Without them, %@. Build the IPA with Vitrine instead of injecting its .deb.",
+    return @[@"Installed without Spotify SYNA's app changes",
+             [NSString stringWithFormat:@"Some of what Spotify SYNA does needs changes to the app that only its IPA build makes. Without them, %@. Build the IPA with Spotify SYNA instead of injecting its .deb.",
                  joined(missingAppChanges(), @"and")]];
 }
 
 static SGProblem fellBack(void) {
     return @[@"The redesign did not start",
-             [NSString stringWithFormat:@"Spotify did not get going with the redesign on iOS %@, so it is back in Legacy and Redesigned UI is off. Mod Settings can turn it on again.",
+             [NSString stringWithFormat:@"Spotify did not get going with the redesign on iOS %@, so it is back in Legacy and Redesigned UI is off. Cài đặt SYNA can turn it on again.",
                  UIDevice.currentDevice.systemVersion]];
 }
 
@@ -99,7 +99,7 @@ static void tell(NSArray<SGProblem> *list) {
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
-// What Chroma, installed over the same Spotify before Vitrine, left in the app's storage that Vitrine never
+// What Chroma, installed over the same Spotify before Spotify SYNA, left in the app's storage that Spotify SYNA never
 // reads: its Karaoke voice model (about 470 MB) and its saved lock screen videos. Its listening history and
 // audio effects are the person's own and stay (AudioEffectsFiles.m moves the effects over).
 static NSArray<NSURL *> *chromaLeftovers(void) {
@@ -131,7 +131,7 @@ static void offerCleanup(void) {
     if (!leftovers.count) return;
     NSString *size = sizeOf(leftovers);
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:[NSString stringWithFormat:@"Chroma left %@ on this iPhone", size]
-                                                                  message:@"Its Karaoke voice model and its saved lock screen videos are still in Spotify's storage, and Vitrine uses neither. Your listening history and audio effects stay."
+                                                                  message:@"Its Karaoke voice model and its saved lock screen videos are still in Spotify's storage, and Spotify SYNA uses neither. Your listening history and audio effects stay."
                                                            preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"Delete" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
@@ -164,7 +164,7 @@ NSArray<SGModRow *> *SGEnvironmentWarningRows(void) {
     if (withoutAppChanges())
         [rows addObject:SGWarningRow(@"Installed without the app changes", @"Tap for what that does", ^{ tell(@[appChanges()]); })];
     if (chromaLeftovers().count)
-        [rows addObject:SGWarningRow(@"Chroma left files behind", [NSString stringWithFormat:@"%@ Vitrine never uses. Tap to delete", sizeOf(chromaLeftovers())], ^{ offerCleanup(); })];
+        [rows addObject:SGWarningRow(@"Chroma left files behind", [NSString stringWithFormat:@"%@ Spotify SYNA never uses. Tap to delete", sizeOf(chromaLeftovers())], ^{ offerCleanup(); })];
     return rows;
 }
 
@@ -200,7 +200,7 @@ static void tellProblems(void) {
         [list addObjectsFromArray:installProblems()];
     }
     if (list.count) tell(list);
-    // Chroma's leftovers are offered once, after any problem; the row in Mod Settings stays while they do.
+    // Chroma's leftovers are offered once, after any problem; the row in Cài đặt SYNA stays while they do.
     if (chromaLeftovers().count && ![store boolForKey:kCleanupOffered]) {
         whenClear(kTries, ^{
             [store setBool:YES forKey:kCleanupOffered];
