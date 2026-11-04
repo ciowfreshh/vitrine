@@ -10,6 +10,7 @@
 #define SGKeyOnboardingSeen @"spotifyglass.onboarding.seen"
 // The version whose What's new was last shown, or skipped because the tour came first.
 #define SGKeyWhatsNewSeen @"spotifyglass.whatsnew.seen"
+#define SGKeySYNAWelcomeSeen @"spotifyglass.syna.welcome.seen"
 
 // Presents the tour over the top of the app; does nothing while it is already up.
 void SGShowOnboarding(void);
