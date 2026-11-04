@@ -1311,6 +1311,44 @@ static NSArray<NSString *> *modelMenu(const SGAIProvider *p) {
 }
 @end
 
+void SGTestAIConnection(void) {
+    const SGAIProvider *p = chosen();
+    NSString *key = storedSecret(p, kKeyAccount);
+    NSString *modelID = model(p);
+    if (!key.length || !modelID.length || (isOpenAI(p) && !openAIServer())) {
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Chưa đủ cấu hình API"
+            message:@"Hãy cài khóa API, mô hình và địa chỉ máy chủ hợp lệ trước khi kiểm tra."
+            preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+        [SGTopController() presentViewController:alert animated:YES completion:nil];
+        return;
+    }
+    NSString *provider = [p->tag copy];
+    NSURLRequest *probe = SGAITranslationRequest(provider, modelID,
+        @"Translate the one line 'Hello' into Vietnamese. Return exactly one line as the required JSON format.", key, YES);
+    if (!probe) return;
+    NSMutableURLRequest *request = [probe mutableCopy];
+    request.timeoutInterval = 15;
+    [[NSURLSession.sharedSession dataTaskWithRequest:request
+      completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        NSInteger status = [response isKindOfClass:NSHTTPURLResponse.class]
+            ? ((NSHTTPURLResponse *)response).statusCode : 0;
+        id json = data.length ? [NSJSONSerialization JSONObjectWithData:data options:0 error:nil] : nil;
+        NSString *problem = nil;
+        NSArray<NSString *> *lines = SGAITranslationsIn(provider, json, status, error, 1, &problem);
+        BOOL succeeded = lines.count == 1;
+        NSString *message = succeeded ? @"Máy chủ, khóa API và mô hình đã trả lời yêu cầu thử nghiệm."
+            : (problem ?: error.localizedDescription ?: @"Không xác minh được kết nối API.");
+        dispatch_async(dispatch_get_main_queue(), ^{
+            UIAlertController *alert = [UIAlertController
+                alertControllerWithTitle:succeeded ? @"Kết nối thành công" : @"Kiểm tra thất bại"
+                message:message preferredStyle:UIAlertControllerStyleAlert];
+            [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+            [SGTopController() presentViewController:alert animated:YES completion:nil];
+        });
+    }] resume];
+}
+
 NSArray<SGModRow *> *SGAITranslatorRows(void) {
     NSMutableArray<NSString *> *names = [NSMutableArray array];
     for (NSUInteger i = 0; i < kProviderCount; i++) [names addObject:kProviders[i].name];
@@ -1388,5 +1426,8 @@ NSArray<SGModRow *> *SGAITranslatorRows(void) {
         [SGTopController() presentViewController:nav animated:YES completion:nil];
     });
     SGModRow *skipSavedRow = SGSwitchRow(@"Skip saved translations", @"Skip songs that already have a saved translation", SGKeyLyricsBatchSkipSaved);
-    return @[provider, key, models, thinking, timeout, prompt, batchSizeRow, batchPromptRow, skipSavedRow];
+    SGModRow *connection = SGActionRow(@"Check API connection",
+        @"Sends one short test request using the saved Keychain credentials",
+        ^{ SGTestAIConnection(); });
+    return @[provider, key, connection, models, thinking, timeout, prompt, batchSizeRow, batchPromptRow, skipSavedRow];
 }
