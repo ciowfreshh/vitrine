@@ -49,6 +49,8 @@ BOOL SGLyricsBatchSkipSaved(void);
 
 // The chosen provider has its key, a model and, for an OpenAI-compatible one, a usable server URL.
 BOOL SGAITranslatorReady(void);
+// Sends one minimal test translation to the currently selected provider.
+void SGTestAIConnection(void);
 // Removes every provider's key and the OpenAI-compatible server from the Keychain (Mod > Clear Keychain).
 void SGAIForgetKeys(void);
 // The menu item's words: "Gemini", "Anthropic", or an OpenAI-compatible server's model; and who gets the lyrics.
