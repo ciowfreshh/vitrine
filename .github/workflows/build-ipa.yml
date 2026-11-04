@@ -1,17 +1,32 @@
 name: Build Spotify SYNA IPA from your own Spotify IPA
 
 on:
+  # Build once when the build workflow itself changes. Other source commits
+  # do not start costly macOS runners; workflow_dispatch remains available.
+  push:
+    branches: [syna-spotify-v1]
+    paths: [.github/workflows/build-ipa.yml]
   workflow_dispatch:
     inputs:
       ipa_url:
-        description: "Direct link to a decrypted Spotify IPA"
-        required: true
+        description: "Direct link to a decrypted Spotify IPA (optional; default is 9.1.90)"
+        required: false
+        default: "https://github.com/codeboy2012/PwEevee/releases/download/v3.1.6.1/com.spotify.client_9.1.90_und3fined.ipa"
         type: string
       upload_method:
         description: "Where to put the result"
         default: artifacts
         type: choice
         options: [artifacts, filebin, both]
+
+permissions:
+  contents: read
+
+# Avoid overlapping CI jobs when the workflow button is pressed repeatedly.
+# One pending job remains; no running job is interrupted.
+concurrency:
+  group: spotify-syna-ipa-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   THEOS: ${{ github.workspace }}/theos
@@ -47,13 +62,31 @@ jobs:
 
       - name: Download IPA
         env:
-          IPA_URL: ${{ inputs.ipa_url }}
+          IPA_URL: ${{ inputs.ipa_url || 'https://github.com/codeboy2012/PwEevee/releases/download/v3.1.6.1/com.spotify.client_9.1.90_und3fined.ipa' }}
         run: |
           mkdir -p ipa
           curl -fsSL "$IPA_URL" -o ipa/spotify.ipa
           case "$(file --mime-type -b ipa/spotify.ipa)" in application/zip|application/x-ios-app) ;; *) echo "::error::Not an IPA"; exit 1 ;; esac
 
-      - run: make release
+      - name: Build preflight
+        run: |
+          python3 scripts/verify-syna-v1.py
+          CYAN_PY="$(dirname "$(readlink -f "$(command -v cyan)")")/python"
+          "$CYAN_PY" -c 'from PIL import Image; print("Pillow OK:", Image.__version__)'
+
+      - name: Run make release
+        run: |
+          mkdir -p out
+          set -o pipefail
+          make release 2>&1 | tee out/build-syna.log
+
+      - name: Upload build diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: Spotify_SYNA_build_log
+          path: out/build-syna.log
+          if-no-files-found: ignore
 
       - uses: actions/upload-artifact@v5
         if: inputs.upload_method != 'filebin'
