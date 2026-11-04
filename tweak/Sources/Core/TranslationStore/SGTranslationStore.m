@@ -75,12 +75,17 @@ static BOOL text(id value, NSUInteger limit) {
 
 - (void)open {
     NSFileManager *fm = NSFileManager.defaultManager;
-    if (![fm createDirectoryAtURL:_url.URLByDeletingLastPathComponent withIntermediateDirectories:YES attributes:nil error:&_openError]) return;
+    NSError *failure = nil;
+    if (![fm createDirectoryAtURL:_url.URLByDeletingLastPathComponent withIntermediateDirectories:YES attributes:nil error:&failure]) {
+        _openError = failure; return;
+    }
     if (sqlite3_open_v2(_url.path.UTF8String, &_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX, NULL) != SQLITE_OK) {
         _openError = problem(SGLocalized(@"Could not open saved translations.")); return;
     }
     sqlite3_busy_timeout(_db, 10000);
-    if (![self sql:"PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; CREATE TABLE IF NOT EXISTS translations (track TEXT NOT NULL, language TEXT NOT NULL, json BLOB NOT NULL, title TEXT, artist TEXT, made REAL, bytes INTEGER NOT NULL, PRIMARY KEY(track,language));" error:&_openError]) return;
+    if (![self sql:"PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; CREATE TABLE IF NOT EXISTS translations (track TEXT NOT NULL, language TEXT NOT NULL, json BLOB NOT NULL, title TEXT, artist TEXT, made REAL, bytes INTEGER NOT NULL, PRIMARY KEY(track,language));" error:&failure]) {
+        _openError = failure; return;
+    }
     // No eviction. Application Support participates in device backups. Files are protected after first unlock.
 #if TARGET_OS_IPHONE
     [fm setAttributes:@{NSFileProtectionKey:NSFileProtectionCompleteUntilFirstUserAuthentication} ofItemAtPath:_url.path error:nil];
