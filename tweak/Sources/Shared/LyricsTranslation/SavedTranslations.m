@@ -1,6 +1,7 @@
 // Persistent JSON per song/language under Application Support/SYNA/Translations.
 // Existing cache files are copied once; no deletion or automatic limit is applied.
 #import "Core/SGCore.h"
+#import "Core/SGSYNA.h"
 #import "Settings/SGModPage.h"
 #import "Settings/SGPageStyle.h"
 #import "Shared/Lyrics/Lyrics.h"
@@ -129,7 +130,7 @@ void SGLyricsDeleteSavedTranslation(NSString *track, NSString *language) {
 
 static NSString *summary(void) {
     NSArray<NSURL *> *all = files();
-    if (!all.count) return @"None";
+    if (!all.count) return SGSYNALocalize(@"None");
     long long bytes = 0;
     for (NSURL *file in all) {
         NSNumber *size;
@@ -144,13 +145,14 @@ SGModRow *SGSavedTranslationsRow(void) {
     return SGStatActionRow(@"Saved translations", @"Songs translated on this iPhone or by an AI translator come back translated",
                            ^NSString *{ return summary(); }, ^{
         if (!files().count) return;
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Delete saved translations?"
-            message:@"Songs translated before are translated again the next time you ask." preferredStyle:UIAlertControllerStyleAlert];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Delete" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGSYNALocalize(@"Delete saved translations?")
+            message:SGSYNAVietnamese() ? @"Mọi bản dịch đã lưu sẽ bị xóa; bạn cần dịch lại khi sử dụng."
+                                     : @"Saved translations will be deleted; you will need to translate songs again." preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:SGSYNALocalize(@"Delete") style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
             SGLyricsForgetAITranslation(nil, nil);
             deleteQueued(folder(), @"saved translations");
         }]];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+        [alert addAction:[UIAlertAction actionWithTitle:SGSYNALocalize(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
         [SGTopController() presentViewController:alert animated:YES completion:nil];
     });
 }
