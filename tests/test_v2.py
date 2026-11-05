@@ -1,4 +1,4 @@
-import hashlib,importlib.util,json,pathlib,subprocess,sys,tempfile,unittest,zipfile
+import hashlib,importlib.util,json,pathlib,plistlib,re,subprocess,sys,tempfile,unittest,zipfile
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'scripts'))
 import localization
@@ -47,8 +47,33 @@ class LocalizationTests(unittest.TestCase):
     def test_vitrine_tables_do_not_overwrite_spotify(self):
         spec=importlib.util.spec_from_file_location('tables',ROOT/'scripts/install-localizations.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
         tables=module.resources()
-        self.assertEqual(set(tables),{'en.lproj/Vitrine.strings','vi.lproj/Vitrine.strings'})
+        self.assertEqual(set(tables),{f'{lang}.lproj/{name}.strings' for lang in ('en','vi') for name in ('Vitrine','AppShortcuts')})
         self.assertIn('Lời bài hát',tables['vi.lproj/Vitrine.strings'].decode())
+    def test_shortcuts_phrases_and_placeholders(self):
+        phrases=json.loads((ROOT/'localization/app-shortcuts.json').read_text())
+        source=(ROOT/'tweak/Sources/Shared/LiveActivity/AppShortcuts.swift').read_text()
+        actual=[]
+        for _,key in localization.swift_literals(source):
+            if r'\(.applicationName)' in key:
+                actual.append(re.sub(r'\\\(\\\.\$(\w+)\)',r'${\1}',key.replace(r'\(.applicationName)','${applicationName}')))
+        self.assertEqual(set(actual),set(phrases))
+        for key,value in phrases.items():
+            self.assertEqual(sorted(re.findall(r'\$\{\w+\}',key)),sorted(re.findall(r'\$\{\w+\}',value)))
+            self.assertNotEqual(key,value)
+    def test_install_preserves_existing_spotify_resource_entries(self):
+        spec=importlib.util.spec_from_file_location('tables',ROOT/'scripts/install-localizations.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as tmp:
+            path=pathlib.Path(tmp)/'test.ipa';app='Payload/Spotify.app/'
+            with zipfile.ZipFile(path,'w') as z:
+                z.writestr(app+'SpotifyData',b'unchanged binary')
+                z.writestr(app+'vi.lproj/AppShortcuts.strings',plistlib.dumps({'Spotify-owned':'Giữ nguyên'},fmt=plistlib.FMT_BINARY))
+            module.install(path,app)
+            with zipfile.ZipFile(path) as z:
+                self.assertIsNone(z.testzip())
+                self.assertEqual(z.read(app+'SpotifyData'),b'unchanged binary')
+                existing=plistlib.loads(z.read(app+'vi.lproj/AppShortcuts.strings'))
+                self.assertEqual(existing['Spotify-owned'],'Giữ nguyên')
+                self.assertEqual(existing['Play or pause ${applicationName}'],'Phát hoặc tạm dừng ${applicationName}')
     def test_upstream_contract(self):
         contract=json.loads((ROOT/'tests/upstream-contract.json').read_text())
         for relative,expected in contract['unchanged_files'].items():

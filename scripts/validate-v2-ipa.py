@@ -31,7 +31,8 @@ with zipfile.ZipFile(args.ipa) as ipa:
     decrypted(ipa.read(app+info['CFBundleExecutable']))
     if args.built:
         for language in ('en','vi'):
-            if app+language+'.lproj/Vitrine.strings' not in ipa.namelist():raise ValueError('Missing UI localization')
+            for table in ('Vitrine','AppShortcuts'):
+                if app+language+'.lproj/'+table+'.strings' not in ipa.namelist():raise ValueError('Missing UI localization')
         if not any(n.endswith('/spotifyglass.dylib') for n in ipa.namelist()):raise ValueError('Missing tweak')
         if not any('SpotifyGlassLiveActivity.appex/vi.lproj/Vitrine.strings' in n for n in ipa.namelist()):raise ValueError('Missing extension localization')
         if args.original:

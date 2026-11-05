@@ -65,3 +65,10 @@ container, and existing playback/translation behavior. OS-owned sheets and Siri/
 metadata may require the system language or a system refresh; validate these on a device.
 The UI language changes immediately for newly built screens; restart applies it to all
 cached views. It is independent of the lyrics translation target and Spotify's own locale.
+
+The ten existing Siri phrase templates have a separate English/Vietnamese
+`AppShortcuts.strings` table, preserving `${applicationName}`, `${mode}` and `${length}`.
+The installer merges existing Spotify table entries rather than replacing them.
+The macOS tests parse generated tables through Foundation and Apple's plutil, including
+an existing OpenStep table merge. This follows Apple's App Shortcuts localization format:
+https://developer.apple.com/videos/play/tech-talks/10168/

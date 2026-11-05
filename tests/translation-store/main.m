@@ -67,6 +67,10 @@ int main(int argc,const char *argv[]) { @autoreleasepool {
     [NSUserDefaults.standardUserDefaults setObject:@"vi" forKey:SGKeyUILanguage];CHECK([SGLocalized(@"Lyrics")isEqual:@"Lời bài hát"]);CHECK([SGLocalized(@"unregistered technical value")isEqual:@"unregistered technical value"]);
     [NSUserDefaults.standardUserDefaults setObject:@"en" forKey:SGKeyUILanguage];CHECK([SGLocalized(@"Lyrics")isEqual:@"Lyrics"]);
     [NSUserDefaults.standardUserDefaults removeObjectForKey:SGKeyUILanguage];
+    NSString *resources=[[@(argv[0]) stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"vi.lproj"];
+    NSBundle *vietnamese=[NSBundle bundleWithPath:resources];
+    CHECK([[vietnamese localizedStringForKey:@"Lyrics" value:nil table:@"Vitrine"]isEqual:@"Lời bài hát"]);
+    CHECK([[vietnamese localizedStringForKey:@"Play or pause ${applicationName}" value:nil table:@"AppShortcuts"]isEqual:@"Phát hoặc tạm dừng ${applicationName}"]);
     if(argc>1) { for(NSString *file in [NSFileManager.defaultManager contentsOfDirectoryAtPath:@(argv[1]) error:nil]) {
         BOOL shouldFail=[file hasPrefix:@"bad-"];BOOL ok=[SGTranslationArchive readURL:[[NSURL fileURLWithPath:@(argv[1])] URLByAppendingPathComponent:file] consume:^BOOL(id row,NSError **e){return [SGTranslationStore validatedRecord:row error:e]!=nil;} progress:nil error:nil];CHECK(ok!=shouldFail);
     }}
