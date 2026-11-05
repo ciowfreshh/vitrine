@@ -9,6 +9,7 @@
 #import "Shared/AlbumQueue/AlbumQueue.h"
 #import "Shared/Navigation/Links.h"
 #import "Settings/SGModPage.h"
+#import "Settings/SGPageStyle.h"
 
 static NSString *const kConcurrency = @"spotifyglass.lyrics.batch.concurrency";
 static NSString *const kChanged = @"Vitrine.BatchQueueChanged";
@@ -75,6 +76,7 @@ static NSError *requestError(NSHTTPURLResponse *response, NSError *error) {
     NSInteger count = [NSUserDefaults.standardUserDefaults integerForKey:kConcurrency];
     _queue.concurrency = count ?: 2;
     _queue.changed = ^{ [NSNotificationCenter.defaultCenter postNotificationName:kChanged object:nil]; };
+    __weak SGTranslationQueue *weakQueue = _queue;
     _queue.execute = ^(NSDictionary *item, NSString *language, void (^done)(NSString *, NSError *)) {
         NSString *track = item[@"id"];
         // Recheck the durable store after restart, and immediately before sending, so a completed
@@ -94,6 +96,7 @@ static NSError *requestError(NSHTTPURLResponse *response, NSError *error) {
                 SGKaraokeLine *copy = [line copy]; copy.translation = nil; copy.translationMade = NO;
                 [lines addObject:copy];
             }
+            if (![weakQueue markCandidate:track]) { done(nil, SGTranslationQueueError(SGTranslationStorage, SGLocalized(@"Could not write translations. Check available storage."), 0)); return; }
             SGTranslationSource *source = SGAITranslatorSource();
             SGLyricsTranslateQueuedWithAI(track, lines, language, ^(NSArray *answer, NSError *failure) {
                 if (failure) { done(nil, failure); return; }
@@ -216,13 +219,17 @@ static SGBatchManager *manager(void) { static SGBatchManager *value; static disp
 
 @interface SGBatchPage : SGPage
 @property (nonatomic, strong) UIProgressView *progress;
+@property (nonatomic, strong) UILabel *progressLabel;
 @end
 @implementation SGBatchPage
 - (void)viewDidLoad {
     [super viewDidLoad]; self.title = SGLocalized(@"Batch translation");
     _progress = [[UIProgressView alloc] initWithProgressViewStyle:UIProgressViewStyleDefault];
     _progress.frame = CGRectMake(20, 20, MAX(1, self.view.bounds.size.width - 40), 4);
-    UIView *header = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 44)];
+    UIView *header = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 76)];
+    _progressLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 30, self.view.bounds.size.width - 40, 40)];
+    _progressLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth; _progressLabel.numberOfLines = 0;
+    _progressLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleFootnote]; [header addSubview:_progressLabel];
     _progress.autoresizingMask = UIViewAutoresizingFlexibleWidth; [header addSubview:_progress]; self.tableView.tableHeaderView = header;
 }
 - (void)viewWillAppear:(BOOL)animated { [super viewWillAppear:animated]; [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(refresh) name:kChanged object:nil]; [self refresh]; }
@@ -231,11 +238,12 @@ static SGBatchManager *manager(void) { static SGBatchManager *value; static disp
     NSDictionary *s = manager().queue.statistics;
     NSUInteger processed = [s[@"succeeded"] unsignedIntegerValue] + [s[@"failed"] unsignedIntegerValue] + [s[@"skipped"] unsignedIntegerValue];
     _progress.progress = [s[@"total"] floatValue] ? processed / [s[@"total"] floatValue] : 0;
+    _progressLabel.text = [NSString stringWithFormat:SGLocalized(@"Processed %lu / %lu songs"), (unsigned long)processed, [s[@"total"] unsignedLongValue]];
     [self.tableView reloadData];
 }
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)table { return 4; }
 - (NSInteger)tableView:(UITableView *)table numberOfRowsInSection:(NSInteger)section {
-    if (section == 0) return 4; if (section == 1) return 8; if (section == 2) return 4;
+    if (section == 0) return 4; if (section == 1) return 9; if (section == 2) return 4;
     NSUInteger n = 0; for (NSDictionary *item in manager().queue.items) if (item[@"error"]) ++n; return n;
 }
 - (NSString *)tableView:(UITableView *)table titleForHeaderInSection:(NSInteger)section {
@@ -256,7 +264,8 @@ static SGBatchManager *manager(void) { static SGBatchManager *value; static disp
         NSArray *labels = @[SGLocalized(@"Songs in queue"), SGLocalized(@"Translated"), SGLocalized(@"Failed"), SGLocalized(@"Skipped"), SGLocalized(@"Translating"), SGLocalized(@"Unprocessed")];
         if (path.row < 6) { cell.textLabel.text = labels[path.row]; cell.detailTextLabel.text = [s[keys[path.row]] stringValue]; }
         else if (path.row == 6) { cell.textLabel.text = SGLocalized(@"Songs scanned from source"); cell.detailTextLabel.text = [q.context[@"scanned"] stringValue] ?: @"0"; }
-        else { cell.textLabel.text = SGLocalized(@"Target language"); cell.detailTextLabel.text = q.language ?: SGLyricsTranslationTarget(); }
+        else if (path.row == 7) { cell.textLabel.text = SGLocalized(@"Target language"); cell.detailTextLabel.text = q.language ?: SGLyricsTranslationTarget(); }
+        else { cell.textLabel.text = SGLocalized(@"Songs needing translation (checked)"); cell.detailTextLabel.text = [s[@"eligible"] stringValue]; }
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
     } else if (path.section == 2) {
         cell.textLabel.text = @[SGLocalized(@"Start / Resume untranslated songs"), SGLocalized(@"Pause"), SGLocalized(@"Retry failed songs"), SGLocalized(@"Concurrent AI requests")][path.row];

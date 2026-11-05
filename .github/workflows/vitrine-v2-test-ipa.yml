@@ -2,7 +2,6 @@ name: Build Vitrine V2.1 Enhanced IPA
 on:
   push:
     branches: [vitrine-i18n-translation-v2]
-    paths: [.github/workflows/vitrine-v2-test-ipa.yml]
   workflow_dispatch:
 permissions:
   contents: read

@@ -97,9 +97,16 @@ int main(void) { @autoreleasepool {
         [q resume]; check([q.statistics[@"failed"] integerValue] == 1, @"500/invalid JSON/line mismatch/timeout stop after attempt four");
         [q pause]; [q retryFailures]; check([q.statistics[@"pending"] integerValue] == 1, @"manual retry resets only failed songs");
     }
+    SGTranslationQueue *skips = job(root, @"skips.json", 3); __block NSUInteger skipped = 0;
+    skips.execute = ^(NSDictionary *item, NSString *language, void (^done)(NSString *, NSError *)) { done(@[@"skipped:saved", @"skipped:no_lyrics", @"skipped:same_language"][skipped++], nil); };
+    [skips resume]; check([skips.statistics[@"skipped"] integerValue] == 3 && [skips.statistics[@"failed"] integerValue] == 0, @"saved, unavailable lyrics and same-language outcomes are skips, not network failures");
     SGTranslationQueue *auth = job(root, @"auth.json", 5);
     auth.execute = ^(NSDictionary *item, NSString *language, void (^done)(NSString *, NSError *)) { done(nil, SGTranslationQueueError(SGTranslationAuthentication, @"fixture auth rejected", 0)); };
     [auth resume]; check(auth.paused && auth.notice.length && [auth.statistics[@"pending"] integerValue] >= 3, @"authentication failure pauses with an actionable error");
+    NSURL *corruptURL = [root URLByAppendingPathComponent:@"corrupt.json"];
+    NSData *corrupt = [@"{\"schema\":null}" dataUsingEncoding:NSUTF8StringEncoding]; [corrupt writeToURL:corruptURL atomically:YES];
+    SGTranslationQueue *broken = [[SGTranslationQueue alloc] initWithURL:corruptURL];
+    check(broken.paused && broken.notice.length && ![broken prepareLanguage:@"vi"] && [[NSData dataWithContentsOfURL:corruptURL] isEqual:corrupt], @"corrupt progress never crashes or overwrites the recovery file");
     NSLog(@"PASS: %lu native queue assertions; network and player are mocks, no API keys used", (unsigned long)checks);
     [NSFileManager.defaultManager removeItemAtURL:root error:nil];
 } return 0; }

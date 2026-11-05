@@ -48,20 +48,27 @@ SGTranslationFailure SGTranslationHTTPFailure(NSInteger status, NSError *network
     NSData *data = [NSData dataWithContentsOfURL:url];
     if (data) {
         id root = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
-        BOOL valid = [root isKindOfClass:NSDictionary.class] && [root[@"schema"] integerValue] == 1 &&
+        BOOL valid = [root isKindOfClass:NSDictionary.class] && [root[@"schema"] isKindOfClass:NSNumber.class] && [root[@"schema"] integerValue] == 1 &&
             [root[@"items"] isKindOfClass:NSArray.class] && [root[@"language"] isKindOfClass:NSString.class] &&
             [root[@"context"] isKindOfClass:NSDictionary.class];
         NSMutableSet *seen = [NSMutableSet set];
         for (id item in valid ? root[@"items"] : @[]) {
             if (![item isKindOfClass:NSMutableDictionary.class] || ![item[@"id"] isKindOfClass:NSString.class] ||
                 ![item[@"id"] length] || [seen containsObject:item[@"id"]] ||
+                ![item[@"attempts"] isKindOfClass:NSNumber.class] ||
+                (item[@"next"] && ![item[@"next"] isKindOfClass:NSNumber.class]) ||
+                (item[@"title"] && ![item[@"title"] isKindOfClass:NSString.class]) ||
+                (item[@"error"] && ![item[@"error"] isKindOfClass:NSString.class]) ||
                 ![@[@"pending", @"running", @"retry", @"succeeded", @"skipped", @"failed"] containsObject:item[@"state"]]) { valid = NO; break; }
             [seen addObject:item[@"id"]];
         }
         if (valid) {
             _work = root[@"items"]; _language = root[@"language"]; _context = root[@"context"];
-            _cooldown = [root[@"cooldown"] doubleValue];
-            for (NSMutableDictionary *item in _work) if ([item[@"state"] isEqual:@"running"]) item[@"state"] = @"pending";
+            _cooldown = [root[@"cooldown"] isKindOfClass:NSNumber.class] ? [root[@"cooldown"] doubleValue] : 0;
+            for (NSMutableDictionary *item in _work) if ([item[@"state"] isEqual:@"running"]) {
+                item[@"state"] = [item[@"attempts"] unsignedIntegerValue] >= 4 ? @"failed" : @"pending";
+                if ([item[@"state"] isEqual:@"failed"]) item[@"error"] = @"Interrupted request reached the retry limit. Use Retry failed songs.";
+            }
         } else { _unreadable = YES; _notice = @"Queue recovery failed. The saved file was preserved."; }
     }
     return self;
@@ -93,6 +100,10 @@ SGTranslationFailure SGTranslationHTTPFailure(NSInteger status, NSError *network
         [seen addObject:identifier];
         [_work addObject:[@{@"id":identifier, @"title":track[@"title"] ?: identifier, @"state":@"pending", @"attempts":@0} mutableCopy]];
     }
+    return [self checkpoint];
+}
+- (BOOL)markCandidate:(NSString *)trackID {
+    for (NSMutableDictionary *item in _work) if ([item[@"id"] isEqual:trackID]) { item[@"eligible"] = @YES; break; }
     return [self checkpoint];
 }
 - (BOOL)checkpoint {
@@ -128,10 +139,11 @@ SGTranslationFailure SGTranslationHTTPFailure(NSInteger status, NSError *network
     [self checkpoint];
 }
 - (NSDictionary *)statistics {
-    NSMutableDictionary *stats = [@{@"total":@(_work.count), @"succeeded":@0, @"failed":@0, @"skipped":@0, @"running":@0, @"pending":@0} mutableCopy];
+    NSMutableDictionary *stats = [@{@"total":@(_work.count), @"succeeded":@0, @"failed":@0, @"skipped":@0, @"running":@0, @"pending":@0, @"eligible":@0} mutableCopy];
     for (NSDictionary *item in _work) {
         NSString *state = [item[@"state"] isEqual:@"retry"] ? @"pending" : item[@"state"];
         stats[state] = @([stats[state] unsignedIntegerValue] + 1);
+        if ([item[@"eligible"] boolValue]) stats[@"eligible"] = @([stats[@"eligible"] unsignedIntegerValue] + 1);
     }
     return stats;
 }

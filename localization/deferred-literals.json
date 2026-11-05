@@ -40,6 +40,7 @@
   },
   "tweak/Sources/Core/BatchQueue/SGTranslationQueue.m": {
     "Could not save queue progress. Check available storage.\nif (!ok) { _paused = YES; _notice = @\"Could not save queue progress. Check available storage.\"; }": 1,
+    "Interrupted request reached the retry limit. Use Retry failed songs.\nif ([item[@\"state\"] isEqual:@\"failed\"]) item[@\"error\"] = @\"Interrupted request reached the retry limit. Use Retry failed songs.\";": 1,
     "Queue recovery failed. The saved file was preserved.\n} else { _unreadable = YES; _notice = @\"Queue recovery failed. The saved file was preserved.\"; }": 1,
     "Translation failed\nitem[@\"error\"] = error.localizedDescription ?: @\"Translation failed\"; item[@\"code\"] = @(code);": 1
   },

@@ -1308,7 +1308,7 @@ typedef struct {
 - (BOOL)accessibilityActivate { return self.activate ? self.activate() : NO; }
 @end
 
-@interface SGRKaraokeView () <UIScrollViewDelegate, SGPlayerStateObserver>
+@interface SGRKaraokeView () <UIScrollViewDelegate, SGPlayerStateObserver, UIGestureRecognizerDelegate>
 @end
 
 @implementation SGRKaraokeView {
@@ -1429,8 +1429,10 @@ typedef struct {
     _sing.hidden = !SGSingButtonShown();
     [self addSubview:_sing];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(singButtonChanged) name:SGSingButtonDidChangeNotification object:nil];
-    [self addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapped:)]];
-    [self addGestureRecognizer:[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(held:)]];
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapped:)];
+    UILongPressGestureRecognizer *hold = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(held:)];
+    tap.delegate = self; hold.delegate = self;
+    [self addGestureRecognizer:tap]; [self addGestureRecognizer:hold];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(playerTransitionChanged:) name:SGPlayerTransitionNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(playerTransitionChanged:) name:SGPlayerTransitionEndedNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(restyle) name:SGRLyricsTextDidChangeNotification object:nil];
@@ -1597,6 +1599,11 @@ typedef struct {
     if (!meanings.count) return;
     SGPlayFeedback(SGFeedbackSkip);
     SGRShowMeanings(SGKaraokeLineText(view.line), meanings);
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)recognizer shouldReceiveTouch:(UITouch *)touch {
+    if (_selected && (touch.view == _selectionBar || [touch.view isDescendantOfView:_selectionBar])) return NO;
+    return YES;
 }
 
 // Selection stays in this view; it never sends a player seek or replaces the lyric renderer.

@@ -28,6 +28,7 @@ SGTranslationFailure SGTranslationHTTPFailure(NSInteger status, NSError *network
 - (BOOL)prepareLanguage:(NSString *)language;
 - (BOOL)appendTracks:(NSArray<NSDictionary *> *)tracks;
 - (BOOL)checkpoint;
+- (BOOL)markCandidate:(NSString *)trackID;
 - (void)resume;
 - (void)pause;
 - (void)retryFailures;
