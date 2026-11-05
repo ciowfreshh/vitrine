@@ -89,11 +89,11 @@ static void unsettle(UICollectionViewCell *cell) {
 #pragma mark - the switches
 
 static const struct { __unsafe_unretained NSString *title, *key; BOOL prefix; } kSections[] = {
-    {SGLocalized(@"More by "), SGRKeyAlbumHideMoreBy, YES},
-    {SGLocalized(@"Related Music Videos"), SGRKeyAlbumHideVideos, NO},
-    {SGLocalized(@"Concerts"), SGRKeyAlbumHideConcerts, NO},
-    {SGLocalized(@"Merch"), SGRKeyAlbumHideMerch, NO},
-    {SGLocalized(@"You might also like"), SGRKeyAlbumHideYouMightLike, NO},
+    {@"More by ", SGRKeyAlbumHideMoreBy, YES},
+    {@"Related Music Videos", SGRKeyAlbumHideVideos, NO},
+    {@"Concerts", SGRKeyAlbumHideConcerts, NO},
+    {@"Merch", SGRKeyAlbumHideMerch, NO},
+    {@"You might also like", SGRKeyAlbumHideYouMightLike, NO},
 };
 static const NSInteger kOther = sizeof(kSections) / sizeof(kSections[0]);
 

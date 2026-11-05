@@ -24,6 +24,26 @@ class LocalizationTests(unittest.TestCase):
     def test_format_mismatch_detected(self):
         self.assertNotEqual(localization.signature('%lu of %lu'),localization.signature('%@ trên %lu'))
         self.assertEqual(localization.signature('100% is a percentage.'),[])
+    def test_existing_catalog_key_cannot_bypass_localizer(self):
+        path=ROOT/'tweak/Sources/App/LocalizationRegressionProbe.m'
+        try:
+            path.write_text('void probe(void) { id s = @"Lyrics"; }\n')
+            run=subprocess.run([sys.executable,str(ROOT/'scripts/localization.py')],capture_output=True,text=True)
+            self.assertNotEqual(run.returncode,0)
+            self.assertIn('bypasses localization',run.stderr)
+        finally:path.unlink(missing_ok=True)
+    def test_swift_ui_is_included_in_inventory(self):
+        path=ROOT/'extension/LiveActivity/LocalizationRegressionProbe.swift'
+        try:
+            path.write_text('let label = Text("A new untranslated widget label")\n')
+            run=subprocess.run([sys.executable,str(ROOT/'scripts/localization.py')],capture_output=True,text=True)
+            self.assertNotEqual(run.returncode,0)
+            self.assertIn('A new untranslated widget label',run.stderr)
+        finally:path.unlink(missing_ok=True)
+    def test_localized_labels_do_not_become_api_tokens(self):
+        source=(ROOT/'tweak/Sources/Shared/LyricsTranslation/LyricsTranslation.m').read_text()
+        self.assertNotIn('setObject:thinkingLevels[index]',source)
+        self.assertIn('setObject:@[@"low", @"medium", @"high"][index] forKey:SGKeyAIThinking',source)
     def test_vitrine_tables_do_not_overwrite_spotify(self):
         spec=importlib.util.spec_from_file_location('tables',ROOT/'scripts/install-localizations.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
         tables=module.resources()

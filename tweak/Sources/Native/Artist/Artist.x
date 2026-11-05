@@ -246,17 +246,17 @@ static void hideTabBar(UIView *strip) {
 #pragma mark - sections
 
 static const struct { __unsafe_unretained NSString *title, *key; BOOL prefix; } sections[] = {
-    {SGLocalized(@"Popular"), SGHideArtistPopular, NO},
-    {SGLocalized(@"Artist pick"), SGHideArtistPick, NO},
-    {SGLocalized(@"Popular releases"), SGHideArtistReleases, NO},
-    {SGLocalized(@"Featuring "), SGHideArtistFeaturing, YES},
-    {SGLocalized(@"Music videos"), SGHideArtistVideos, NO},
-    {SGLocalized(@"Watch more from "), SGHideArtistVideos, YES},
-    {SGLocalized(@"About"), SGHideArtistAbout, NO},
-    {SGLocalized(@"Artist playlists"), SGHideArtistPlaylists, NO},
-    {SGLocalized(@"Fans also like"), SGHideArtistFansAlsoLike, NO},
-    {SGLocalized(@"Appears on"), SGHideArtistAppearsOn, NO},
-    {SGLocalized(@"Discovered on"), SGHideArtistDiscoveredOn, NO},
+    {@"Popular", SGHideArtistPopular, NO},
+    {@"Artist pick", SGHideArtistPick, NO},
+    {@"Popular releases", SGHideArtistReleases, NO},
+    {@"Featuring ", SGHideArtistFeaturing, YES},
+    {@"Music videos", SGHideArtistVideos, NO},
+    {@"Watch more from ", SGHideArtistVideos, YES},
+    {@"About", SGHideArtistAbout, NO},
+    {@"Artist playlists", SGHideArtistPlaylists, NO},
+    {@"Fans also like", SGHideArtistFansAlsoLike, NO},
+    {@"Appears on", SGHideArtistAppearsOn, NO},
+    {@"Discovered on", SGHideArtistDiscoveredOn, NO},
 };
 
 static BOOL sectionHidden(NSString *title) {

@@ -256,7 +256,7 @@ static NSString *serverHost(void) {
 
 // Who the messages name: the provider, or for an OpenAI-compatible one its server's host.
 static NSString *speaker(const SGAIProvider *p) {
-    return isOpenAI(p) ? serverHost() ?: @"The server" : SGLocalized(p->name);
+    return isOpenAI(p) ? serverHost() ?: SGLocalized(@"The server") : SGLocalized(p->name);
 }
 
 #pragma mark - the keys
@@ -1336,10 +1336,10 @@ NSArray<SGModRow *> *SGAITranslatorRows(void) {
         SGLog(@"ai: translator %@", chosen()->tag);
         translatorChanged();
     });
-    SGModRow *key = SGStatActionRow(@"API key", SGLocalized(@"Translate any song from the lyrics' corner menu"), ^NSString *{
+    SGModRow *key = SGStatActionRow(SGLocalized(@"API key"), SGLocalized(@"Translate any song from the lyrics' corner menu"), ^NSString *{
         const SGAIProvider *p = chosen();
         if (!storedSecret(p, kKeyAccount)) return SGLocalized(@"Off");
-        return isOpenAI(p) ? serverHost() ?: @"Server not usable" : SGLocalized(@"Set");
+        return isOpenAI(p) ? serverHost() ?: SGLocalized(@"Server not usable") : SGLocalized(@"Set");
     }, ^{ askForKey(); });
     SGModRow *prompt = SGStatActionRow(SGLocalized(@"Translation prompt"), SGLocalized(@"What the AI translator is told to do with a song's lines"),
                                        ^NSString *{ return storedString(SGKeyAIPrompt) ? SGLocalized(@"Edited") : SGLocalized(@"Default"); }, ^{
@@ -1351,10 +1351,11 @@ NSArray<SGModRow *> *SGAITranslatorRows(void) {
     // Low first: 3.8 Flash refuses minimal.
     NSArray<NSString *> *thinkingLevels = @[SGLocalized(@"Low"), SGLocalized(@"Medium"), SGLocalized(@"High")];
     SGModRow *thinking = SGMenuRow(SGLocalized(@"Thinking"), thinkingLevels, ^NSString *{
-        return geminiThinkingLevel().capitalizedString;
+        return SGLocalized(geminiThinkingLevel().capitalizedString);
     }, ^(NSInteger index) {
         if (index == 0) [NSUserDefaults.standardUserDefaults removeObjectForKey:SGKeyAIThinking];
-        else [NSUserDefaults.standardUserDefaults setObject:thinkingLevels[index].lowercaseString forKey:SGKeyAIThinking];
+        // Display labels are localized; Gemini's stored/request values must remain protocol tokens.
+        else [NSUserDefaults.standardUserDefaults setObject:@[@"low", @"medium", @"high"][index] forKey:SGKeyAIThinking];
         translatorChanged();
     });
     thinking.visible = ^{ return [chosen()->tag isEqualToString:@"gemini"]; };

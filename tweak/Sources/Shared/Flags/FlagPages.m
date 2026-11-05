@@ -23,7 +23,7 @@ static NSArray<SGModSection *> *known(NSArray<SGModSection *> *sections) {
 }
 
 static UIViewController *martiniPage(void) {
-    return [[SGModPage alloc] initWithTitle:@"AI Chat (Martini)" intro:SGLocalized(SGRestartNote) sections:known(@[
+    return [[SGModPage alloc] initWithTitle:SGLocalized(@"AI Chat (Martini)") intro:SGLocalized(SGRestartNote) sections:known(@[
         SGSection(SGLocalized(@"On Home"), @[
             SGFlagRow(SGLocalized(@"Chat entry point"), @"ios-home-evopage-impl.interactive_entrypoint_enabled"),
             SGFlagRow(SGLocalized(@"Martini behind it"), @"ios-home-evopage-impl.interactive_entrypoint_martini_enabled"),

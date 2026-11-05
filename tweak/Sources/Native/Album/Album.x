@@ -113,11 +113,11 @@ static void applyBackdrop(UIView *page) {
 #pragma mark - sections
 
 static const struct { __unsafe_unretained NSString *title, *key; BOOL prefix; } sections[] = {
-    {SGLocalized(@"More by "), SGHideAlbumMoreBy, YES},
-    {SGLocalized(@"Related Music Videos"), SGHideAlbumVideos, NO},
-    {SGLocalized(@"Concerts"), SGHideAlbumConcerts, NO},
-    {SGLocalized(@"Merch"), SGHideAlbumMerch, NO},
-    {SGLocalized(@"You might also like"), SGHideAlbumYouMightLike, NO},
+    {@"More by ", SGHideAlbumMoreBy, YES},
+    {@"Related Music Videos", SGHideAlbumVideos, NO},
+    {@"Concerts", SGHideAlbumConcerts, NO},
+    {@"Merch", SGHideAlbumMerch, NO},
+    {@"You might also like", SGHideAlbumYouMightLike, NO},
 };
 
 static BOOL sectionHidden(NSString *title) {

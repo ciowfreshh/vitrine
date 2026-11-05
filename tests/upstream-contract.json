@@ -9,7 +9,10 @@
     "tweak/Sources/Shared/AudioEffects/SGDSPDynamics.m": "d180393276cd2aec91bdbb4c8dd2323e70cfe3c679d95452bb77ced3931b9af9",
     "tweak/Sources/Shared/Player/SGTimePitch.m": "e118934031d094eea10d90444ee7947e31f4e9f8e343b168520693297949f430",
     "tweak/Sources/Shared/AppIcon/AppIcon.h": "0ff19bf60efeb156c79434d2cd8ec6a4f59ffcd51b85dff7b51da87e2f69f207",
-    "tweak/Sources/Shared/LiveActivity/LiveActivity.h": "db315e0763f49745ce3ba001710e158f82a191a5d0fc6d1a098139ab71d1cc80"
+    "tweak/Sources/Shared/LiveActivity/LiveActivity.h": "db315e0763f49745ce3ba001710e158f82a191a5d0fc6d1a098139ab71d1cc80",
+    "tweak/Sources/Native/Album/Album.x": "dc9280dece59813bea9a0997509d28fd995cd8a12c84bf511dacce291d9ac037",
+    "tweak/Sources/Native/Artist/Artist.x": "e81ce31c1659d453c19ab781602a890a29de5db1361d937499e77bda10ae1c2b",
+    "tweak/Sources/Redesigned/Album/AlbumSections.x": "e7a0e1f493732b124a12b3cb077708018f70718a6b240da864060156152766d1"
   },
   "translation_instructions": [
     "static NSString *const kDefaultPrompt =\n    @\"Translate the lines of this song into {language}: exactly {count} translations, one per input line and in \"\n    @\"the same order. Translate the meaning naturally, keep each line short like a lyric, and keep an empty line \"\n    @\"empty. A line already in {language} stays as it is.\";",

@@ -1,4 +1,52 @@
 {
+  "extension/AppGroups/AppGroups.m": {
+    ".com.spotify.client.extension-credentials": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "Library/Preferences": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "com.apple.token": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "group.": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
+  },
+  "extension/LiveActivity/Controls.swift": {
+    "Karaoke": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "Vitrine": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "heart": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "moon.zzz": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "music.mic": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "spotifyglass.control.like": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "spotifyglass.control.sing": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "spotifyglass.control.sleeptimer": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
+  },
+  "extension/LiveActivity/LiveActivityWidget.swift": {
+    "Music stops in \\(Text(timerInterval: Date()...end, countsDown: true))": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "Vitrine": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "\\(state.title) · \\(state.artist)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "backward.fill": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "forward.fill": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "list.bullet": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "moon": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "moon.zzz": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "music.note": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "next": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "pause.fill": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "play.fill": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "plus": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "previous": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "repeat": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "repeat.1": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "shuffle": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "slider.horizontal.3": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "square.stack": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "tab:\\(tab.rawValue)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "timer:15": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "timer:30": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "timer:60": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "timer:add": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "timer:album": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "timer:cancel": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "timer:track": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "toggle": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "waveform": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "xmark": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
+  },
   "tweak/Sources/App/About/About.h": {
     "spotifyglass.update.betas": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "spotifyglass.update.notice": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
@@ -295,6 +343,14 @@
     "the jailbreak's": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "unknown": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "unmapped": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
+  },
+  "tweak/Sources/Core/SGUIL10n.swift": {
+    "%@ (%ld)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "Vitrine": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "en": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "lproj": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "spotifyglass.interfaceLanguage": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "vi": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
   "tweak/Sources/Core/SGUIMode.h": {
     "spotifyglass.redesign": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
@@ -1310,6 +1366,19 @@
     "_TtC19LegacyUI_ECMCoreKit31InteractableLayoutBackingButton": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "_TtC30Discovery_MediumDensityCardKit9DJMDCView": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "redesign home: DJ card at the card radius, transcript gone": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
+  },
+  "tweak/Sources/Redesigned/Home/HomeFeed.swift": {
+    "collectionViewRenderer": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "configuration": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "contentDataSource": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "contentSnapshot": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "enrichedTextRange": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "heading": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "item": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "items": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "props": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "sections": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "text": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
   "tweak/Sources/Redesigned/Home/HomeHeader.x": {
     ", NSStringFromCGRect(header.frame),\n              face ? NSStringFromCGRect(face.frame) : @": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
@@ -2797,6 +2866,13 @@
     "repeatingTrack": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "shufflingContext": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
+  "tweak/Sources/Shared/AlbumQueue/AlbumPage.swift": {
+    "creativeWork": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "spotify:album:": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "spotify:playlist:": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "template": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "uri": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
+  },
   "tweak/Sources/Shared/AlbumQueue/AlbumQueue.h": {
     "Components.UI.ContextMenuButton-": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
@@ -3332,7 +3408,6 @@
     "connect: relayed %zu bytes from %@": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
   "tweak/Sources/Shared/Flags/FlagPages.m": {
-    "AI Chat (Martini)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "DJ": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "bubble.left.and.bubble.right": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "ios-feature-comments.enable_comments_card": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
@@ -3616,6 +3691,26 @@
     "trackName": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "ts": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
+  "tweak/Sources/Shared/LiveActivity/AppShortcuts.swift": {
+    "Add this song to Liked Songs in \\(.applicationName)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "Karaoke": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "Like this song in \\(.applicationName)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "Next track in \\(.applicationName)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "Play or pause \\(.applicationName)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "Previous track in \\(.applicationName)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "Set a sleep timer in \\(.applicationName)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "Sing along in \\(.applicationName)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "Skip this song in \\(.applicationName)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "Sleep timer \\(\\.$length) in \\(.applicationName)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "Vitrine": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "\\(\\.$mode) Karaoke in \\(.applicationName)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "backward": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "forward": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "heart": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "moon.zzz": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "music.mic": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "playpause": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
+  },
   "tweak/Sources/Shared/LiveActivity/LiveActivity.h": {
     "spotifyglass.liveActivity": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "spotifyglass.liveActivity.alignment": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
@@ -3673,9 +3768,42 @@
     "track": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "yes": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
+  "tweak/Sources/Shared/LiveActivity/LiveActivityBridge.swift": {
+    "[spotifyglass] live activity: \\(size, privacy: .public) bytes, sent without the cover": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "[spotifyglass] live activity: activities are off for this app": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "[spotifyglass] live activity: an update has not landed in \\(kStuckAfter, privacy: .public) s, sending on past it": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "[spotifyglass] live activity: not ended in time at exit": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "[spotifyglass] live activity: request failed: \\(String(describing: error), privacy: .public)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "[spotifyglass] live activity: started \\(id, privacy: .public)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "at": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "id": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "live activity": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "spotifyglass": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "spotifyglass.liveActivity.startedAt": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
+  },
   "tweak/Sources/Shared/LiveActivity/LiveActivitySettings.m": {
     "NSSupportsLiveActivities": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "Spotify": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
+  },
+  "tweak/Sources/Shared/LiveActivity/LiveActivityShared.swift": {
+    "Karaoke": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "SGLiveActivityAction": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "SGLiveActivityPlay": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "SGShortcut": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "Set the sleep timer to \\(\\.$length)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "Vitrine": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "\\(\\.$mode) Karaoke": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "\\(message)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "\\(try await askSpotify(": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "album": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "cancel": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "failed": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "next": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "previous": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "reply": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "said": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "toggle": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "track": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
   "tweak/Sources/Shared/LiveActivity/SGLiveActivityPreview.m": {
     "Cada luz, una pequeña promesa": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
@@ -4666,7 +4794,6 @@
     "/chat/completions": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "3.5 Flash-Lite": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "3.8 Flash": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "API key": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "ARRAY": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "Answer with a JSON array of the {count} translations as strings.": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "Answer with a JSON object whose \"lines\" array holds the {count} translations as strings.": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
@@ -4821,6 +4948,29 @@
     "x-goog-api-key": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "{count}": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "{language}": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
+  },
+  "tweak/Sources/Shared/LyricsTranslation/OnDeviceTranslation.swift": {
+    "\n            let content = try await session.respond(to: context + ": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "\n        // Each line under its own number, in the question and the answer, so a sentence the model joins or splits\n        // across lines cannot move the translations after it onto the wrong lines (K-pop's mixed lines did).\n        if #available(iOS 26.4, *) {\n            let keys = lines.indices.map { String(format: ": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    " + json(lines), schema: schema, options: options).content.value([String].self)\n        return answer.count == lines.count ? answer : lines.indices.map { $0 < answer.count ? answer[$0] : ": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    " + numbered,\n                                                    schema: try GenerationSchema(root: root, dependencies: []), options: options).content\n            return try keys.map { try content.value(String.self, forProperty: $0) }\n        }\n        let session = LanguageModelSession(model: model, instructions: ": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    " + zip(keys, lines).map { ": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    " }.joined(separator: ": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    ")\n            let root = DynamicGenerationSchema(name: ": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    ")\n        let line = DynamicGenerationSchema(type: String.self)\n        let schema = try GenerationSchema(root: DynamicGenerationSchema(arrayOf: line, minimumElements: lines.count, maximumElements: lines.count),\n                                          dependencies: [])\n        let answer = try await session.respond(to: context + ": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    ", $0 + 1) }\n            let session = LanguageModelSession(model: model, instructions: ": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    ", properties: keys.map {\n                DynamicGenerationSchema.Property(name: $0, schema: DynamicGenerationSchema(type: String.self))\n            })\n            let numbered = ": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "App-Prefs:TRANSLATE": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "Just before, already translated: \\(json(before.map { [$0.0, $0.1] }))\n\n": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "a song": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "intelligence: \\(first + indices.count) of \\(wanted.count) lines in \\(Date().timeIntervalSince(chunkStarted), format: .fixed(precision: 1)) s": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "intelligence: \\(translated) of \\(wanted.count) lines into \\(languageTag, privacy: .public) in \\(Date().timeIntervalSince(started), format: .fixed(precision: 1)) s": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "intelligence: lines \\(first + 1)-\\(first + indices.count) of \\(wanted.count) failed: \\(String(describing: error), privacy: .public)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "prefs:root=TRANSLATE": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "spotifyglass": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "translate: \\(source.minimalIdentifier, privacy: .public) to \\(target.minimalIdentifier, privacy: .public), \\(requests.count) lines in \\(Date().timeIntervalSince(started), format: .fixed(precision: 1)) s": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "translate: \\(source.minimalIdentifier, privacy: .public) to \\(target.minimalIdentifier, privacy: .public), try \\(attempt) failed: \\(String(describing: error), privacy: .public)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "translation": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
   "tweak/Sources/Shared/LyricsTranslation/SavedTranslations.m": {
     "Vitrine/Translations": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",

@@ -1,0 +1,236 @@
+{
+  "extension/LiveActivity/LiveActivityWidget.swift": {
+    "1 hour\nChipButton(action: \"timer:60\", symbol: \"moon\", label: \"1h\", spoken: \"1 hour\")": 1,
+    "15 minutes\nChipButton(action: \"timer:15\", symbol: \"moon\", label: \"15m\", spoken: \"15 minutes\")": 1,
+    "15m\nChipButton(action: \"timer:15\", symbol: \"moon\", label: \"15m\", spoken: \"15 minutes\")": 1,
+    "15m\nChipButton(action: \"timer:add\", symbol: \"plus\", label: \"15m\", spoken: \"Add 15 minutes\")": 1,
+    "1h\nChipButton(action: \"timer:60\", symbol: \"moon\", label: \"1h\", spoken: \"1 hour\")": 1,
+    "30 minutes\nChipButton(action: \"timer:30\", symbol: \"moon\", label: \"30m\", spoken: \"30 minutes\")": 1,
+    "30m\nChipButton(action: \"timer:30\", symbol: \"moon\", label: \"30m\", spoken: \"30 minutes\")": 1,
+    "Add 15 minutes\nChipButton(action: \"timer:add\", symbol: \"plus\", label: \"15m\", spoken: \"Add 15 minutes\")": 1,
+    "Album\nChipButton(action: \"timer:album\", symbol: \"square.stack\", label: \"Album\", spoken: \"End of album\")": 1,
+    "Cancel\nChipButton(action: \"timer:cancel\", symbol: \"xmark\", label: \"Cancel\")": 1,
+    "Controls\ncase .controls: \"Controls\"": 1,
+    "End of album\nChipButton(action: \"timer:album\", symbol: \"square.stack\", label: \"Album\", spoken: \"End of album\")": 1,
+    "End of track\nChipButton(action: \"timer:track\", symbol: \"music.note\", label: \"Track\", spoken: \"End of track\")": 1,
+    "Next\nChipButton(action: \"next\", symbol: \"forward.fill\", label: \"Next\")": 1,
+    "Pause\n.toggleStyle(ChipStyle(symbol: \"play.fill\", onSymbol: \"pause.fill\", label: \"Play\", onLabel: \"Pause\", lights: false))": 1,
+    "Play\n.toggleStyle(ChipStyle(symbol: \"play.fill\", onSymbol: \"pause.fill\", label: \"Play\", onLabel: \"Pause\", lights: false))": 1,
+    "Previous\nChipButton(action: \"previous\", symbol: \"backward.fill\", label: \"Previous\")": 1,
+    "Queue\ncase .queue: \"Queue\"": 1,
+    "Repeat\nlabel: \"Repeat\", lit: state.repeatMode != 0)": 1,
+    "Shuffle\n.toggleStyle(ChipStyle(symbol: \"shuffle\", label: \"Shuffle\"))": 1,
+    "Timer\ncase .timer: \"Timer\"": 1,
+    "Track\nChipButton(action: \"timer:track\", symbol: \"music.note\", label: \"Track\", spoken: \"End of track\")": 1
+  },
+  "tweak/Sources/App/About/Update.m": {
+    "Accept\n[request setValue:@\"application/vnd.github+json\" forHTTPHeaderField:@\"Accept\"];": 1
+  },
+  "tweak/Sources/App/Onboarding/WhatsNew.m": {
+    "Features\n@\"Features\": @\"sparkles\",": 1,
+    "Fixes\n@\"Fixes\": @\"wrench.and.screwdriver\",": 1,
+    "Performance\n@\"Performance\": @\"gauge.with.dots.needle.67percent\",": 1,
+    "Reverts\n@\"Reverts\": @\"arrow.uturn.backward\",": 1
+  },
+  "tweak/Sources/App/Pages.m": {
+    "The newest version of Vitrine, leaning toward Apple Music's style. It is not compatible with the legacy look's settings.\n\nThe legacy look gives you more freedom, yet still looks like Spotify.\nNSString *const SGRedesignedUIInfo = @\"The newest version of Vitrine, leaning toward Apple Music's style. It is not compatible with the legacy look's settings.\\n\\nThe legacy look gives you more freedom, yet still looks like Spotify.\";": 1
+  },
+  "tweak/Sources/Core/SGUIL10n.swift": {
+    "Could not complete the operation. Please try again.\nformat(\"%@ (%ld)\", string(\"Could not complete the operation. Please try again.\"), (error as NSError).code)": 1
+  },
+  "tweak/Sources/Diagnostics/Driver.m": {
+    "Context menu\nfor (UIView *view in findAll(@{@\"id\" : @\"Context menu\"}, nil)) {": 1
+  },
+  "tweak/Sources/Native/Album/Album.x": {
+    "Concerts\n{@\"Concerts\", SGHideAlbumConcerts, NO},": 1,
+    "Merch\n{@\"Merch\", SGHideAlbumMerch, NO},": 1,
+    "More by \n{@\"More by \", SGHideAlbumMoreBy, YES},": 1,
+    "Related Music Videos\n{@\"Related Music Videos\", SGHideAlbumVideos, NO},": 1,
+    "You might also like\n{@\"You might also like\", SGHideAlbumYouMightLike, NO},": 1
+  },
+  "tweak/Sources/Native/Artist/Artist.x": {
+    "About\n{@\"About\", SGHideArtistAbout, NO},": 1,
+    "Appears on\n{@\"Appears on\", SGHideArtistAppearsOn, NO},": 1,
+    "Artist pick\n{@\"Artist pick\", SGHideArtistPick, NO},": 1,
+    "Artist playlists\n{@\"Artist playlists\", SGHideArtistPlaylists, NO},": 1,
+    "Discovered on\n{@\"Discovered on\", SGHideArtistDiscoveredOn, NO},": 1,
+    "Fans also like\n{@\"Fans also like\", SGHideArtistFansAlsoLike, NO},": 1,
+    "Featuring \n{@\"Featuring \", SGHideArtistFeaturing, YES},": 1,
+    "Music videos\n{@\"Music videos\", SGHideArtistVideos, NO},": 1,
+    "Popular\n{@\"Popular\", SGHideArtistPopular, NO},": 1,
+    "Popular releases\n{@\"Popular releases\", SGHideArtistReleases, NO},": 1,
+    "Watch more from \n{@\"Watch more from \", SGHideArtistVideos, YES},": 1
+  },
+  "tweak/Sources/Redesigned/Album/AlbumSections.x": {
+    "Concerts\n{@\"Concerts\", SGRKeyAlbumHideConcerts, NO},": 1,
+    "Merch\n{@\"Merch\", SGRKeyAlbumHideMerch, NO},": 1,
+    "More by \n{@\"More by \", SGRKeyAlbumHideMoreBy, YES},": 1,
+    "Related Music Videos\n{@\"Related Music Videos\", SGRKeyAlbumHideVideos, NO},": 1,
+    "You might also like\n{@\"You might also like\", SGRKeyAlbumHideYouMightLike, NO},": 1
+  },
+  "tweak/Sources/Redesigned/Artist/ArtistSections.x": {
+    "About\nstatic __unsafe_unretained NSString *const dropped[] = {nil, nil, nil, @\"the videos\", @\"the Artist pick\", @\"the Release Countdown\", @\"About\"};": 1
+  },
+  "tweak/Sources/Redesigned/ContextMenu/ContextMenu.x": {
+    "Liked Songs\nif ([title containsString:@\"Liked Songs\"]) name = [title hasPrefix:@\"Remove\"] ? @\"heart.fill\" : @\"heart\";": 1,
+    "Remove\nif ([title containsString:@\"Liked Songs\"]) name = [title hasPrefix:@\"Remove\"] ? @\"heart.fill\" : @\"heart\";": 1
+  },
+  "tweak/Sources/Redesigned/Home/HomeSettings.m": {
+    "First shelf\nstatic NSString *const kFirstShelf = @\"First shelf\";": 1
+  },
+  "tweak/Sources/Redesigned/Kit/SGRDownload.m": {
+    "Downloaded\n@\"Downloaded\": @(SGRDownloadDownloaded), @\"Error\": @(SGRDownloadError),": 1,
+    "Downloading\n@\"None\": @(SGRDownloadNone), @\"Waiting\": @(SGRDownloadWaiting), @\"Downloading\": @(SGRDownloadDownloading),": 1,
+    "Error\n@\"Downloaded\": @(SGRDownloadDownloaded), @\"Error\": @(SGRDownloadError),": 1,
+    "None\n@\"None\": @(SGRDownloadNone), @\"Waiting\": @(SGRDownloadWaiting), @\"Downloading\": @(SGRDownloadDownloading),": 1,
+    "Waiting\n@\"None\": @(SGRDownloadNone), @\"Waiting\": @(SGRDownloadWaiting), @\"Downloading\": @(SGRDownloadDownloading),": 1
+  },
+  "tweak/Sources/Redesigned/Player/PlayerHeader.x": {
+    "Context menu\nglassInside(unit, @[@[@\"now-playing-minimize-button\", @\"mobile-nowplaying-close-button\"], @[@\"Context menu\"]], keys, watchMenu);": 1,
+    "Context menu\nif (watchMenu && [name isEqualToString:@\"Context menu\"]) {": 1
+  },
+  "tweak/Sources/Settings/SGModPage.m": {
+    "Changes apply after you restart Spotify.\nNSString *const SGRestartNote = @\"Changes apply after you restart Spotify.\";": 1
+  },
+  "tweak/Sources/Shared/AdBlock/AdBlock.m": {
+    "Ad services\n@\"Ad services\", @\"Upsell services\", @\"Popups\", @\"Page components\", @\"Feed sections\", @\"Requests\", @\"Config rewrites\",": 1,
+    "Config rewrites\n@\"Ad services\", @\"Upsell services\", @\"Popups\", @\"Page components\", @\"Feed sections\", @\"Requests\", @\"Config rewrites\",": 1,
+    "Config rewrites\nstatic NSString *const checkedLabels[] = {@\"Popups\", @\"Page components\", @\"Feed sections\", @\"Requests\", @\"Config rewrites\"};": 1,
+    "Feed sections\n@\"Ad services\", @\"Upsell services\", @\"Popups\", @\"Page components\", @\"Feed sections\", @\"Requests\", @\"Config rewrites\",": 1,
+    "Feed sections\nstatic NSString *const checkedLabels[] = {@\"Popups\", @\"Page components\", @\"Feed sections\", @\"Requests\", @\"Config rewrites\"};": 1,
+    "Page components\n@\"Ad services\", @\"Upsell services\", @\"Popups\", @\"Page components\", @\"Feed sections\", @\"Requests\", @\"Config rewrites\",": 1,
+    "Page components\nstatic NSString *const checkedLabels[] = {@\"Popups\", @\"Page components\", @\"Feed sections\", @\"Requests\", @\"Config rewrites\"};": 1,
+    "Popups\n@\"Ad services\", @\"Upsell services\", @\"Popups\", @\"Page components\", @\"Feed sections\", @\"Requests\", @\"Config rewrites\",": 1,
+    "Popups\nstatic NSString *const checkedLabels[] = {@\"Popups\", @\"Page components\", @\"Feed sections\", @\"Requests\", @\"Config rewrites\"};": 1,
+    "Requests\n@\"Ad services\", @\"Upsell services\", @\"Popups\", @\"Page components\", @\"Feed sections\", @\"Requests\", @\"Config rewrites\",": 1,
+    "Requests\nif (sg_counts.count && !sg_counts[checkedKey(@\"Requests\")]) {": 1,
+    "Requests\nsg_counts[checkedKey(@\"Requests\")] = @0;": 1,
+    "Requests\nstatic NSString *const checkedLabels[] = {@\"Popups\", @\"Page components\", @\"Feed sections\", @\"Requests\", @\"Config rewrites\"};": 1,
+    "Upsell services\n@\"Ad services\", @\"Upsell services\", @\"Popups\", @\"Page components\", @\"Feed sections\", @\"Requests\", @\"Config rewrites\",": 1
+  },
+  "tweak/Sources/Shared/AdBlock/AdBlockSettings.m": {
+    "This is the part of EeveeSpotify Spotify's takedown went after, and it has not been tested here. It can end in a forced logout or worse for the account. A Premium account gains nothing from it.\nNSString *const SGFakePremiumWarning = @\"This is the part of EeveeSpotify Spotify's takedown went after, and it has not been tested here. It can end in a forced logout or worse for the account. A Premium account gains nothing from it.\";": 1
+  },
+  "tweak/Sources/Shared/AdBlock/AdHubs.x": {
+    "Page components\nSGAdBlockCountOne(@\"Page components\");": 2,
+    "Page components\nSGAdBlockSawOne(@\"Page components\");": 1
+  },
+  "tweak/Sources/Shared/AdBlock/AdNetwork.x": {
+    "Config rewrites\nSGAdBlockCountOne(@\"Config rewrites\");": 1,
+    "Config rewrites\nSGAdBlockSawOne(@\"Config rewrites\");": 1,
+    "Requests\nSGAdBlockCountOne(@\"Requests\");": 3,
+    "Requests\nSGAdBlockSawOne(@\"Requests\");": 3
+  },
+  "tweak/Sources/Shared/AdBlock/AdPopups.x": {
+    "Popups\nSGAdBlockCountOne(@\"Popups\");": 1,
+    "Popups\nSGAdBlockSawOne(@\"Popups\");": 1
+  },
+  "tweak/Sources/Shared/AdBlock/AdServices.x": {
+    "Ad services\n- (void)load { SGAdBlockCountOne(@\"Ad services\"); }": 9,
+    "Ad services\n- (void)registerScrollProviderIn:(id)registry { SGAdBlockCountOne(@\"Ad services\"); }": 1,
+    "Upsell services\n- (void)load { SGAdBlockCountOne(@\"Upsell services\"); }": 8
+  },
+  "tweak/Sources/Shared/AdBlock/Feeds.m": {
+    "Feed sections\nSGAdBlockSawOne(@\"Feed sections\");": 1,
+    "Feed sections\nif (adSection(section.payload)) SGAdBlockCountOne(@\"Feed sections\");": 1
+  },
+  "tweak/Sources/Shared/AlbumQueue/AlbumQueue.m": {
+    "Accept\n[http setValue:@\"application/json\" forHTTPHeaderField:@\"Accept\"];": 1
+  },
+  "tweak/Sources/Shared/AnimatedArtwork/SGMotionCatalog.m": {
+    "Origin\n[request setValue:@\"https://music.apple.com\" forHTTPHeaderField:@\"Origin\"];": 1
+  },
+  "tweak/Sources/Shared/AudioEffects/AudioEffectsPresets.m": {
+    "A large hall's reverb, a wider stage\n{@\"Concert hall\", @\"A large hall's reverb, a wider stage\"},": 1,
+    "Bass boost\n{@\"Bass boost\", @\"Bass boost at 8 dB\"},": 1,
+    "Bass boost at 8 dB\n{@\"Bass boost\", @\"Bass boost at 8 dB\"},": 1,
+    "Concert hall\n{@\"Concert hall\", @\"A large hall's reverb, a wider stage\"},": 1,
+    "Crossfeed, a softer top\n{@\"Headphone comfort\", @\"Crossfeed, a softer top\"},": 1,
+    "Equalizer on voices, a light compander\n{@\"Vocal clarity\", @\"Equalizer on voices, a light compander\"},": 1,
+    "Headphone comfort\n{@\"Headphone comfort\", @\"Crossfeed, a softer top\"},": 1,
+    "Late night\n{@\"Late night\", @\"Quiet and loud evened out, less bass\"},": 1,
+    "Quiet and loud evened out, less bass\n{@\"Late night\", @\"Quiet and loud evened out, less bass\"},": 1,
+    "Stereo widening\n{@\"Wide stereo\", @\"Stereo widening\"},": 1,
+    "Tube warmth, a warm equalizer\n{@\"Warm analog\", @\"Tube warmth, a warm equalizer\"},": 1,
+    "Vocal clarity\n{@\"Vocal clarity\", @\"Equalizer on voices, a light compander\"},": 1,
+    "Warm analog\n{@\"Warm analog\", @\"Tube warmth, a warm equalizer\"},": 1,
+    "Wide stereo\n{@\"Wide stereo\", @\"Stereo widening\"},": 1
+  },
+  "tweak/Sources/Shared/AudioEffects/AudioEffectsPresetsPage.m": {
+    "Before presets\nstatic NSString *const kBeforePresets = @\"Before presets\";": 1
+  },
+  "tweak/Sources/Shared/Flags/FlagPages.m": {
+    "AI Chat (Martini)\nSGWithSymbol(SGPageRow(@\"AI Chat (Martini)\", ^UIViewController *{ return martiniPage(); }), @\"bubble.left.and.bubble.right\"),": 1
+  },
+  "tweak/Sources/Shared/Fonts/Fonts.x": {
+    "Bold\nif ([face hasSuffix:@\"Bold\"]) bold = scale;": 1,
+    "Circular\nreturn [joined hasPrefix:@\"CircularSp\"] || [joined hasPrefix:@\"SpotifyMix\"] || [joined hasPrefix:@\"Circular\"];": 1
+  },
+  "tweak/Sources/Shared/Haptics/HapticsSettings.m": {
+    "Keeps the vibrations going on the lock screen and in other apps, where iOS stops Spotify's own. The mod tells iOS which recording is playing, by its ISRC code from Apple Music's catalog (no sound leaves the phone), and iOS's own Music Haptics, the one Apple Music uses, plays Apple's haptic track for it.\n\nIt needs Settings > Accessibility > Music Haptics on, and only songs Apple has a haptic track for vibrate. While Spotify is open, Music Haptics above plays the others, if it is on.\nstatic NSString *const kBackgroundInfo = @\"Keeps the vibrations going on the lock screen and in other apps, where iOS stops Spotify's own. The mod tells iOS which recording is playing, by its ISRC code from Apple Music's catalog (no sound leaves the phone), and iOS's own Music Haptics, the one Apple Music uses, plays Apple's haptic track for it.\\n\\nIt needs Settings > Accessibility > Music Haptics on, and only songs Apple has a haptic track for vibrate. While Spotify is open, Music Haptics above plays the others, if it is on.\";": 1,
+    "The iPhone taps along with the drums and rumbles under the bass, worked out from the sound as Spotify plays it. Only while Spotify is open: iOS stops an app's own haptics in the background, and a song playing on another device through Connect has no sound here to follow.\n\nWith In the Background on too, iOS plays its own haptic track for the songs it has one for, and this waits, so the two never double up.\nstatic NSString *const kMusicInfo = @\"The iPhone taps along with the drums and rumbles under the bass, worked out from the sound as Spotify plays it. Only while Spotify is open: iOS stops an app's own haptics in the background, and a song playing on another device through Connect has no sound here to follow.\\n\\nWith In the Background on too, iOS plays its own haptic track for the songs it has one for, and this waits, so the two never double up.\";": 1
+  },
+  "tweak/Sources/Shared/Haptics/SystemMusicHaptics.x": {
+    "Accept\n[request setValue:@\"application/x-protobuf\" forHTTPHeaderField:@\"Accept\"];": 1
+  },
+  "tweak/Sources/Shared/LiveActivity/SGLiveActivityPreview.m": {
+    "Glasshouse\n{@\"Glasshouse\", @\"Juniper & Cole\"},": 1
+  },
+  "tweak/Sources/Shared/LocalFiles/LocalLyrics.m": {
+    "Imported LRC\nstatic NSString *const kCredit = @\"Imported LRC\";": 1
+  },
+  "tweak/Sources/Shared/Lyrics/KaraokeSource.x": {
+    "Accept\n[request setValue:@\"application/json\" forHTTPHeaderField:@\"Accept\"];": 1
+  },
+  "tweak/Sources/Shared/LyricsMeanings/Meanings.m": {
+    "Accept\n@\"Accept\": @\"application/json\"};": 1
+  },
+  "tweak/Sources/Shared/LyricsSources/Musixmatch.m": {
+    "Accept\n[request setValue:@\"application/json\" forHTTPHeaderField:@\"Accept\"];": 1
+  },
+  "tweak/Sources/Shared/LyricsSources/QQMusic.m": {
+    "Accept\nNSDictionary *headers = @{@\"Referer\": @\"https://y.qq.com/\", @\"User-Agent\": SGLyricsBrowserAgent, @\"Accept\": @\"application/json\"};": 1
+  },
+  "tweak/Sources/Shared/LyricsSources/SpicyLyrics.m": {
+    "Accept\nNSDictionary *headers = @{@\"Authorization\": [@\"Bearer \" stringByAppendingString:key], @\"Accept\": @\"application/json\", @\"User-Agent\": kAgent};": 1,
+    "Background\nfor (NSDictionary *group in arrayIn(item, @\"Background\")) {": 1,
+    "Body\nNSDictionary *body = [root isKindOfClass:NSDictionary.class] ? root[@\"Body\"] : nil;": 2,
+    "Content\n: [type isEqualToString:@\"Line\"] ? lineLines(arrayIn(body, @\"Content\"))": 1,
+    "Content\nNSArray<SGKaraokeLine *> *lines = [type isEqualToString:@\"Syllable\"] ? syllableLines(arrayIn(body, @\"Content\"))": 1,
+    "Lead\nNSDictionary *lead = item[@\"Lead\"];": 1,
+    "Line\n: [type isEqualToString:@\"Line\"] ? lineLines(arrayIn(body, @\"Content\"))": 1,
+    "Lines\n: [type isEqualToString:@\"Static\"] ? staticLines(arrayIn(body, @\"Lines\"), &pageTexts)": 1,
+    "Maker\nNSDictionary *makerInfo = people[@\"Maker\"], *uploaderInfo = people[@\"Uploader\"];": 1,
+    "Static\n: [type isEqualToString:@\"Static\"] ? staticLines(arrayIn(body, @\"Lines\"), &pageTexts)": 1,
+    "Syllable\nNSArray<SGKaraokeLine *> *lines = [type isEqualToString:@\"Syllable\"] ? syllableLines(arrayIn(body, @\"Content\"))": 1,
+    "Syllables\nNSDictionary *background = @{@\"Syllables\": backing};": 1,
+    "Syllables\n[backing addObjectsFromArray:arrayIn(group, @\"Syllables\")];": 1,
+    "Syllables\nfor (NSDictionary *syllable in arrayIn(part, @\"Syllables\")) {": 1,
+    "Text\nNSString *text = stringIn(row, @\"Text\");": 1,
+    "Text\n[texts addObject:kept[i][@\"Text\"]];": 1,
+    "Text\nif (!isBreak(stringIn(item, @\"Text\"))) [kept addObject:item];": 1,
+    "Type\nNSString *type = stringIn(body, @\"Type\");": 1,
+    "Uploader\nNSDictionary *makerInfo = people[@\"Maker\"], *uploaderInfo = people[@\"Uploader\"];": 1
+  },
+  "tweak/Sources/Shared/LyricsTranslation/BatchTranslation.x": {
+    "Accept\n[req setValue:@\"application/json\" forHTTPHeaderField:@\"Accept\"];": 2,
+    "Thinking\u2026\nif ([phase isEqualToString:@\"Thinking\u2026\"]) {": 1,
+    "Writing\n} else if ([phase isEqualToString:@\"Writing\"]) {": 1
+  },
+  "tweak/Sources/Shared/LyricsTranslation/LyricsTranslation.m": {
+    "API key\n} else if (status == 401 || status == 403 || (status == 400 && [says localizedCaseInsensitiveContainsString:@\"API key\"])) {": 1,
+    "Flash (latest)\n{@\"gemini-3.8-flash\", @\"gemini-3.5-flash-lite\", @\"gemini-flash-latest\"}, {@\"3.8 Flash\", @\"3.5 Flash-Lite\", @\"Flash (latest)\"},": 1,
+    "OpenAI-compatible\n{@\"openai\", @\"OpenAI-compatible\", nil, @\"Vitrine.OpenAI\",": 1,
+    "Sends the song's lyrics to the server below: OpenAI's own unless you name another, such as OpenRouter, or an Ollama on your network (http works for local addresses). The key stays on this iPhone; for a server without keys, copy any word and paste that.\n@\"Sends the song's lyrics to the server below: OpenAI's own unless you name another, such as OpenRouter, or an \"\n     @\"Ollama on your network (http works for local addresses). The key stays on this iPhone; for a server without \"\n     @\"keys, copy any word and paste that.\",": 1,
+    "Thinking\u2026\nphaseBlock(@\"Thinking\u2026\");": 1,
+    "Translate with Anthropic sends the song's lyrics to Anthropic, on your own key from the Claude Console. The key stays on this iPhone.\n@\"Translate with Anthropic sends the song's lyrics to Anthropic, on your own key from the Claude Console. The key stays on this iPhone.\",": 1,
+    "Translate with Gemini sends the song's lyrics to Google, on your own key from Google AI Studio. The key stays on this iPhone.\n@\"Translate with Gemini sends the song's lyrics to Google, on your own key from Google AI Studio. The key stays on this iPhone.\",": 1,
+    "Writing\nphaseBlock(@\"Writing\");": 1
+  },
+  "tweak/Sources/Shared/Player/MinuteLabel.x": {
+    "1 minutes\nif (label.text.length != 9 || ![label.text isEqualToString:@\"1 minutes\"]) return;": 1
+  },
+  "tweak/Sources/Shared/Player/SpeedPitchMenu.x": {
+    "Context menu\nif (!more && [view.accessibilityIdentifier isEqualToString:@\"Context menu\"]) more = view;": 1
+  }
+}

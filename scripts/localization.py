@@ -5,6 +5,7 @@ This is not an automatic translator. A new source literal requires translation o
 import argparse, collections, hashlib, json, pathlib, re, sys
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 TOKEN=re.compile(r'//[^\n]*|/\*[\s\S]*?\*/|\'(?:[^\'\\]|\\.)*\'|(@"(?:[^"\\]|\\.)*"(?:\s*@?"(?:[^"\\]|\\.)*")*)|"(?:[^"\\]|\\.)*"')
+SWIFT_TOKEN=re.compile(r'//[^\n]*|/\*[\s\S]*?\*/|("(?:[^"\\]|\\.)*")')
 def decode(raw):
     # Match Objective-C escapes without corrupting Unicode.
     return re.sub(r'\\([nrt"\\])',lambda m:{'n':'\n','r':'\r','t':'\t','"':'"','\\':'\\'}[m[1]],raw)
@@ -12,9 +13,32 @@ def literals(source):
     for match in TOKEN.finditer(source):
         if match[1]:
             yield match,decode(''.join(re.findall(r'@?"((?:[^"\\]|\\.)*)"',match[1])))
+def swift_literals(source):
+    for match in SWIFT_TOKEN.finditer(source):
+        if match[1]: yield match,decode(match[1][1:-1])
 def objc(value):return '@'+json.dumps(value,ensure_ascii=False)
 def sources():
-    return sorted(p for p in (ROOT/'tweak/Sources').rglob('*') if p.suffix in ('.m','.x','.h') and p.name not in ('SGLocalization.m','SGFlagList.m'))
+    return sorted(p for folder in ('tweak/Sources','extension') for p in (ROOT/folder).rglob('*') if p.suffix in ('.m','.x','.h','.swift') and p.name not in ('SGLocalization.m','SGFlagList.m'))
+def inventory_literals(path,source):
+    return swift_literals(source) if path.suffix=='.swift' else literals(source)
+def deferred_inventory(catalog):
+    """Known catalog keys must pass a localizer, even when that key already exists.
+    Static tables are translated at their display site; protocol keys stay unchanged.
+    Each exceptional statement is reviewed and pinned, including its occurrence count.
+    """
+    deferred=collections.defaultdict(collections.Counter)
+    for path in sources():
+        source=path.read_text()
+        for match,key in inventory_literals(path,source):
+            if key not in catalog: continue
+            before=source[max(0,match.start()-100):match.start()].rstrip()
+            statement=source[source.rfind('\n',0,match.start())+1:source.find('\n',match.end())].strip()
+            if path.suffix=='.swift':
+                if re.search(r'(SGUIL10n\.(?:string|format)|LocalizedStringResource)\($',before) or 'tableName: "Vitrine"' in statement:continue
+            elif re.search(r'SGLocalized(?:Context)?\($',before): continue
+            identity=key+'\n'+statement
+            deferred[str(path.relative_to(ROOT))][identity]+=1
+    return {path:dict(counts) for path,counts in deferred.items()}
 def signature(s):
     return sorted(re.findall(r'%(?!%)(?:\d+\$)?[-+ #0]*(?:\d+|\*)?(?:\.(?:\d+|\*))?(?:hh|ll|[hljztL])?[@diuoxXfFeEgGaAcsp]',re.sub(r'(?<=\d)%(?=[ ,.]|$)', '', s.replace('%%',''))))
 def compile_catalog():
@@ -36,7 +60,7 @@ def main():
     # Per-file fingerprints include all non-UI literals. This makes new prose in an old file fail too.
     excluded=collections.defaultdict(dict)
     for p in sources():
-        for _,key in literals(p.read_text()):
+        for _,key in inventory_literals(p,p.read_text()):
             if key not in catalog and re.search('[A-Za-z]',key):
                 excluded[str(p.relative_to(ROOT))][key]='technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction'
     baseline=ROOT/'localization/non-ui-literals.json'
@@ -47,6 +71,12 @@ def main():
         for key in keys:
             if key not in allowed.get(path,{}):missing.append(f'{path}: {key!r}')
     if missing:raise ValueError('Unclassified source strings (translate UI; document technical data):\n'+'\n'.join(missing))
+    deferred=deferred_inventory(catalog)
+    deferred_path=ROOT/'localization/deferred-literals.json'
+    if args.snapshot_exclusions:deferred_path.write_text(json.dumps(deferred,indent=2,sort_keys=True)+'\n')
+    permitted=json.loads(deferred_path.read_text()) if deferred_path.exists() else {}
+    unwrapped=[path for path,counts in deferred.items() if any(count>permitted.get(path,{}).get(key,0) for key,count in counts.items())]
+    if unwrapped:raise ValueError('Catalog text bypasses localization (or a deferred statement changed):\n'+'\n'.join(unwrapped))
     print(f'PASS: {len(catalog)} English/Vietnamese keys; format arguments, placeholders, generated catalog and source-string inventory')
 if __name__=='__main__':
     try:main()

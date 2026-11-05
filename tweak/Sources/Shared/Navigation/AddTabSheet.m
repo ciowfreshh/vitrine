@@ -282,7 +282,7 @@ static void showProblem(UIViewController *page, NSString *title, NSString *messa
         if (!found.count) _footer = symbols && !_symbols ? SGLocalized(@"Still reading the list of SF Symbols…") : SGLocalized(@"No icon has that in its name.");
     } else if (symbols) {
         _sections = @[SGCommonTabSymbols()];
-        _headers = @[@"Suggested"];
+        _headers = @[SGLocalized(@"Suggested")];
         _footer = SGLocalized(@"Search finds any SF Symbol.");
     } else {
         NSArray<NSString *> *common = SGCommonTabGlyphs();
