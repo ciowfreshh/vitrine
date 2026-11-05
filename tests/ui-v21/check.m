@@ -82,6 +82,9 @@ void SGV21UIChecks(SGRKaraokeView *view) {
     UIView *replacement = ((id (*)(id, SEL, NSInteger))objc_msgSend)(view, NSSelectorFromString(@"viewForLine:"), indexes[0].integerValue);
     invoke(view, @"toggleSelectedView:", replacement);
     verify([[view valueForKey:@"selected"] count] == 1, @"selection re-enters after cancellation");
+    ((void (*)(id, SEL))objc_msgSend)(view, NSSelectorFromString(@"continueSelection"));
+    verify(UIPasteboard.generalPasteboard.string.length > 0 && [view valueForKey:@"selected"] == nil, @"copy action copies original lyrics and restores playback without an unavailable share alert");
+    invoke(view, @"toggleSelectedView:", ((id (*)(id, SEL, NSInteger))objc_msgSend)(view, NSSelectorFromString(@"viewForLine:"), indexes[0].integerValue));
     ((void (*)(id, SEL))objc_msgSend)(view, NSSelectorFromString(@"dropLines"));
     verify([view valueForKey:@"selected"] == nil, @"track replacement clears old selection");
     ((void (*)(id, SEL))objc_msgSend)(view, NSSelectorFromString(@"tick")); [view layoutIfNeeded];

@@ -1,6 +1,7 @@
 // Durable translations. SQLite commits one complete song at a time in Application Support.
 #import "Core/SGCore.h"
 #import "Core/TranslationStore/SGTranslationStore.h"
+#import "Core/BatchQueue/SGTranslationAlignment.h"
 #import "Settings/SGModPage.h"
 #import "Settings/SGPageStyle.h"
 #import "Shared/Lyrics/Lyrics.h"
@@ -52,12 +53,18 @@ SGTranslationSource *SGLyricsSyncSavedTranslation(NSString *track, NSString *lan
     if (error) { SGLog(@"translation: durable read failed"); return nil; }
     SGTranslationSource *source = nil;
     NSDictionary *saved = SGSavedTranslationLines(record, &source);
+    NSMutableArray *originals = [NSMutableArray arrayWithCapacity:lines.count];
+    for (SGKaraokeLine *line in lines) [originals addObject:SGKaraokeLineText(line) ?: @""];
+    NSArray *resolved = SGTranslationResolveLines(saved, originals);
+    NSIndexSet *untranslated = SGTranslationUnchangedForeignLines(originals, resolved, language);
     BOOL shown = NO;
-    for (SGKaraokeLine *line in lines) {
-        id translation = saved[SGKaraokeLineText(line) ?: @""];
-        BOOL has = [translation isKindOfClass:NSString.class] && [translation length];
+    for (NSUInteger i = 0; i < lines.count; ++i) {
+        SGKaraokeLine *line = lines[i];
+        id translation = resolved[i];
+        BOOL has = [translation isKindOfClass:NSString.class] && [translation length] && ![untranslated containsIndex:i];
         if (line.translationMade && !has) { line.translation = nil; line.translationMade = NO; }
-        else if (!line.translation.length && has) { line.translation = translation; line.translationMade = YES; }
+        // A community/native translation must not hide the user's saved AI translation.
+        else if (has) { line.translation = translation; line.translationMade = YES; }
         shown |= line.translationMade;
     }
     return shown ? source : nil;
@@ -66,19 +73,25 @@ SGTranslationSource *SGLyricsSyncSavedTranslation(NSString *track, NSString *lan
 SGTranslationSource *SGLyricsSaveTranslation(NSString *track, NSString *language, NSArray<SGKaraokeLine *> *lines, SGTranslationSource *source) {
     if (!track.length || !language.length) return nil;
     NSMutableDictionary *saved = [NSMutableDictionary dictionary];
+    NSMutableArray *originals = [NSMutableArray arrayWithCapacity:lines.count];
     for (SGKaraokeLine *line in lines) {
         NSString *text = SGKaraokeLineText(line);
+        [originals addObject:text ?: @""];
         if (text.length && line.translation.length) saved[text] = line.translation;
     }
     if (!saved.count) return nil;
+    NSError *error = nil;
+    NSDictionary *previous = [SGSavedTranslationStore() recordForTrack:track language:language error:&error];
+    if (error) { showFailure(error); return nil; }
+    // Partial/on-device progress and a new lyrics source must never erase other saved lines.
+    saved = [SGTranslationMergeLines(SGSavedTranslationLines(previous, NULL), saved) mutableCopy];
     NSDate *now = NSDate.date;
     NSMutableDictionary *record = [@{@"type":@"vitrine.translation", @"schemaVersion":@1, @"track":track, @"language":language,
-                                    @"lines":saved, @"made":@(floor(now.timeIntervalSince1970))} mutableCopy];
+                                    @"lines":saved, @"originals":originals, @"made":@(floor(now.timeIntervalSince1970))} mutableCopy];
     if (source.by) record[@"by"] = source.by;
     if (source.model) record[@"model"] = source.model;
     NSString *name = SGLyricsSongName(track);
     if (name.length) record[@"title"] = name;
-    NSError *error = nil;
     // Synchronous durability: callers can report completion only after the commit survives termination.
     if (![SGSavedTranslationStore() putRecord:record replace:YES didWrite:NULL error:&error]) { showFailure(error); return nil; }
     return [SGTranslationSource by:source.by model:source.model made:now];
@@ -86,6 +99,16 @@ SGTranslationSource *SGLyricsSaveTranslation(NSString *track, NSString *language
 
 BOOL SGLyricsHasSavedTranslation(NSString *track, NSString *language) {
     return track.length && language.length && [SGSavedTranslationStore() recordForTrack:track language:language error:nil] != nil;
+}
+
+NSUInteger SGLyricsSavedTranslationMissing(NSString *track, NSString *language, NSArray<SGKaraokeLine *> *lines) {
+    NSDictionary *record = [SGSavedTranslationStore() recordForTrack:track language:language error:nil];
+    NSMutableArray *originals = [NSMutableArray arrayWithCapacity:lines.count];
+    for (SGKaraokeLine *line in lines) [originals addObject:SGKaraokeLineText(line) ?: @""];
+    NSArray *resolved = SGTranslationResolveLines(SGSavedTranslationLines(record, NULL), originals);
+    NSMutableIndexSet *missing = [SGTranslationMissingLines(originals, resolved) mutableCopy];
+    [missing addIndexes:SGTranslationUnchangedForeignLines(originals, resolved, language)];
+    return missing.count;
 }
 
 void SGLyricsDeleteSavedTranslation(NSString *track, NSString *language) {

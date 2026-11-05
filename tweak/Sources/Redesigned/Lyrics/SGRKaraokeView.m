@@ -1653,8 +1653,16 @@ typedef struct {
     NSUInteger index = number.unsignedIntegerValue;
     if ([_selected containsIndex:index]) [_selected removeIndex:index]; else [_selected addIndex:index];
     for (NSNumber *key in _shown) [self styleSelectionView:_shown[key] index:key.integerValue];
-    [_selectionContinue setTitle:[NSString stringWithFormat:SGLocalized(@"Continue (%lu)"), (unsigned long)_selected.count] forState:UIControlStateNormal];
+    [_selectionContinue setTitle:[NSString stringWithFormat:SGLocalized(@"Copy (%lu)"), (unsigned long)_selected.count] forState:UIControlStateNormal];
     _selectionContinue.enabled = _selected.count > 0;
+    NSNumber *firstSelected = @(_selected.firstIndex);
+    if (_selected.count && _meanings[firstSelected].count) {
+        __weak SGRKaraokeView *weakSelf = self;
+        _selectionContinue.menu = [UIMenu menuWithChildren:@[[UIAction actionWithTitle:SGLocalized(@"Explain selected line") image:nil identifier:nil handler:^(UIAction *action) {
+            SGRKaraokeView *page = weakSelf;
+            if (page && page->_selected.count) [page explainLine:[page viewForLine:page->_selected.firstIndex]];
+        }]]];
+    } else _selectionContinue.menu = nil;
     SGPlayFeedback(SGFeedbackSkip);
 }
 - (void)selectionSettingChanged { if (!SGFlag(SGKeyLyricsShareSelection, NO)) [self endSelection]; }
@@ -1673,21 +1681,10 @@ typedef struct {
 }
 - (void)continueSelection {
     if (!_selected.count) return;
-    // Binary symbol presence and a routable URI are insufficient to establish a safe payload contract.
-    // Do not call guessed Swift selectors or fabricate Spotify/Apple Music images.
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Lyrics selection")
-        message:SGLocalized(@"Native Spotify lyric sharing has not been verified in this build. Your selection is kept. You can copy the original text; no share image is generated.") preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Copy original lyrics") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
-        NSMutableArray *texts = [NSMutableArray array];
-        [self->_selected enumerateIndexesUsingBlock:^(NSUInteger index, BOOL *stop) { if (index < self->_lines.count) [texts addObject:SGKaraokeLineText(self->_lines[index]) ?: @""]; }];
-        UIPasteboard.generalPasteboard.string = [texts componentsJoinedByString:@"\n"];
-        [self endSelection];
-    }]];
-    NSNumber *first = @(_selected.firstIndex);
-    if (_meanings[first].count) [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Explain selected line") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) { [self explainLine:[self viewForLine:first.integerValue]]; }]];
-    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Keep selection") style:UIAlertActionStyleCancel handler:nil]];
-    alert.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
-    [SGTopController() presentViewController:alert animated:YES completion:nil];
+    NSMutableArray *texts = [NSMutableArray array];
+    [_selected enumerateIndexesUsingBlock:^(NSUInteger index, BOOL *stop) { if (index < self->_lines.count) [texts addObject:SGKaraokeLineText(self->_lines[index]) ?: @""]; }];
+    UIPasteboard.generalPasteboard.string = [texts componentsJoinedByString:@"\n"];
+    [self endSelection];
 }
 
 // Genius is asked once the song's lines are in; lines that change under it are matched again.

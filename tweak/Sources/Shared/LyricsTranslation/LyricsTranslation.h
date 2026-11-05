@@ -64,6 +64,9 @@ void SGLyricsTranslateWithAI(NSString *trackID, NSArray<SGKaraokeLine *> *lines,
 // Same single-song request and parser, with batch rules appended; the queue owns bounded retries.
 void SGLyricsTranslateQueuedWithAI(NSString *trackID, NSArray<SGKaraokeLine *> *lines, NSString *languageTag,
                                    void (^done)(NSArray<NSString *> *translations, NSError *error));
+// A repair sends only missing lines as output targets, with the complete original song as context.
+void SGLyricsTranslateQueuedWithContext(NSString *trackID, NSArray<SGKaraokeLine *> *lines, NSArray<SGKaraokeLine *> *context,
+                                       NSString *languageTag, void (^done)(NSArray<NSString *> *translations, NSError *error));
 // Multiple songs translated in one prompt, keyed by track URI (or ID). Streams live phase ("Thinking…",
 // "Writing") and per-song completions as each song's array closes in the SSE stream. Main queue.
 void SGLyricsTranslateBatchWithAI(NSDictionary<NSString *, NSArray<NSString *> *> *songs, NSString *languageTag,
@@ -112,6 +115,8 @@ NSArray<SGModRow *> *SGAITranslatorRows(void);
 SGTranslationSource *SGLyricsSyncSavedTranslation(NSString *track, NSString *language, NSArray<SGKaraokeLine *> *lines);
 SGTranslationSource *SGLyricsSaveTranslation(NSString *track, NSString *language, NSArray<SGKaraokeLine *> *lines, SGTranslationSource *source);
 BOOL SGLyricsHasSavedTranslation(NSString *track, NSString *language);
+// Coverage against the actual source the player will display, not just existence of a stored record.
+NSUInteger SGLyricsSavedTranslationMissing(NSString *track, NSString *language, NSArray<SGKaraokeLine *> *lines);
 // Whether a song's lines read as another language than `language`.
 BOOL SGKaraokeInAnotherLanguage(NSArray<SGKaraokeLine *> *lines, NSString *language);
 // Deletes the song's saved translation and the launch's answers for it, then posts SGLyricsTranslationsDidChangeNotification.

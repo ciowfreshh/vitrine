@@ -51,8 +51,12 @@ NSArray<NSDictionary *> *SGTranslationTracksPage(id root, NSURL *base, NSString 
             id metadata = track[@"metadata"];
             NSString *title = track[@"name"] ?: ([metadata isKindOfClass:NSDictionary.class] ? metadata[@"title"] : nil);
             NSString *artist = [metadata isKindOfClass:NSDictionary.class] ? metadata[@"artist_name"] : nil;
-            if ([title isKindOfClass:NSString.class] && [artist isKindOfClass:NSString.class]) title = [title stringByAppendingFormat:@" — %@", artist];
-            [result addObject:@{@"id":identifier, @"title":[title isKindOfClass:NSString.class] ? title : identifier}];
+            id artists = track[@"artists"];
+            if ([artists isKindOfClass:NSArray.class] && [artists count] && [artists[0] isKindOfClass:NSDictionary.class] && [artists[0][@"name"] isKindOfClass:NSString.class]) artist = artists[0][@"name"];
+            NSMutableDictionary *named = [@{@"id":identifier, @"title":[title isKindOfClass:NSString.class] ? title : identifier} mutableCopy];
+            if ([title isKindOfClass:NSString.class]) named[@"name"] = title;
+            if ([artist isKindOfClass:NSString.class]) { named[@"artist"] = artist; named[@"title"] = [named[@"title"] stringByAppendingFormat:@" — %@", artist]; }
+            [result addObject:named];
         }
     }
     return result;

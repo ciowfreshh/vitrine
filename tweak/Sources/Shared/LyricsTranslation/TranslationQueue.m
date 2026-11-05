@@ -4,6 +4,9 @@
 #import "Core/SGCore.h"
 #import "Core/BatchQueue/SGTranslationQueue.h"
 #import "Core/BatchQueue/SGTranslationPage.h"
+#import "Core/BatchQueue/SGTranslationAlignment.h"
+#import "Core/TranslationStore/SGTranslationStore.h"
+#import "TranslationLibrary.h"
 #import "Shared/Lyrics/Lyrics.h"
 #import "Shared/LyricsSources/LyricsSources.h"
 #import "Shared/AlbumQueue/AlbumQueue.h"
@@ -79,30 +82,52 @@ static NSError *requestError(NSHTTPURLResponse *response, NSError *error) {
     __weak SGTranslationQueue *weakQueue = _queue;
     _queue.execute = ^(NSDictionary *item, NSString *language, void (^done)(NSString *, NSError *)) {
         NSString *track = item[@"id"];
-        // Recheck the durable store after restart, and immediately before sending, so a completed
-        // single-song translation or an interrupted queue checkpoint never causes another API call.
-        if (SGLyricsHasSavedTranslation(track, language)) { done(@"skipped:saved", nil); return; }
-        if (!SGAITranslatorReady()) { done(nil, SGTranslationQueueError(SGTranslationConfiguration, SGLocalized(@"Configure the AI provider, model and API key in Lyrics settings."), 0)); return; }
         void (^translate)(NSArray<SGKaraokeLine *> *, NSError *) = ^(NSArray<SGKaraokeLine *> *original, NSError *error) {
             if (error) { done(nil, error); return; }
             BOOL words = NO;
-            for (SGKaraokeLine *line in original) if ([SGKaraokeLineText(line) rangeOfCharacterFromSet:NSCharacterSet.letterCharacterSet].location != NSNotFound) words = YES;
+            for (SGKaraokeLine *line in original) if (SGTranslationLineNeedsText(SGKaraokeLineText(line))) words = YES;
             if (!words) { done(@"skipped:no_lyrics", nil); return; }
+            NSError *readError = nil;
+            BOOL saved = [SGSavedTranslationStore() recordForTrack:track language:language error:&readError] != nil;
+            if (readError) { done(nil, SGTranslationQueueError(SGTranslationStorage, SGLocalized(@"Could not read saved translations."), 0)); return; }
+            NSUInteger missing = saved ? SGLyricsSavedTranslationMissing(track, language, original) : original.count;
+            if (saved && !missing) { done(@"skipped:saved", nil); return; }
+            BOOL verifyOnly = [weakQueue.context[@"verifyOnly"] boolValue];
+            if (saved && (verifyOnly || ![weakQueue.context[@"repairSaved"] boolValue])) {
+                done(nil, SGTranslationQueueError(SGTranslationSavedMismatch,
+                    [NSString stringWithFormat:SGLocalized(@"Saved translation does not cover %lu lyric lines from this source. No AI request was sent. Use Translate missing saved lines to repair it."), (unsigned long)missing], 0)); return;
+            }
+            if (verifyOnly) { done(@"skipped:not_saved", nil); return; }
+            if ([weakQueue.context[@"repairSaved"] boolValue] && !saved) { done(@"skipped:not_saved", nil); return; }
             if (!SGKaraokeInAnotherLanguage(original, language)) { done(@"skipped:same_language", nil); return; }
-            if (SGLyricsHasSavedTranslation(track, language)) { done(@"skipped:saved", nil); return; }
-            // Separate objects: the currently displayed song may use the cached lines on another thread.
+            if (!SGAITranslatorReady()) { done(nil, SGTranslationQueueError(SGTranslationConfiguration, SGLocalized(@"Configure the AI provider, model and API key in Lyrics settings."), 0)); return; }
             NSMutableArray *lines = [NSMutableArray arrayWithCapacity:original.count];
             for (SGKaraokeLine *line in original) {
                 SGKaraokeLine *copy = [line copy]; copy.translation = nil; copy.translationMade = NO;
                 [lines addObject:copy];
             }
+            SGLyricsSyncSavedTranslation(track, language, lines);
+            NSMutableArray *needed = [NSMutableArray array], *positions = [NSMutableArray array];
+            for (NSUInteger i = 0; i < lines.count; ++i) if (!((SGKaraokeLine *)lines[i]).translationMade && SGTranslationLineNeedsText(SGKaraokeLineText(lines[i]))) {
+                [needed addObject:lines[i]]; [positions addObject:@(i)];
+            }
+            if (!needed.count) { done(@"skipped:saved", nil); return; }
             if (![weakQueue markCandidate:track]) { done(nil, SGTranslationQueueError(SGTranslationStorage, SGLocalized(@"Could not write translations. Check available storage."), 0)); return; }
             SGTranslationSource *source = SGAITranslatorSource();
-            SGLyricsTranslateQueuedWithAI(track, lines, language, ^(NSArray *answer, NSError *failure) {
+            SGLyricsTranslateQueuedWithContext(track, needed, saved ? original : nil, language, ^(NSArray *answer, NSError *failure) {
                 if (failure) { done(nil, failure); return; }
-                for (NSUInteger i = 0; i < lines.count; ++i) { ((SGKaraokeLine *)lines[i]).translation = answer[i]; ((SGKaraokeLine *)lines[i]).translationMade = YES; }
-                // A single-song request may have finished while the batch request was in flight.
-                if (!SGLyricsHasSavedTranslation(track, language) && !SGLyricsSaveTranslation(track, language, lines, source)) {
+                NSMutableArray *texts = [NSMutableArray array];
+                for (SGKaraokeLine *line in needed) [texts addObject:SGKaraokeLineText(line) ?: @""];
+                if (answer.count != needed.count || SGTranslationMissingLines(texts, answer).count) {
+                    done(nil, SGTranslationQueueError(SGTranslationLineCount, SGLocalized(@"The AI returned empty translations for lyric lines. The song was not marked complete."), 0)); return;
+                }
+                // Re-read before merging: a single-song request may have completed while this one ran.
+                SGLyricsSyncSavedTranslation(track, language, lines);
+                for (NSUInteger n = 0; n < positions.count; ++n) {
+                    SGKaraokeLine *line = lines[[positions[n] unsignedIntegerValue]];
+                    if (!line.translationMade) { line.translation = answer[n]; line.translationMade = YES; }
+                }
+                if (!SGLyricsSaveTranslation(track, language, lines, source) || SGLyricsSavedTranslationMissing(track, language, original)) {
                     done(nil, SGTranslationQueueError(SGTranslationStorage, SGLocalized(@"Could not write translations. Check available storage."), 0)); return;
                 }
                 [NSNotificationCenter.defaultCenter postNotificationName:SGLyricsTranslationsDidChangeNotification object:nil];
@@ -111,19 +136,39 @@ static NSError *requestError(NSHTTPURLResponse *response, NSError *error) {
         };
         NSArray *cached = SGKaraokeLinesForTrack(track);
         if (cached.count) { translate(cached, nil); return; }
-        NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"https://spclient.wg.spotify.com/color-lyrics/v2/track/%@?format=json&vocalRemoval=false&market=from_token", track]];
-        getJSON(url, ^(id root, NSHTTPURLResponse *response, NSError *error) {
-            if (error || (response.statusCode != 200 && response.statusCode != 404)) { translate(nil, requestError(response, error)); return; }
-            NSData *body = [root isKindOfClass:NSDictionary.class] ? [NSJSONSerialization dataWithJSONObject:root options:0 error:nil] : nil;
-            NSArray *spotify = SGKaraokeLinesFromBody(body);
-            if (spotify.count) { translate(spotify, nil); return; }
-            BOOL unavailable = response.statusCode == 404;
-            if (!SGLyricsEnabled()) { if (unavailable) done(@"skipped:no_lyrics", nil); else translate(nil, SGTranslationQueueError(SGTranslationJSON, SGLocalized(@"Spotify returned unreadable lyrics."), 0)); return; }
-            SGLyricsFetch(track, ^(SGLyricsResult *result) {
-                if (result.karaokeLines.count) translate(result.karaokeLines, nil);
-                else if (unavailable) done(@"skipped:no_lyrics", nil);
+        void (^spotifyFallback)(BOOL) = ^(BOOL providerFailed) {
+            NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"https://spclient.wg.spotify.com/color-lyrics/v2/track/%@?format=json&vocalRemoval=false&market=from_token", track]];
+            getJSON(url, ^(id root, NSHTTPURLResponse *response, NSError *error) {
+                if (error || (response.statusCode != 200 && response.statusCode != 404)) { translate(nil, requestError(response, error)); return; }
+                NSData *body = [root isKindOfClass:NSDictionary.class] ? [NSJSONSerialization dataWithJSONObject:root options:0 error:nil] : nil;
+                NSArray *spotify = SGKaraokeLinesFromBody(body);
+                if (spotify.count && !providerFailed) { translate(spotify, nil); return; }
+                if (response.statusCode == 404 && !providerFailed) done(@"skipped:no_lyrics", nil);
                 else translate(nil, SGTranslationQueueError(SGTranslationNetwork, SGLocalized(@"Lyrics could not be loaded. This is not confirmed as a song without lyrics."), 0));
             });
+        };
+        if (!SGLyricsEnabled()) { spotifyFallback(NO); return; }
+        void (^fetchSources)(NSDictionary *) = ^(NSDictionary *metadata) {
+            SGLyricsQuery *query = [SGLyricsQuery new]; query.trackID = track;
+            query.title = [metadata[@"name"] isKindOfClass:NSString.class] ? metadata[@"name"] : item[@"name"];
+            query.artist = item[@"artist"];
+            NSArray *artists = [metadata[@"artists"] isKindOfClass:NSArray.class] ? metadata[@"artists"] : nil;
+            if ([artists.firstObject isKindOfClass:NSDictionary.class] && [artists.firstObject[@"name"] isKindOfClass:NSString.class]) query.artist = artists.firstObject[@"name"];
+            if ([metadata[@"duration_ms"] isKindOfClass:NSNumber.class]) query.seconds = [metadata[@"duration_ms"] integerValue] / 1000;
+            NSUInteger failures = SGLyricsFailures();
+            SGLyricsFetchForQuery(query, ^(SGLyricsResult *result) {
+                if (result.karaokeLines.count) translate(result.karaokeLines, nil);
+                else if (result.instrumental) done(@"skipped:no_lyrics", nil);
+                else spotifyFallback(SGLyricsFailures() != failures);
+            });
+        };
+        // Off-player album/context pages sometimes carry IDs only. Name the track before asking the
+        // same provider chain the player uses; never silently translate a different lower-priority source.
+        if ([item[@"name"] length] && [item[@"artist"] length]) { fetchSources(nil); return; }
+        NSURL *metadataURL = [NSURL URLWithString:[@"https://api.spotify.com/v1/tracks/" stringByAppendingString:track]];
+        getJSON(metadataURL, ^(id root, NSHTTPURLResponse *response, NSError *error) {
+            if (error || response.statusCode != 200 || ![root isKindOfClass:NSDictionary.class]) { translate(nil, requestError(response, error)); return; }
+            fetchSources(root);
         });
     };
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(pause) name:UIApplicationDidEnterBackgroundNotification object:nil];
@@ -243,7 +288,7 @@ static SGBatchManager *manager(void) { static SGBatchManager *value; static disp
 }
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)table { return 4; }
 - (NSInteger)tableView:(UITableView *)table numberOfRowsInSection:(NSInteger)section {
-    if (section == 0) return 4; if (section == 1) return 9; if (section == 2) return 4;
+    if (section == 0) return 4; if (section == 1) return 9; if (section == 2) return 6;
     NSUInteger n = 0; for (NSDictionary *item in manager().queue.items) if (item[@"error"]) ++n; return n;
 }
 - (NSString *)tableView:(UITableView *)table titleForHeaderInSection:(NSInteger)section {
@@ -268,8 +313,10 @@ static SGBatchManager *manager(void) { static SGBatchManager *value; static disp
         else { cell.textLabel.text = SGLocalized(@"Songs needing translation (checked)"); cell.detailTextLabel.text = [s[@"eligible"] stringValue]; }
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
     } else if (path.section == 2) {
-        cell.textLabel.text = @[SGLocalized(@"Start / Resume untranslated songs"), SGLocalized(@"Pause"), SGLocalized(@"Retry failed songs"), SGLocalized(@"Concurrent AI requests")][path.row];
+        cell.textLabel.text = @[SGLocalized(@"Start / Resume untranslated songs"), SGLocalized(@"Pause"), SGLocalized(@"Retry failed songs"), SGLocalized(@"Concurrent AI requests"), SGLocalized(@"Check saved results (no AI)"), SGLocalized(@"Translate missing saved lines")][path.row];
         if (path.row == 3) cell.detailTextLabel.text = [NSString stringWithFormat:@"%lu (%lu)", (unsigned long)q.concurrency, (unsigned long)q.effectiveConcurrency];
+        if (path.row == 4) cell.detailTextLabel.text = SGLocalized(@"Recheck this queue against the playback lyrics source. No AI requests are sent.");
+        if (path.row == 5) cell.detailTextLabel.text = SGLocalized(@"Uses your AI API only for missing lines in saved songs. Existing translated lines are kept.");
     } else {
         NSMutableArray *errors = [NSMutableArray array]; for (NSDictionary *item in q.items) if (item[@"error"]) [errors addObject:item];
         NSDictionary *item = errors[path.row]; cell.textLabel.text = item[@"title"]; cell.detailTextLabel.text = SGLocalized(item[@"error"]); cell.selectionStyle = UITableViewCellSelectionStyleNone;
@@ -279,10 +326,15 @@ static SGBatchManager *manager(void) { static SGBatchManager *value; static disp
 - (void)tableView:(UITableView *)table didSelectRowAtIndexPath:(NSIndexPath *)path {
     [table deselectRowAtIndexPath:path animated:YES]; SGBatchManager *m = manager();
     if (path.section == 2) {
-        if (path.row == 0) [m resume];
+        if (path.row == 0) { [m.queue.context removeObjectForKey:@"verifyOnly"]; [m.queue.context removeObjectForKey:@"repairSaved"]; [m resume]; }
         else if (path.row == 1) [m pause];
-        else if (path.row == 2) { [m.queue retryFailures]; [m resume]; }
-        else {
+        else if (path.row == 2) { [m.queue.context removeObjectForKey:@"verifyOnly"]; [m.queue.context removeObjectForKey:@"repairSaved"]; [m.queue retryFailures]; [m resume]; }
+        else if (path.row == 4 || path.row == 5) {
+            [m pause];
+            if (![m.queue recheckSavedResults]) { notice(SGLocalized(@"Wait for the current requests to finish, then try again.")); return; }
+            if (path.row == 5) { [m.queue.context removeObjectForKey:@"verifyOnly"]; m.queue.context[@"repairSaved"] = @YES; }
+            [m.queue checkpoint]; [m resume];
+        } else {
             UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Concurrent AI requests") message:nil preferredStyle:UIAlertControllerStyleAlert];
             for (NSInteger i = 1; i <= 3; ++i) [alert addAction:[UIAlertAction actionWithTitle:@(i).stringValue style:UIAlertActionStyleDefault handler:^(UIAlertAction *a) { m.queue.concurrency = i; [NSUserDefaults.standardUserDefaults setInteger:i forKey:kConcurrency]; [self refresh]; }]];
             [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]]; [self presentViewController:alert animated:YES completion:nil];

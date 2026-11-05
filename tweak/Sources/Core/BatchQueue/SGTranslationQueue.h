@@ -5,7 +5,7 @@ typedef NS_ENUM(NSInteger, SGTranslationFailure) {
     SGTranslationNetwork = 1, SGTranslationTimeout, SGTranslationRateLimit,
     SGTranslationServer, SGTranslationAuthentication, SGTranslationModel,
     SGTranslationJSON, SGTranslationLineCount, SGTranslationNoLyrics,
-    SGTranslationContextLimit, SGTranslationConfiguration, SGTranslationStorage
+    SGTranslationContextLimit, SGTranslationConfiguration, SGTranslationStorage, SGTranslationSavedMismatch
 };
 extern NSString *const SGTranslationQueueErrorDomain;
 NSError *SGTranslationQueueError(SGTranslationFailure code, NSString *message, NSTimeInterval retryAfter);
@@ -32,5 +32,7 @@ SGTranslationFailure SGTranslationHTTPFailure(NSInteger status, NSError *network
 - (void)resume;
 - (void)pause;
 - (void)retryFailures;
+// Explicit no-AI audit of old successes/skipped saved records. Wait for in-flight calls before use.
+- (BOOL)recheckSavedResults;
 - (NSDictionary<NSString *, NSNumber *> *)statistics;
 @end

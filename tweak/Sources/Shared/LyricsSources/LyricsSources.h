@@ -93,6 +93,9 @@ BOOL SGLyricsEnabled(void);   // any source at all is on
 
 // Asks the sources in order and merges what they give, on the main queue. nil when none had lyrics.
 void SGLyricsFetch(NSString *trackID, void (^done)(SGLyricsResult *result));
+// Same source order and cache as playback, with names supplied by an album/library scan. No player
+// change is needed for providers that search by title and artist.
+void SGLyricsFetchForQuery(SGLyricsQuery *query, void (^done)(SGLyricsResult *result));
 // NO once every source has said it has nothing for the track; safe from any thread.
 BOOL SGLyricsMayHave(NSString *trackID);
 // Starts the walk for a track before anyone has asked, so the answer is in when Spotify's request

@@ -576,19 +576,23 @@ static void startWalk(NSString *trackID, SGLyricsQuery *query) {
 
 // Starts the walk as soon as the player has named the track, or once it has waited long enough
 // that it is not going to: a track opened for something other than what is playing is never named.
-static void whenNamed(NSString *trackID, NSTimeInterval waited) {
+static void whenNamed(NSString *trackID, NSTimeInterval waited, SGLyricsQuery *hint) {
     SGLyricsQuery *query = SGLyricsQueryFor(trackID);
+    if (!query.title.length) query.title = hint.title;
+    if (!query.artist.length) query.artist = hint.artist;
+    if (!query.album.length) query.album = hint.album;
+    if (!query.seconds) query.seconds = hint.seconds;
     if (named(query) || waited >= kNameWait) {
         if (!named(query)) SGLog(@"lyrics: the player never named %@ in %.1fs", trackID, waited);
         startWalk(trackID, query);
         return;
     }
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kNamePoll * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        whenNamed(trackID, waited + kNamePoll);
+        whenNamed(trackID, waited + kNamePoll, hint);
     });
 }
 
-void SGLyricsFetch(NSString *trackID, void (^done)(SGLyricsResult *result)) {
+static void fetchLyrics(NSString *trackID, SGLyricsQuery *hint, void (^done)(SGLyricsResult *result)) {
     setUp();
     dispatch_async(dispatch_get_main_queue(), ^{
         if (!trackID.length) {
@@ -596,7 +600,7 @@ void SGLyricsFetch(NSString *trackID, void (^done)(SGLyricsResult *result)) {
             return;
         }
         id kept = sg_kept[trackID];
-        if (kept) {
+        if (kept && !(kept == NSNull.null && named(hint))) {
             done(kept == NSNull.null ? nil : kept);
             return;
         }
@@ -606,9 +610,11 @@ void SGLyricsFetch(NSString *trackID, void (^done)(SGLyricsResult *result)) {
             return;
         }
         sg_waiting[trackID] = [NSMutableArray arrayWithObject:[done copy]];
-        whenNamed(trackID, 0);
+        whenNamed(trackID, 0, hint);
     });
 }
+void SGLyricsFetch(NSString *trackID, void (^done)(SGLyricsResult *result)) { fetchLyrics(trackID, nil, done); }
+void SGLyricsFetchForQuery(SGLyricsQuery *query, void (^done)(SGLyricsResult *result)) { fetchLyrics(query.trackID, query, done); }
 
 BOOL SGLyricsMayHave(NSString *trackID) {
     setUp();

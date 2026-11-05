@@ -2,6 +2,7 @@
 #import "Core/BatchQueue/SGTranslationQueue.h"
 #import "Core/BatchQueue/SGTranslationPage.h"
 #import "Core/BatchQueue/SGTranslationJSON.h"
+#import "Core/BatchQueue/SGTranslationAlignment.h"
 static NSUInteger checks;
 static void check(BOOL ok, NSString *name) { if (!ok) { NSLog(@"FAIL: %@", name); exit(1); } ++checks; NSLog(@"PASS: %@", name); }
 static void spin(BOOL (^until)(void), double seconds) {
@@ -34,6 +35,8 @@ int main(void) { @autoreleasepool {
     check(!SGTranslationValidateLines(@"[\"one\"]", 2, &invalid) && invalid == SGTranslationLineCount, @"real parser rejects missing lines");
     check(!SGTranslationValidateLines(@"[null,42]", 2, &invalid) && invalid == SGTranslationJSON, @"real parser rejects non-string entries");
     check(SGTranslationValidateLines(@"```json\n[\"a\",\"b\"]\n```", 2, &invalid).count == 2, @"compatible server fenced JSON support");
+    check(SGTranslationMissingLines(@[@"first verse", @"second verse"], SGTranslationValidateLines(@"[\"đã dịch\",\"\"]", 2, NULL)).count == 1, @"valid JSON with empty lyric output is incomplete");
+    check(SGTranslationMissingLines(@[@"first verse", @"♪"], @[@"đã dịch", @""]).count == 0, @"instrumental break does not need translated text");
     NSMutableArray *collected = [NSMutableArray array]; NSUInteger scanned = 0;
     NSURL *base = [NSURL URLWithString:@"https://api.spotify.com/v1/me/tracks?limit=50"];
     for (NSUInteger offset = 0; offset < 1867; offset += 50) {
@@ -53,6 +56,9 @@ int main(void) { @autoreleasepool {
     SGTranslationQueue *single = job(root, @"single.json", 1);
     single.execute = ^(NSDictionary *item, NSString *language, void (^done)(NSString *, NSError *)) { done(@"succeeded", nil); };
     [single resume]; check([single.statistics[@"succeeded"] integerValue] == 1, @"one song succeeds and commits");
+    check([single recheckSavedResults] && [single.context[@"verifyOnly"] boolValue] && [single.statistics[@"pending"] integerValue] == 1, @"old success can be explicitly rechecked without AI");
+    single.execute = ^(NSDictionary *item, NSString *language, void (^done)(NSString *, NSError *)) { done(nil, SGTranslationQueueError(SGTranslationSavedMismatch, @"fixture incomplete stored translation", 0)); };
+    [single resume]; check([single.statistics[@"failed"] integerValue] == 1 && [single.items.firstObject[@"attempts"] integerValue] == 1, @"incomplete saved lyrics fail once without automatic API retry");
     check([single prepareLanguage:@"vi"] && single.items.count == 0, @"new source scan archives the completed report without carrying terminal IDs forward");
     SGTranslationQueue *bulk = job(root, @"bulk.json", 1000); bulk.concurrency = 3;
     __block NSUInteger active = 0, peak = 0, calls = 0;

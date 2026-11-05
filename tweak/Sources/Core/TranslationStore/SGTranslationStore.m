@@ -34,13 +34,20 @@ static BOOL text(id value, NSUInteger limit) {
             reason = SGLocalized(@"Invalid translation lines."); break;
         }
     }
+    id originals = reason ? nil : value[@"originals"];
+    if (!reason && originals) {
+        if (![originals isKindOfClass:NSArray.class] || [originals count] > 100000) reason = SGLocalized(@"Invalid translation lines.");
+        else for (id line in originals) if (![line isKindOfClass:NSString.class] || [line length] > 65536) {
+            reason = SGLocalized(@"Invalid translation lines."); break;
+        }
+    }
     for (NSString *key in @[@"by", @"model", @"title", @"artist"]) {
         if (!reason && value[key] && !text(value[key], 4096)) reason = SGLocalized(@"Invalid translation metadata.");
     }
     if (!reason && value[@"made"] && (![value[@"made"] isKindOfClass:NSNumber.class] || !isfinite([value[@"made"] doubleValue]) || [value[@"made"] doubleValue] < 0)) reason = SGLocalized(@"Invalid translation date.");
     if (reason) { if (error) *error = problem(reason); return nil; }
     NSMutableDictionary *clean = [NSMutableDictionary dictionary];
-    for (NSString *key in @[@"type", @"schemaVersion", @"track", @"language", @"lines", @"by", @"model", @"made", @"title", @"artist"]) {
+    for (NSString *key in @[@"type", @"schemaVersion", @"track", @"language", @"lines", @"originals", @"by", @"model", @"made", @"title", @"artist"]) {
         if (value[key]) clean[key] = value[key];
     }
     NSData *data = [NSJSONSerialization dataWithJSONObject:clean options:0 error:error];

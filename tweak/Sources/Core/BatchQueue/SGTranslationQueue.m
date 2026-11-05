@@ -58,6 +58,8 @@ SGTranslationFailure SGTranslationHTTPFailure(NSInteger status, NSError *network
                 ![item[@"attempts"] isKindOfClass:NSNumber.class] ||
                 (item[@"next"] && ![item[@"next"] isKindOfClass:NSNumber.class]) ||
                 (item[@"title"] && ![item[@"title"] isKindOfClass:NSString.class]) ||
+                (item[@"name"] && ![item[@"name"] isKindOfClass:NSString.class]) ||
+                (item[@"artist"] && ![item[@"artist"] isKindOfClass:NSString.class]) ||
                 (item[@"error"] && ![item[@"error"] isKindOfClass:NSString.class]) ||
                 ![@[@"pending", @"running", @"retry", @"succeeded", @"skipped", @"failed"] containsObject:item[@"state"]]) { valid = NO; break; }
             [seen addObject:item[@"id"]];
@@ -110,12 +112,25 @@ SGTranslationFailure SGTranslationHTTPFailure(NSInteger status, NSError *network
         NSString *identifier = track[@"id"];
         if (![identifier isKindOfClass:NSString.class] || !identifier.length || [seen containsObject:identifier]) continue;
         [seen addObject:identifier];
-        [_work addObject:[@{@"id":identifier, @"title":track[@"title"] ?: identifier, @"state":@"pending", @"attempts":@0} mutableCopy]];
+        NSMutableDictionary *item = [@{@"id":identifier, @"title":track[@"title"] ?: identifier, @"state":@"pending", @"attempts":@0} mutableCopy];
+        for (NSString *key in @[@"name", @"artist"]) if ([track[key] isKindOfClass:NSString.class]) item[key] = track[key];
+        [_work addObject:item];
     }
     return [self checkpoint];
 }
 - (BOOL)markCandidate:(NSString *)trackID {
     for (NSMutableDictionary *item in _work) if ([item[@"id"] isEqual:trackID]) { item[@"eligible"] = @YES; break; }
+    return [self checkpoint];
+}
+- (BOOL)recheckSavedResults {
+    if (_active || !_paused) return NO;
+    for (NSMutableDictionary *item in _work) {
+        if ([item[@"state"] isEqual:@"succeeded"] || [item[@"reason"] isEqual:@"saved"] || [item[@"code"] integerValue] == SGTranslationSavedMismatch) {
+            item[@"state"] = @"pending"; item[@"attempts"] = @0;
+            [item removeObjectForKey:@"next"]; [item removeObjectForKey:@"reason"]; [item removeObjectForKey:@"error"]; [item removeObjectForKey:@"code"];
+        }
+    }
+    _context[@"verifyOnly"] = @YES;
     return [self checkpoint];
 }
 - (BOOL)checkpoint {
