@@ -17,6 +17,7 @@
 #import "Shared/Sing/Sing.h"
 #import "Shared/LyricsSources/LyricsSources.h"
 #import "Shared/LyricsTranslation/LyricsTranslation.h"
+#import "Shared/LyricsTranslation/LyricsSelection.h"
 #import "Settings/SGPageStyle.h"
 #import "Shared/Player/PlayerEvents.h"
 #import "Shared/Player/PlayerState.h"
@@ -1312,6 +1313,11 @@ typedef struct {
 
 @implementation SGRKaraokeView {
     UIScrollView *_scroll;
+    NSMutableIndexSet *_selected;
+    UIView *_selectionBar;
+    UIButton *_selectionCancel, *_selectionContinue;
+    BOOL _wasBrowsing;
+    CGPoint _selectionOffset;
     BOOL _browsing;
     // The anchor and the open break as they were when the page was taken by hand, which the stack keeps to
     // until it follows the song again (topOfLine:).
@@ -1418,6 +1424,7 @@ typedef struct {
     };
     for (NSNotificationName name in @[UIContentSizeCategoryDidChangeNotification, UIAccessibilityDarkerSystemColorsStatusDidChangeNotification])
         [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(creditStyleChanged) name:name object:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(selectionSettingChanged) name:SGLyricsShareSelectionChangedNotification object:nil];
     _sing = [SGRSingButton new];
     _sing.hidden = !SGSingButtonShown();
     [self addSubview:_sing];
@@ -1441,6 +1448,8 @@ typedef struct {
 // Karaoke's settings switched the mic off or on: hidden at once, Karaoke itself as it was.
 - (void)singButtonChanged {
     _sing.hidden = !SGSingButtonShown();
+    _sing.tucked = _extrasHidden && !_keepsSing;
+    [self clearBottomRow];
 }
 
 - (void)refreshCreditStyle {
@@ -1513,6 +1522,7 @@ typedef struct {
 // to, or nothing.
 - (UIView *)tapTargetAt:(CGPoint)point explains:(BOOL *)explains {
     *explains = NO;
+    if (_selectionBar && CGRectContainsPoint(_selectionBar.frame, point)) return nil;
     if (_extrasBox && !_extrasBox.hidden && CGRectContainsPoint(_extrasBox.frame, point)) return nil;
     if (_sing.userInteractionEnabled && [_sing pointInside:[self convertPoint:point toView:_sing] withEvent:nil]) return nil;
     CGPoint inScroll = [self convertPoint:point toView:_scroll];
@@ -1526,8 +1536,8 @@ typedef struct {
         *explains = YES;
         return view;
     }
-    if (_plain) return nil;   // a line with no time has nowhere to seek to
-    if (_seeksAbove > 0 && (point.y > _seeksAbove || point.y < _seeksBelow)) return nil;   // the host's, where its controls were
+    if (_plain && !_selected) return nil;   // plain lines may be selected but never seek
+    if (!_selected && _seeksAbove > 0 && (point.y > _seeksAbove || point.y < _seeksBelow)) return nil;   // the host's, where its controls were
     for (SGRKaraokeLineView *view in _shown.allValues) {
         if (CGRectContainsPoint(CGRectInset(view.frame, -_margin, -_lineGap / 2), inScroll)) return view;
     }
@@ -1535,6 +1545,7 @@ typedef struct {
 }
 
 - (BOOL)tapSeeksAt:(CGPoint)point {
+    if (_selected && _selectionBar && CGRectContainsPoint(_selectionBar.frame, point)) return YES;
     BOOL explains;
     UIView *target = [self tapTargetAt:point explains:&explains];
     return target && target != _credit && !explains;
@@ -1544,6 +1555,7 @@ typedef struct {
     [self stir];
     BOOL explains;
     UIView *target = [self tapTargetAt:[tap locationInView:self] explains:&explains];
+    if (_selected && [target isKindOfClass:SGRKaraokeLineView.class]) { [self toggleSelectedView:(SGRKaraokeLineView *)target]; return; }
     if (target == _credit) SGLyricsOpenCreditLinks(_creditLinks, _credit);
     else if (explains) [self explainLine:(SGRKaraokeLineView *)target];
     else if (target) [self seekToLine:((SGRKaraokeLineView *)target).line];
@@ -1551,6 +1563,11 @@ typedef struct {
 
 // A tap on a line, or VoiceOver activating it.
 - (void)seekToLine:(SGKaraokeLine *)line {
+    if (_selected) {
+        NSUInteger index = [_lines indexOfObjectIdenticalTo:line];
+        if (index != NSNotFound) [self toggleSelectedView:[self viewForLine:index]];
+        return;
+    }
     // The line shows Delay later than the song, so its sound is that much past its start.
     NSInteger delay = SGKaraokeDelayMs();
     SGLog(@"lyrics: tapped the line at %ld-%ld ms, the clock at %.0f ms, %ld ms of delay", (long)line.start, (long)line.end, _clock, (long)delay);
@@ -1561,12 +1578,15 @@ typedef struct {
 
 - (void)held:(UILongPressGestureRecognizer *)hold {
     [self stir];
-    if (hold.state != UIGestureRecognizerStateBegan || !_meanings.count) return;
+    if (hold.state != UIGestureRecognizerStateBegan) return;
+    BOOL selection = SGFlag(SGKeyLyricsShareSelection, NO) && !_sample;
+    if (!selection && !_meanings.count) return;
     if (_sing.userInteractionEnabled && [_sing pointInside:[hold locationInView:_sing] withEvent:nil]) return;
     CGPoint point = [hold locationInView:_scroll];
     for (SGRKaraokeLineView *view in _shown.allValues) {
         if (!CGRectContainsPoint(CGRectInset(view.frame, -_margin, -_lineGap / 2), point)) continue;
-        [self explainLine:view];
+        if (selection) [self toggleSelectedView:view];
+        else [self explainLine:view];
         return;
     }
 }
@@ -1577,6 +1597,70 @@ typedef struct {
     if (!meanings.count) return;
     SGPlayFeedback(SGFeedbackSkip);
     SGRShowMeanings(SGKaraokeLineText(view.line), meanings);
+}
+
+// Selection stays in this view; it never sends a player seek or replaces the lyric renderer.
+- (void)styleSelectionView:(SGRKaraokeLineView *)view index:(NSInteger)index {
+    BOOL picked = _selected && [_selected containsIndex:index];
+    view.alpha = _selected && !picked ? 0.35 : 1;
+    view.backgroundColor = picked ? [UIColor colorWithWhite:0 alpha:0.48] : UIColor.clearColor;
+    view.layer.cornerRadius = picked ? 12 : 0;
+    if (_selected) { view.blur = 0; [view showPlain]; }
+    if (_selected) view.accessibilityTraits = UIAccessibilityTraitButton | (picked ? UIAccessibilityTraitSelected : 0);
+}
+- (void)toggleSelectedView:(SGRKaraokeLineView *)view {
+    NSNumber *number = [_shown allKeysForObject:view].firstObject;
+    if (!number || !SGKaraokeLineText(view.line).length) return;
+    if (!_selected) {
+        _wasBrowsing = _browsing; _selectionOffset = _scroll.contentOffset;
+        if (!_browsing) { _browseAnchor = self.bounds.size.height * kAnchor; _browseBreak = _openBreak; }
+        _browsing = YES; _selected = [NSMutableIndexSet indexSet];
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(followSong) object:nil];
+        _selectionBar = [UIView new]; _selectionBar.backgroundColor = [UIColor colorWithWhite:0.08 alpha:0.95]; _selectionBar.layer.cornerRadius = 16;
+        _selectionCancel = [UIButton buttonWithType:UIButtonTypeSystem];
+        [_selectionCancel setTitle:SGLocalized(@"Cancel") forState:UIControlStateNormal];
+        [_selectionCancel addTarget:self action:@selector(endSelection) forControlEvents:UIControlEventTouchUpInside];
+        _selectionContinue = [UIButton buttonWithType:UIButtonTypeSystem];
+        [_selectionContinue addTarget:self action:@selector(continueSelection) forControlEvents:UIControlEventTouchUpInside];
+        [_selectionBar addSubview:_selectionCancel]; [_selectionBar addSubview:_selectionContinue]; [self addSubview:_selectionBar];
+        [self setNeedsLayout];
+    }
+    NSUInteger index = number.unsignedIntegerValue;
+    if ([_selected containsIndex:index]) [_selected removeIndex:index]; else [_selected addIndex:index];
+    for (NSNumber *key in _shown) [self styleSelectionView:_shown[key] index:key.integerValue];
+    [_selectionContinue setTitle:[NSString stringWithFormat:SGLocalized(@"Continue (%lu)"), (unsigned long)_selected.count] forState:UIControlStateNormal];
+    _selectionContinue.enabled = _selected.count > 0;
+    SGPlayFeedback(SGFeedbackSkip);
+}
+- (void)selectionSettingChanged { if (!SGFlag(SGKeyLyricsShareSelection, NO)) [self endSelection]; }
+- (void)endSelection {
+    if (!_selected) return;
+    _selected = nil; [_selectionBar removeFromSuperview]; _selectionBar = nil;
+    _selectionCancel = _selectionContinue = nil;
+    // Rebuild the same lines so normal word timing, glow and accessibility are restored.
+    [self dropLineViews]; _browsing = _wasBrowsing;
+    if (_wasBrowsing) _scroll.contentOffset = _selectionOffset;
+    else _scroll.contentOffset = CGPointZero;
+    [self placeLinesAnimated:NO]; [self showLinesInSight]; [self stir];
+    if (_wasBrowsing && !_plain) [self performSelector:@selector(followSong) withObject:nil afterDelay:kBrowseHold];
+}
+- (void)continueSelection {
+    if (!_selected.count) return;
+    // Binary symbol presence and a routable URI are insufficient to establish a safe payload contract.
+    // Do not call guessed Swift selectors or fabricate Spotify/Apple Music images.
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Lyrics selection")
+        message:SGLocalized(@"Native Spotify lyric sharing has not been verified in this build. Your selection is kept. You can copy the original text; no share image is generated.") preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Copy original lyrics") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+        NSMutableArray *texts = [NSMutableArray array];
+        [self->_selected enumerateIndexesUsingBlock:^(NSUInteger index, BOOL *stop) { if (index < self->_lines.count) [texts addObject:SGKaraokeLineText(self->_lines[index]) ?: @""]; }];
+        UIPasteboard.generalPasteboard.string = [texts componentsJoinedByString:@"\n"];
+        [self endSelection];
+    }]];
+    NSNumber *first = @(_selected.firstIndex);
+    if (_meanings[first].count) [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Explain selected line") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) { [self explainLine:[self viewForLine:first.integerValue]]; }]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Keep selection") style:UIAlertActionStyleCancel handler:nil]];
+    alert.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+    [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
 // Genius is asked once the song's lines are in; lines that change under it are matched again.
@@ -1621,6 +1705,7 @@ typedef struct {
         _extrasBox.userInteractionEnabled = !hidden;
     }
     _sing.tucked = hidden && !_keepsSing;
+    [self clearBottomRow];
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
@@ -1637,6 +1722,7 @@ typedef struct {
 }
 
 - (void)followSong {
+    if (_selected) return;
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(followSong) object:nil];
     if (!_browsing) return;
     _browsing = NO;
@@ -1777,6 +1863,12 @@ typedef struct {
         _extrasBox.frame = CGRectMake(_margin, self.bounds.size.height - kExtrasSide - kExtrasBottom, kExtrasSide, kExtrasSide);
         SGRShowGlass(SGRGlassInside(_extrasBox, &kExtrasGlassKey, kExtrasSide), !_extrasHidden);
     }
+    if (_selectionBar) {
+        _selectionBar.frame = CGRectMake(12, MAX(0, self.bounds.size.height - self.safeAreaInsets.bottom - 64), MAX(0, self.bounds.size.width - 24), 52);
+        _selectionCancel.frame = CGRectMake(4, 0, 80, 52);
+        _selectionContinue.frame = CGRectMake(88, 0, MAX(0, _selectionBar.bounds.size.width - 92), 52);
+        [self bringSubviewToFront:_selectionBar];
+    }
     [self clearBottomRow];
     if (_lines && self.bounds.size.width != _builtWidth) {
         [self rebuild];
@@ -1797,7 +1889,7 @@ typedef struct {
     if (height <= 0) return;
     CGFloat floor = height;
     for (UIView *view in @[_sing ?: NSNull.null, _extrasBox ?: NSNull.null]) {
-        if ([view isKindOfClass:UIView.class] && !view.hidden && view.superview) floor = MIN(floor, CGRectGetMinY(view.frame) - 8);
+        if ([view isKindOfClass:UIView.class] && !view.hidden && view.userInteractionEnabled && view.superview) floor = MIN(floor, CGRectGetMinY(view.frame) - 8);
     }
     CGFloat clear = MAX(0, MIN(1, (height - floor) / height));
     NSArray *locations = @[@0, @(kEdgeFade), @(MAX(kEdgeFade, 1 - clear - kEdgeFade)), @(1 - clear), @1];
@@ -2134,6 +2226,7 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
 }
 
 - (void)dropLines {
+    [self endSelection];
     _lines = nil;
     _passedOver = nil;
     _builtWidth = 0;
@@ -2233,6 +2326,7 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
         [self->_scroll addSubview:view];
         self->_shown[@(index)] = view;
         [self placeLine:view at:index animated:NO];
+        [self styleSelectionView:view index:index];
     }];
     return view;
 }
@@ -2320,7 +2414,7 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
 // below, lit; the stack moves on to it once the line at the anchor is sung out.
 - (void)placeLinesAnimated:(BOOL)animated {
     [self stir];
-    if (_browsing || !_tops.count) return;
+    if (_selected || _browsing || !_tops.count) return;
     _focusTop = _tops[(NSUInteger)MAX(_focus, 0)].doubleValue;
     [self showLinesInSight];
     for (NSNumber *key in _shown) [self placeLine:_shown[key] at:key.integerValue animated:animated];
@@ -2506,6 +2600,7 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
     if (!_sample && _lines && !_creditSource) [self creditTo:SGLyricsCreditFor(track)];
     if (!_tops) return;
     [self alignFade];
+    if (_selected) { [self showLinesInSight]; return; }
     if (_plain) {
         [self showLinesInSight];   // it moves only when scrolled by hand
         return;

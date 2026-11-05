@@ -36,9 +36,10 @@
 #import "Redesigned/Artist/Artist.h"
 #import "Pages.h"
 #import "LanguageSettings.h"
+#import "SettingsPlacement.h"
 
 static const CGFloat kRowHeight = 56;
-static char kRowKey, kInsetKey;
+static char kRowKey;
 
 // Each part of Spotify on a tile of its own color, as Settings lists its own, so a row is found by its color.
 static SGModRow *pageRow(NSString *title, NSString *symbol, UIColor *color, UIViewController *(^page)(void)) {
@@ -141,6 +142,7 @@ static UIViewController *modSettingsPage(void) {
 @implementation SGModSettingsRow {
     UIImageView *_icon;
     UILabel *_title;
+    UILabel *_subtitle;
     UIImageView *_chevron;
 }
 
@@ -148,8 +150,14 @@ static UIViewController *modSettingsPage(void) {
     if (!(self = [super initWithFrame:frame])) return nil;
     _icon = SGSymbolView(@"slider.horizontal.3", 20, UIImageSymbolWeightRegular, 24);
     _title = [UILabel new];
-    _title.text = SGLocalized(@"Mod Settings");
+    _title.text = SGLocalized(@"Vitrine Settings");
     _title.textColor = UIColor.whiteColor;
+    _subtitle = [UILabel new];
+    _subtitle.text = SGLocalized(@"Customize appearance, lyrics, Karaoke and AI translation");
+    _subtitle.textColor = UIColor.secondaryLabelColor;
+    _subtitle.font = [UIFont systemFontOfSize:11];
+    _subtitle.numberOfLines = 2;
+    [self addSubview:_subtitle];
     _chevron = SGSymbolView(@"chevron.right", 11, UIImageSymbolWeightSemibold, 12);
     for (UIView *v in @[_icon, _title, _chevron]) [self addSubview:v];
     [self addTarget:self action:@selector(open) forControlEvents:UIControlEventTouchUpInside];
@@ -161,7 +169,9 @@ static UIViewController *modSettingsPage(void) {
     _title.font = SGSpotifyListFont(self.drawer);
     CGFloat width = self.bounds.size.width, height = self.bounds.size.height, lead = self.drawer ? 4 : 0;
     _icon.frame = CGRectMake(12 + lead, (height - 24) / 2, 24, 24);
-    _title.frame = CGRectMake(48 + lead, 0, width - 96, height);
+    _title.frame = CGRectMake(48 + lead, self.drawer ? 0 : 7, width - 96, self.drawer ? height : 19);
+    _subtitle.hidden = self.drawer;
+    _subtitle.frame = CGRectMake(48, 26, width - 80, height - 29);
     _chevron.frame = CGRectMake(width - 24, (height - 12) / 2, 12, 12);
     _chevron.hidden = self.drawer;
 }
@@ -215,17 +225,7 @@ void SGOpenModSettings(UIView *source) {
 static void placeRow(UICollectionView *list, SGModSettingsRow *row) {
     // The row took the fallback font if it laid out before the list had rows to read.
     if (SGAdoptFonts(list, row, row.drawer)) [row setNeedsLayout];
-    CGFloat bottom = list.contentSize.height;
-    row.hidden = !row.drawer && bottom <= 0;
-    row.frame = CGRectMake(0, row.drawer ? -kRowHeight : bottom, list.bounds.size.width, kRowHeight);
-
-    UIEdgeInsets inset = list.contentInset;
-    NSValue *applied = objc_getAssociatedObject(list, &kInsetKey);
-    if (applied && UIEdgeInsetsEqualToEdgeInsets(inset, applied.UIEdgeInsetsValue)) return;
-    if (row.drawer) inset.top += kRowHeight;
-    else inset.bottom += kRowHeight;
-    objc_setAssociatedObject(list, &kInsetKey, [NSValue valueWithUIEdgeInsets:inset], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    list.contentInset = inset;
+    SGPlaceSettingsEntry(list, row, row.drawer, kRowHeight);
 }
 
 // Media quality, Playback, Account and most of the rest of settings are the same controller class
@@ -263,6 +263,7 @@ static BOOL isSettingsRoot(UIViewController *list) {
         // A page that laid itself out before it was on the stack looked like the list for as long
         // as that took; the row goes again as soon as it can be seen for what it is.
         if (!root) {
+            SGRemoveSettingsEntry((UICollectionView *)sub);
             [row removeFromSuperview];
             objc_setAssociatedObject(sub, &kRowKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
             continue;
