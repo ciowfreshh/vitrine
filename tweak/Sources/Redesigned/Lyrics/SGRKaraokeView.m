@@ -817,6 +817,7 @@ static double secant(SGSweepKnot *knots, NSUInteger i) {
 - (void)showTime:(double)ms;
 // Every word lit and left so, for lyrics with no timing: nothing is sung, so nothing is dim.
 - (void)showPlain;
+- (void)showSelection;
 - (void)markMeaning:(NSArray<SGLyricsMeaning *> *)meanings;
 // Where the bubble can be tapped, in the line's own space; CGRectNull without one.
 @property (nonatomic, readonly) CGRect bubbleTarget;
@@ -1016,6 +1017,23 @@ static const NSUInteger kLinesPerFrame = 4;
     }
     _translation.alpha = _romanised.alpha = kTranslationLit;
     [_backing showPlain];
+}
+
+// Selection is static. Removing sweep masks prevents a stale mask from clipping letters
+// after the view is recreated while the player is paused. Ending selection recreates the
+// normal line views, including all original masks, timing, glow and wave behavior.
+- (void)showSelection {
+    [self showPlain];
+    for (SGRKaraokeWordView *word in _words) {
+        [word.layer removeAllAnimations];
+        [word.lit.layer removeAllAnimations];
+        [word settle];
+        word.lit.layer.mask = nil;
+        word.lit.hidden = NO;
+        word.lit.alpha = 1;
+        [word.lit setNeedsDisplay];
+    }
+    [_backing showSelection];
 }
 
 - (CGRect)bubbleTarget {
@@ -1612,7 +1630,7 @@ typedef struct {
     view.alpha = _selected && !picked ? 0.35 : 1;
     view.backgroundColor = picked ? [UIColor colorWithWhite:0 alpha:0.48] : UIColor.clearColor;
     view.layer.cornerRadius = picked ? 12 : 0;
-    if (_selected) { view.blur = 0; [view showPlain]; }
+    if (_selected) { view.blur = 0; [view showSelection]; }
     if (_selected) view.accessibilityTraits = UIAccessibilityTraitButton | (picked ? UIAccessibilityTraitSelected : 0);
 }
 - (void)toggleSelectedView:(SGRKaraokeLineView *)view {
