@@ -35,6 +35,14 @@
   "tweak/Sources/App/Pages.m": {
     "The newest version of Vitrine, leaning toward Apple Music's style. It is not compatible with the legacy look's settings.\n\nThe legacy look gives you more freedom, yet still looks like Spotify.\nNSString *const SGRedesignedUIInfo = @\"The newest version of Vitrine, leaning toward Apple Music's style. It is not compatible with the legacy look's settings.\\n\\nThe legacy look gives you more freedom, yet still looks like Spotify.\";": 1
   },
+  "tweak/Sources/App/SettingsPlacement.m": {
+    "About\nNSArray *titles = drawer ? @[@\"Settings and privacy\", @\"Settings & privacy\", @\"C\u00e0i \u0111\u1eb7t v\u00e0 quy\u1ec1n ri\u00eang t\u01b0\"] : @[@\"About\", @\"Gi\u1edbi thi\u1ec7u\"];": 1
+  },
+  "tweak/Sources/Core/BatchQueue/SGTranslationQueue.m": {
+    "Could not save queue progress. Check available storage.\nif (!ok) { _paused = YES; _notice = @\"Could not save queue progress. Check available storage.\"; }": 1,
+    "Queue recovery failed. The saved file was preserved.\n} else { _unreadable = YES; _notice = @\"Queue recovery failed. The saved file was preserved.\"; }": 1,
+    "Translation failed\nitem[@\"error\"] = error.localizedDescription ?: @\"Translation failed\"; item[@\"code\"] = @(code);": 1
+  },
   "tweak/Sources/Core/SGUIL10n.swift": {
     "Could not complete the operation. Please try again.\nformat(\"%@ (%ld)\", string(\"Could not complete the operation. Please try again.\"), (error as NSError).code)": 1
   },
@@ -226,6 +234,9 @@
     "Translate with Anthropic sends the song's lyrics to Anthropic, on your own key from the Claude Console. The key stays on this iPhone.\n@\"Translate with Anthropic sends the song's lyrics to Anthropic, on your own key from the Claude Console. The key stays on this iPhone.\",": 1,
     "Translate with Gemini sends the song's lyrics to Google, on your own key from Google AI Studio. The key stays on this iPhone.\n@\"Translate with Gemini sends the song's lyrics to Google, on your own key from Google AI Studio. The key stays on this iPhone.\",": 1,
     "Writing\nphaseBlock(@\"Writing\");": 1
+  },
+  "tweak/Sources/Shared/LyricsTranslation/TranslationQueue.m": {
+    "Accept\n[request setValue:@\"application/json\" forHTTPHeaderField:@\"Accept\"];": 1
   },
   "tweak/Sources/Shared/Player/MinuteLabel.x": {
     "1 minutes\nif (label.text.length != 9 || ![label.text isEqualToString:@\"1 minutes\"]) return;": 1

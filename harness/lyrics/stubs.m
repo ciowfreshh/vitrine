@@ -123,6 +123,7 @@ id SGKaraokeTrackFor(NSString *trackID) {
 }
 // lyrics-page links the real Settings/ framework, which has both.
 #ifndef SG_HARNESS_SETTINGS
+id SGOptionRow(NSString *title, NSString *subtitle, NSString *key) { return nil; }
 id SGChoiceRow(NSString *title, NSString *subtitle, NSString *key, NSArray *choices, NSInteger fallback) { return nil; }
 UIViewController *SGTopController(void) {
     UIWindowScene *scene = (UIWindowScene *)UIApplication.sharedApplication.connectedScenes.anyObject;

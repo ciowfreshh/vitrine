@@ -50,8 +50,10 @@ jobs:
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
-      - name: Native durable storage and archive tests
-        run: tests/translation-store/run.sh
+      - name: Native durable storage, archive and batch queue tests
+        run: |
+          tests/translation-store/run.sh
+          bash tests/batch-queue/run.sh
       - uses: actions/checkout@v5
         with:
           repository: theos/theos
@@ -69,7 +71,10 @@ jobs:
           const NSUInteger SGFlagCount = 0;
           FLAGS
       - name: Compile full tweak
-        run: env -u MAKELEVEL gmake -C tweak clean package
+        run: |
+          set -o pipefail
+          mkdir -p out/build-logs
+          env -u MAKELEVEL gmake -C tweak clean package 2>&1 | tee out/build-logs/tweak.log
       - name: Compile extension and App Intents metadata
         run: |
           mkdir -p out
@@ -79,6 +84,8 @@ jobs:
               plistlib.dump({'CFBundleIdentifier':'com.spotify.client','CFBundleShortVersionString':'9.1.90','CFBundleVersion':'1'},f)
           PY
           scripts/build-extension.sh out/test-host.plist out/test-extension
+      - name: UIKit simulator lyrics and visibility tests
+        run: bash tests/ui-v21/run.sh
       - name: Download supplied IPA
         if: inputs.ipa_url != ''
         env:
@@ -96,21 +103,27 @@ jobs:
           mkdir -p ipa
           curl --fail --location --retry 2 --proto '=https' --proto-redir '=https' "$IPA_URL" -o ipa/spotify.ipa
           python3 scripts/validate-v2-ipa.py ipa/spotify.ipa --sha256 "$IPA_SHA256"
+          python3 scripts/audit-v21-ipa.py ipa/spotify.ipa out/tests/input-ipa.json
       - name: Build supplied IPA
         if: inputs.ipa_url != ''
         run: |
           make release
           python3 scripts/validate-v2-ipa.py out/vitrine-$(cat version.txt).ipa --built --original ipa/spotify.ipa
+          mv out/vitrine-$(cat version.txt).ipa out/Vitrine-V2.1-Enhanced-Spotify-9.1.90.ipa
+          python3 scripts/audit-v21-ipa.py out/Vitrine-V2.1-Enhanced-Spotify-9.1.90.ipa out/IPA_REPORT.json
+          cp docs/v2/V2.1-AUDIT.md out/RELEASE_NOTES.md
           shasum -a 256 out/*.ipa > out/SHA256SUMS.txt
           git rev-parse HEAD > out/SOURCE_COMMIT.txt
       - uses: actions/upload-artifact@v5
         if: inputs.ipa_url != ''
         with:
-          name: vitrine-v2-test-ipa
+          name: vitrine-v2.1-enhanced-ipa
           path: |
             out/*.ipa
             out/SHA256SUMS.txt
             out/SOURCE_COMMIT.txt
+            out/IPA_REPORT.json
+            out/RELEASE_NOTES.md
           if-no-files-found: error
           retention-days: 14
       - uses: actions/upload-artifact@v5
@@ -120,5 +133,6 @@ jobs:
           path: |
             out/tests/
             out/test-extension/
+            out/build-logs/
           if-no-files-found: ignore
           retention-days: 7
