@@ -7,6 +7,7 @@
 #import "Settings/SGPageStyle.h"
 #import "LyricsTranslation.h"
 #import "BatchTranslation.h"
+#import "TranslationQueue.h"
 
 @interface SGEntityPage : NSObject
 + (NSString *)entityURI:(id)controller;
@@ -122,7 +123,7 @@ void SGBatchTranslationMarkSource(UIView *view) {
 }
 
 BOOL SGBatchTranslationIsRunning(void) {
-    return sg_translating;
+    return sg_translating || SGBatchQueueRunning();
 }
 
 static NSArray<NSString *> *textsOfLines(NSArray<SGKaraokeLine *> *lines) {
@@ -305,6 +306,7 @@ static void filterCandidateSongs(NSArray<NSString *> *trackIDs, NSString *target
 #pragma mark - Batch translation execution
 
 void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindow *window) {
+    if (engine == SGBatchTranslationEngineAI) { SGBatchQueueStart(uri, window); return; }
     window = normalAppWindow(window);
     if (sg_translating) {
         [SGAlbumQueueNotice showIn:window title:SGLocalized(@"Already Translating") detail:SGLocalized(@"Wait for this batch") symbol:@"exclamationmark.circle" persistent:NO];

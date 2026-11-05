@@ -9,6 +9,8 @@
 #import "Shared/LocalFiles/LocalFiles.h"
 #import "Headers/SPTPlayer.h"
 #import "LyricsTranslation.h"
+#import "Core/BatchQueue/SGTranslationQueue.h"
+#import "Core/BatchQueue/SGTranslationJSON.h"
 
 static NSString *const kDefaultPrompt =
     @"Translate the lines of this song into {language}: exactly {count} translations, one per input line and in "
@@ -471,30 +473,23 @@ NSURLRequest *SGAITranslationRequest(NSString *provider, NSString *modelID, NSSt
 
 // The lines out of an answer: a bare array or {"lines": [...]}, whichever the request forced or the prompt asked
 // for, and inside a Markdown fence or a sentence when a model without a schema added one.
-static id linesIn(NSString *text) {
-    if (!text) return nil;
-    id parsed = [NSJSONSerialization JSONObjectWithData:[text dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
-    if (!parsed) {
-        NSRange open = [text rangeOfCharacterFromSet:[NSCharacterSet characterSetWithCharactersInString:@"[{"]];
-        NSRange close = [text rangeOfCharacterFromSet:[NSCharacterSet characterSetWithCharactersInString:@"]}"] options:NSBackwardsSearch];
-        if (open.location != NSNotFound && close.location != NSNotFound && close.location > open.location) {
-            NSString *inner = [text substringWithRange:NSMakeRange(open.location, close.location - open.location + 1)];
-            parsed = [NSJSONSerialization JSONObjectWithData:[inner dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
-        }
-    }
-    if ([parsed isKindOfClass:NSDictionary.class]) parsed = parsed[@"lines"];
-    return [parsed isKindOfClass:NSArray.class] ? parsed : nil;
-}
+static id linesIn(NSString *text) { return SGTranslationJSONLines(text); }
 
 NSArray<NSString *> *SGAITranslationsIn(NSString *provider, id root, NSInteger status, NSError *error, NSUInteger count, NSString **problem) {
     const SGAIProvider *p = providerFor(provider) ?: &kProviders[0];
     NSString *who = speaker(p);
     NSDictionary *reply = [root isKindOfClass:NSDictionary.class] ? root : nil;
     NSString *stopped = nil;
-    NSArray *lines = status == 200 ? linesIn(p->answer(reply, who, &stopped)) : nil;
+    NSString *answer = status == 200 ? p->answer(reply, who, &stopped) : nil;
+    NSArray *lines = linesIn(answer);
+    NSArray *valid = SGTranslationValidateLines(answer, count, NULL);
+    if (valid) return valid;
     if (lines.count == count) {
         NSMutableArray<NSString *> *clean = [NSMutableArray arrayWithCapacity:count];
-        for (id line in lines) [clean addObject:[line isKindOfClass:NSString.class] ? line : @""];
+        for (id line in lines) {
+            if (![line isKindOfClass:NSString.class]) { *problem = SGLocalized(@"The translation contains invalid lines."); return nil; }
+            [clean addObject:line];
+        }
         return clean;
     }
     // {"error": {"message": ...}} from all three; a bare string from some compatible servers.
@@ -564,19 +559,35 @@ void SGLyricsForgetAITranslation(NSString *trackID, NSString *languageTag) {
     for (NSString *memo in sg_done.allKeys) if ([memo hasPrefix:song]) [sg_done removeObjectForKey:memo];
 }
 
-void SGLyricsTranslateWithAI(NSString *trackID, NSArray<SGKaraokeLine *> *lines, NSString *languageTag,
-                             void (^done)(NSArray<NSString *> *translations, NSString *error)) {
+// Queue retries are owned by the durable scheduler, never multiplied by transport retries.
+static void sendQueuedSong(const SGAIProvider *p, NSURLRequest *request, NSURLRequest *plain,
+                           void (^done)(NSData *, NSInteger, NSError *, NSHTTPURLResponse *)) {
+    [[NSURLSession.sharedSession dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        NSHTTPURLResponse *http = [response isKindOfClass:NSHTTPURLResponse.class] ? (id)response : nil;
+        NSString *reply = http.statusCode == 400 && data ? [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] : nil;
+        for (NSUInteger i = 0; plain && reply && i < 4 && p->plainWhen[i]; ++i) {
+            if ([reply localizedCaseInsensitiveContainsString:p->plainWhen[i]]) { sendQueuedSong(p, plain, nil, done); return; }
+        }
+        done(data, http.statusCode, error, http);
+    }] resume];
+}
+
+static void translateSong(NSString *trackID, NSArray<SGKaraokeLine *> *lines, NSString *languageTag,
+                             BOOL queued, void (^done)(NSArray<NSString *> *translations, NSError *error)) {
     const SGAIProvider *p = chosen();
-    NSString *key = storedSecret(p, kKeyAccount), *modelID = model(p), *template = promptTemplate();
-    if (!key || !modelID) {
-        done(nil, [NSString stringWithFormat:SGLocalized(@"Add a %@ API key%@ in Mod Settings > Lyrics first."), p->name, modelID ? @"" : SGLocalized(@" and choose a model")]);
+    NSString *key = storedSecret(p, kKeyAccount), *modelID = model(p);
+    NSString *batchRules = [SGLyricsBatchPromptTemplate() stringByReplacingOccurrencesOfString:@"{count}" withString:@"1"];
+    NSString *template = queued ? [NSString stringWithFormat:@"%@\n\n%@\n\n%@", promptTemplate(), batchRules,
+        @"Translate only ONE song. The input is an array of original lines. Output only {\"lines\":[...]} with exactly {count} strings. This output contract overrides any multi-song output format above."] : promptTemplate();
+    if (!key || !modelID || (isOpenAI(p) && !openAIServer())) {
+        done(nil, SGTranslationQueueError(SGTranslationConfiguration, [NSString stringWithFormat:SGLocalized(@"Add a %@ API key%@ in Mod Settings > Lyrics first."), p->name, modelID ? @"" : SGLocalized(@" and choose a model")], 0));
         return;
     }
     if (!sg_done) sg_done = [NSMutableDictionary dictionary];
     NSString *memo = [NSString stringWithFormat:@"%@|%@|%@|%@|%@|%@|%@", trackID, languageTag, p->tag,
                       isOpenAI(p) ? openAIServer() : @"", modelID,
                       [p->tag isEqualToString:@"gemini"] ? geminiThinkingLevel() : @"", template];
-    if (trackID && sg_done[memo].count == lines.count) {
+    if (!queued && trackID && sg_done[memo].count == lines.count) {
         done(sg_done[memo], nil);
         return;
     }
@@ -593,21 +604,45 @@ void SGLyricsTranslateWithAI(NSString *trackID, NSArray<SGKaraokeLine *> *lines,
     NSString *prompt = [NSString stringWithFormat:@"%@\n\n%@", instructions, [[NSString alloc] initWithData:input encoding:NSUTF8StringEncoding]];
     NSURLRequest *request = p->request(modelID, prompt, key, NO), *plain = p->request(modelID, prompt, key, YES);
     if (!request) {
-        done(nil, SGLocalized(@"The server URL is invalid. Check it in Mod Settings > Lyrics."));
+        done(nil, SGTranslationQueueError(SGTranslationConfiguration, SGLocalized(@"The server URL is invalid. Check it in Mod Settings > Lyrics."), 0));
         return;
     }
     SGLog(@"ai: asking %@ %@ at %@, prompt %@%@", p->tag, modelID, request.URL.host, fingerprint(template),
           storedString(SGKeyAIPrompt) ? @" (edited)" : @"");
-    send(p, request, plain, 0, ^(NSData *data, NSInteger status, NSError *error) {
+    void (^finished)(NSData *, NSInteger, NSError *, NSHTTPURLResponse *) = ^(NSData *data, NSInteger status, NSError *error, NSHTTPURLResponse *response) {
         id root = data ? [NSJSONSerialization JSONObjectWithData:data options:0 error:nil] : nil;
         NSString *problem = nil;
         NSArray *translations = SGAITranslationsIn(p->tag, root, status, error, texts.count, &problem);
         SGLog(@"ai: %@ %@ lines into %@: %@", p->tag, @(texts.count), languageTag, translations ? @"translated" : problem);
         dispatch_async(dispatch_get_main_queue(), ^{
-            if (translations && trackID) sg_done[memo] = translations;
-            done(translations, problem);
+            if (!queued && translations && trackID) sg_done[memo] = translations;
+            NSError *failure = nil;
+            if (!translations) {
+                NSString *serverCode = string(dig(root, @[@"error", @"code"])) ?: string(dig(root, @[@"error", @"type"]));
+                SGTranslationFailure kind = SGTranslationHTTPFailure(status, error, serverCode);
+                if (status == 200 && !error) {
+                    NSString *stop = nil;
+                    NSString *answer = p->answer([root isKindOfClass:NSDictionary.class] ? root : nil, speaker(p), &stop);
+                    SGTranslationFailure parsing = SGTranslationJSON;
+                    SGTranslationValidateLines(answer, texts.count, &parsing);
+                    kind = stop ? SGTranslationContextLimit : parsing;
+                }
+                failure = SGTranslationQueueError(kind, problem, SGTranslationRetryAfter([response valueForHTTPHeaderField:@"Retry-After"], NSDate.date));
+            }
+            done(translations, failure);
         });
-    });
+    };
+    if (queued) sendQueuedSong(p, request, plain, finished);
+    else send(p, request, plain, 0, ^(NSData *data, NSInteger status, NSError *error) { finished(data, status, error, nil); });
+}
+
+void SGLyricsTranslateWithAI(NSString *trackID, NSArray<SGKaraokeLine *> *lines, NSString *languageTag,
+                             void (^done)(NSArray<NSString *> *, NSString *)) {
+    translateSong(trackID, lines, languageTag, NO, ^(NSArray *translations, NSError *error) { done(translations, error.localizedDescription); });
+}
+void SGLyricsTranslateQueuedWithAI(NSString *trackID, NSArray<SGKaraokeLine *> *lines, NSString *languageTag,
+                                   void (^done)(NSArray<NSString *> *, NSError *)) {
+    translateSong(trackID, lines, languageTag, YES, done);
 }
 
 static NSDictionary *batchMapIn(NSString *text) {
@@ -1371,23 +1406,12 @@ NSArray<SGModRow *> *SGAITranslatorRows(void) {
         else [NSUserDefaults.standardUserDefaults setInteger:seconds forKey:SGKeyAITimeout];
     });
 
-    NSArray<NSNumber *> *batchSizes = @[@10, @20, @30, @40, @50, @0];
-    NSArray<NSString *> *batchSizeOptions = @[SGLocalized(@"10 songs"), SGLocalized(@"20 songs"), SGLocalized(@"30 songs"), SGLocalized(@"40 songs"), SGLocalized(@"50 songs"), SGLocalized(@"All at once")];
-    SGModRow *batchSizeRow = SGMenuRow(SGLocalized(@"Songs per batch"), batchSizeOptions, ^NSString *{
-        NSUInteger idx = [batchSizes indexOfObject:@(SGLyricsBatchSize())];
-        return batchSizeOptions[idx != NSNotFound ? idx : 1];
-    }, ^(NSInteger index) {
-        NSUInteger size = batchSizes[index].unsignedIntegerValue;
-        if (size == 20) [NSUserDefaults.standardUserDefaults removeObjectForKey:SGKeyLyricsBatchSize];
-        else [NSUserDefaults.standardUserDefaults setInteger:size forKey:SGKeyLyricsBatchSize];
-    });
-    SGModRow *batchPromptRow = SGStatActionRow(SGLocalized(@"Batch prompt"), SGLocalized(@"Prompt used when translating multiple songs at once"),
+    SGModRow *batchPromptRow = SGStatActionRow(SGLocalized(@"Batch prompt"), SGLocalized(@"Additional translation rules for each song in the queue"),
                                                ^NSString *{ return storedString(SGKeyLyricsBatchPrompt) ? SGLocalized(@"Edited") : SGLocalized(@"Default"); }, ^{
         UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:[[SGPromptEditor alloc] initWithBatch:YES]];
         nav.modalPresentationStyle = UIModalPresentationPageSheet;
         SGPresentDark(nav);
         [SGTopController() presentViewController:nav animated:YES completion:nil];
     });
-    SGModRow *skipSavedRow = SGSwitchRow(SGLocalized(@"Skip saved translations"), SGLocalized(@"Skip songs that already have a saved translation"), SGKeyLyricsBatchSkipSaved);
-    return @[provider, key, models, thinking, timeout, prompt, batchSizeRow, batchPromptRow, skipSavedRow];
+    return @[provider, key, models, thinking, timeout, prompt, batchPromptRow];
 }

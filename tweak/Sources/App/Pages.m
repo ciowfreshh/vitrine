@@ -2,6 +2,8 @@
 #import "Shared/AppIcon/AppIcon.h"
 #import "Shared/Fonts/Fonts.h"
 #import "Shared/LyricsTranslation/LyricsTranslation.h"
+#import "Shared/LyricsTranslation/TranslationQueue.h"
+#import "Shared/LyricsTranslation/LyricsSelection.h"
 #import "Redesigned/Player/Player.h"
 #import "Settings/SGModPage.h"
 #import "Settings/SGPageStyle.h"
@@ -123,10 +125,12 @@ static UIViewController *lyricsPage(void) {
             SGSection(SGLocalized(@"Translation"), [[[@[SGLyricsTranslationLanguageRow(), SGTranslateEverySongRow()] arrayByAddingObjectsFromArray:SGOnDeviceTranslatorRows()]
                                           arrayByAddingObjectsFromArray:SGAITranslatorRows()] arrayByAddingObject:SGSavedTranslationsRow()]),
             SGSection(nil, @[SGLyricsMeaningsRow()]),
+            SGNotedSection(nil, @[SGLyricsShareSelectionRow()], SGLocalized(@"Experimental selection preview. Native Spotify sharing is not verified; Apple Music sharing is unavailable.")),
         ]];
     } else {
         [sections addObject:timing];
     }
+    [sections addObject:SGSection(nil, @[SGBatchQueueRow()])];
     [sections addObject:SGSection(nil, more)];
     // The redesign's page leads with its lyrics playing in the look the page sets, and that look's presets.
     if (redesigned) return SGRLyricsSettingsPage(SGLocalized(@"Lyrics"), SGLocalized(@"The look applies at once. The settings below apply after you restart Spotify."), sections);
