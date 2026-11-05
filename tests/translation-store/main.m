@@ -38,6 +38,13 @@ int main(int argc,const char *argv[]) { @autoreleasepool {
     CHECK([[[store recordForTrack:@"track0" language:@"vi" error:nil] objectForKey:@"title"]isEqual:@"Home"]);
     CHECK([store putRecord:changed replace:YES didWrite:&wrote error:nil]&&wrote);
     CHECK([[[store recordForTrack:@"track0" language:@"vi" error:nil] objectForKey:@"title"]isEqual:@"Replacement"]);
+    // A failed write must report failure and leave the previous committed song intact.
+    sqlite3 *locked=NULL;CHECK(sqlite3_open(db.path.UTF8String,&locked)==SQLITE_OK);
+    CHECK(sqlite3_exec(locked,"BEGIN IMMEDIATE",NULL,NULL,NULL)==SQLITE_OK);
+    changed[@"title"]=@"Must not replace";NSError *writeError=nil;wrote=YES;
+    CHECK(![store putRecord:changed replace:YES didWrite:&wrote error:&writeError]&&writeError!=nil&&!wrote);
+    CHECK([[[store recordForTrack:@"track0" language:@"vi" error:nil]objectForKey:@"title"]isEqual:@"Replacement"]);
+    CHECK(sqlite3_exec(locked,"ROLLBACK",NULL,NULL,NULL)==SQLITE_OK);sqlite3_close(locked);
     NSMutableDictionary *secret=[record(@"private") mutableCopy];secret[@"apiKey"]=@"DO_NOT_EXPORT";secret[@"settings"]=@{@"token":@"DO_NOT_EXPORT"};
     NSDictionary *clean=[SGTranslationStore validatedRecord:secret error:nil];CHECK(clean[@"apiKey"]==nil&&clean[@"settings"]==nil);
     CHECK([clean[@"title"]isEqual:@"Home"]&&[clean[@"lines"]isEqual:record(@"private")[@"lines"]]);

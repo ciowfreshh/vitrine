@@ -356,9 +356,10 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                 SGTranslationSource *source = SGAITranslatorSource();
                 NSString *providerName = SGAITranslatorName() ?: @"AI";
                 NSString *translatingTitle = [NSString stringWithFormat:SGLocalized(@"Translating %@"), entityName];
+                __block NSString *storageError = nil;
 
                 void (^saveSongTranslation)(SGBatchCandidateSong *, NSArray<NSString *> *) = ^(SGBatchCandidateSong *song, NSArray<NSString *> *trans) {
-                    if (!song || trans.count != song.lines.count || [savedTrackIDs containsObject:song.trackID]) return;
+                    if (storageError || !song || trans.count != song.lines.count || [savedTrackIDs containsObject:song.trackID]) return;
                     for (NSUInteger idx = 0; idx < song.lines.count; idx++) {
                         SGKaraokeLine *line = song.lines[idx];
                         NSString *t = trans[idx];
@@ -367,7 +368,10 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                             line.translationMade = YES;
                         }
                     }
-                    SGLyricsSaveTranslation(song.trackID, targetLang, song.lines, source);
+                    if (!SGLyricsSaveTranslation(song.trackID, targetLang, song.lines, source)) {
+                        storageError = SGLocalized(@"Could not write translations. Check available storage.");
+                        return;
+                    }
                     [savedTrackIDs addObject:song.trackID];
                     completed++;
                 };
@@ -396,7 +400,7 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                     [SGAlbumQueueNotice showIn:window title:translatingTitle detail:askDetail symbol:@"sparkles" persistent:YES];
 
                     SGLyricsTranslateBatchWithAI(songsMap, targetLang, ^(NSString *phase) {
-                        if (!sg_translating) return;
+                        if (!sg_translating || storageError) return;
                         if ([phase isEqualToString:@"Thinking…"]) {
                             NSString *thinkDetail = completed > 0
                                 ? [NSString stringWithFormat:SGLocalized(@"Thinking • %lu/%lu…"), (unsigned long)completed, (unsigned long)total]
@@ -407,7 +411,7 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                             [SGAlbumQueueNotice showIn:window title:translatingTitle detail:writeDetail symbol:@"sparkles" persistent:YES];
                         }
                     }, ^(NSString *trackKey, NSArray<NSString *> *lines) {
-                        if (!sg_translating) return;
+                        if (!sg_translating || storageError) return;
                         SGBatchCandidateSong *song = lookup[trackKey];
                         if (!song) {
                             for (SGBatchCandidateSong *c in chunk) {
@@ -420,6 +424,7 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                         }
                         if (song && lines.count == song.lines.count && ![savedTrackIDs containsObject:song.trackID]) {
                             saveSongTranslation(song, lines);
+                            if (storageError) return;
                             NSString *progressDetail = [NSString stringWithFormat:SGLocalized(@"%lu of %lu songs…"), (unsigned long)MIN(completed + 1, total), (unsigned long)total];
                             [SGAlbumQueueNotice showIn:window title:translatingTitle detail:progressDetail symbol:@"sparkles" persistent:YES];
                         }
@@ -432,6 +437,7 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                                 }
                             }
                         }
+                        if (storageError) error = storageError;
                         if (error || !results.count) {
                             processChunk = nil;
                             sg_translating = NO;
@@ -485,7 +491,11 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                                     song.lines[lIdx].translationMade = YES;
                                 }
                             }
-                            SGLyricsSaveTranslation(song.trackID, targetLang, song.lines, [SGTranslationSource by:by model:nil made:nil]);
+                            if (!SGLyricsSaveTranslation(song.trackID, targetLang, song.lines, [SGTranslationSource by:by model:nil made:nil])) {
+                                lastError = SGLocalized(@"Could not write translations. Check available storage.");
+                                translateNext(total);
+                                return;
+                            }
                             completed++;
                         } else if (err.length) {
                             lastError = err;

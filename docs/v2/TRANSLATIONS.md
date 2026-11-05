@@ -14,6 +14,8 @@ can carry these files to another iPhone. No network or API key is needed for tra
 A complete record is an atomic SQLite commit, serialized on one database queue. There is
 no song-count cap or eviction. Completed songs survive termination; an interrupted song
 retains its previous committed snapshot. Device backup includes Application Support.
+Batch translation counts a song as saved only after a successful durable commit. A write
+failure stops further batches, reports the error and preserves all previously committed songs.
 Uninstalling Spotify or changing to a separate signed app container can remove or isolate
 its data: export before uninstalling or changing the signing identity.
 
@@ -49,6 +51,7 @@ export supports 50,000 songs and less than 4 GiB. These transfer bounds do not c
 - `tests/translation-store/run.sh` on macOS: real Foundation/SQLite/zlib tests with
   10,001 records, reopening, abrupt process exit, old migration, duplicate policies,
   whitelist export, selected/all JSON/ZIP and malicious/corrupted ZIP fixtures.
+  A locked-database write test verifies that failure leaves the previous committed record intact.
 - GitHub Actions compiles the complete Theos tweak and the extension/App Intents metadata.
   The compile-only job uses an empty flag table and does not publish an IPA.
 - A manual build on this branch requires the user's decrypted Spotify IPA. It regenerates
