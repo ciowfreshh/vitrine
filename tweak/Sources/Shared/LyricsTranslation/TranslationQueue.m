@@ -333,7 +333,7 @@ static SGBatchManager *manager(void) { static SGBatchManager *value; static disp
             [m pause];
             if (![m.queue recheckSavedResults]) { notice(SGLocalized(@"Wait for the current requests to finish, then try again.")); return; }
             if (path.row == 5) { [m.queue.context removeObjectForKey:@"verifyOnly"]; m.queue.context[@"repairSaved"] = @YES; }
-            [m.queue checkpoint]; [m resume];
+            [m.queue checkpoint]; [m.queue resume];
         } else {
             UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Concurrent AI requests") message:nil preferredStyle:UIAlertControllerStyleAlert];
             for (NSInteger i = 1; i <= 3; ++i) [alert addAction:[UIAlertAction actionWithTitle:@(i).stringValue style:UIAlertActionStyleDefault handler:^(UIAlertAction *a) { m.queue.concurrency = i; [NSUserDefaults.standardUserDefaults setInteger:i forKey:kConcurrency]; [self refresh]; }]];

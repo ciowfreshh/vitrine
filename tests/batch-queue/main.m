@@ -60,6 +60,18 @@ int main(void) { @autoreleasepool {
     single.execute = ^(NSDictionary *item, NSString *language, void (^done)(NSString *, NSError *)) { done(nil, SGTranslationQueueError(SGTranslationSavedMismatch, @"fixture incomplete stored translation", 0)); };
     [single resume]; check([single.statistics[@"failed"] integerValue] == 1 && [single.items.firstObject[@"attempts"] integerValue] == 1, @"incomplete saved lyrics fail once without automatic API retry");
     check([single prepareLanguage:@"vi"] && single.items.count == 0, @"new source scan archives the completed report without carrying terminal IDs forward");
+    SGTranslationQueue *mixed = job(root, @"mixed.json", 1);
+    mixed.execute = ^(NSDictionary *item, NSString *language, void (^done)(NSString *, NSError *)) { done(@"succeeded", nil); };
+    [mixed resume]; [mixed appendTracks:@[@{@"id":@"new-untranslated", @"title":@"Still waiting"}]];
+    check([mixed recheckSavedResults], @"audit can start with existing pending songs");
+    __block NSUInteger audited = 0;
+    mixed.execute = ^(NSDictionary *item, NSString *language, void (^done)(NSString *, NSError *)) { ++audited; check(![item[@"id"] isEqual:@"new-untranslated"], @"no-AI audit never consumes unrelated pending work"); done(@"skipped:saved", nil); };
+    [mixed resume];
+    check(audited == 1 && [mixed.statistics[@"pending"] integerValue] == 1 && mixed.paused, @"audit stops with pending untranslated work intact");
+    mixed = [[SGTranslationQueue alloc] initWithURL:[root URLByAppendingPathComponent:@"mixed.json"]];
+    [mixed.context removeObjectForKey:@"verifyOnly"];
+    mixed.execute = ^(NSDictionary *item, NSString *language, void (^done)(NSString *, NSError *)) { check([item[@"id"] isEqual:@"new-untranslated"], @"normal resume processes preserved pending song after restart"); done(@"succeeded", nil); };
+    [mixed resume]; check([mixed.statistics[@"succeeded"] integerValue] == 1, @"audit recovery never loses untranslated songs");
     SGTranslationQueue *bulk = job(root, @"bulk.json", 1000); bulk.concurrency = 3;
     __block NSUInteger active = 0, peak = 0, calls = 0;
     NSMutableSet *seen = [NSMutableSet set];

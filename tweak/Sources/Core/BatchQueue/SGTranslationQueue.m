@@ -125,8 +125,10 @@ SGTranslationFailure SGTranslationHTTPFailure(NSInteger status, NSError *network
 - (BOOL)recheckSavedResults {
     if (_active || !_paused) return NO;
     for (NSMutableDictionary *item in _work) {
+        [item removeObjectForKey:@"auditSaved"];
         if ([item[@"state"] isEqual:@"succeeded"] || [item[@"reason"] isEqual:@"saved"] || [item[@"code"] integerValue] == SGTranslationSavedMismatch) {
             item[@"state"] = @"pending"; item[@"attempts"] = @0;
+            item[@"auditSaved"] = @YES;
             [item removeObjectForKey:@"next"]; [item removeObjectForKey:@"reason"]; [item removeObjectForKey:@"error"]; [item removeObjectForKey:@"code"];
         }
     }
@@ -176,11 +178,13 @@ SGTranslationFailure SGTranslationHTTPFailure(NSInteger status, NSError *network
 }
 - (void)pump {
     if (_paused || !self.execute) return;
+    BOOL audit = [_context[@"verifyOnly"] boolValue] || [_context[@"repairSaved"] boolValue];
     NSTimeInterval now = NSDate.date.timeIntervalSince1970, soonest = DBL_MAX;
     if (_cooldown > now) soonest = _cooldown;
     for (NSMutableDictionary *item in _work) {
         if (_paused || _active >= _effectiveConcurrency || _cooldown > now) break;
         if (![@[@"pending", @"retry"] containsObject:item[@"state"]]) continue;
+        if (audit && ![item[@"auditSaved"] boolValue]) continue;
         NSTimeInterval due = [item[@"next"] doubleValue];
         if (due > now) { soonest = MIN(soonest, due); continue; }
         item[@"state"] = @"running";
@@ -215,7 +219,9 @@ SGTranslationFailure SGTranslationHTTPFailure(NSInteger status, NSError *network
             if ([q checkpoint]) dispatch_async(dispatch_get_main_queue(), ^{ [q pump]; });
         });
     }
-    if (!_active && [self statistics][@"pending"].unsignedIntegerValue == 0) { _paused = YES; [self checkpoint]; return; }
+    BOOL hasPending = NO;
+    for (NSDictionary *item in _work) if ((!audit || [item[@"auditSaved"] boolValue]) && [@[@"pending", @"retry"] containsObject:item[@"state"]]) { hasPending = YES; break; }
+    if (!_active && !hasPending) { _paused = YES; [self checkpoint]; return; }
     if (soonest != DBL_MAX) {
         NSUInteger generation = ++_wakeGeneration;
         __weak SGTranslationQueue *weak = self;
