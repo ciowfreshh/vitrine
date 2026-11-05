@@ -1,3 +1,4 @@
+#import "Core/SGLocalization.h"
 #import <os/lock.h>
 #import <pthread.h>
 #import <stdatomic.h>
@@ -466,7 +467,7 @@ static void *work(void *argument) {
         double took = CFAbsoluteTimeGetCurrent() - began;
         if (!separated) {
             atomic_fetch_add(&engine->failures, 1);
-            setError(engine, error.localizedDescription ?: @"The model failed");
+            setError(engine, SGLocalizedError(error) ?: SGLocalized(@"The model failed"));
             usleep(1000000);
             continue;
         }

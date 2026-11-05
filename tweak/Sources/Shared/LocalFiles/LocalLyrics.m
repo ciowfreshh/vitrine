@@ -315,7 +315,7 @@ static void changed(void) {
 static NSString *freeName(NSString *given) {
     NSString *name = [given stringByReplacingOccurrencesOfString:@"/" withString:@"-"];
     NSString *base = name.stringByDeletingPathExtension, *extension = name.pathExtension;
-    if (!base.length || [base hasPrefix:@"."]) base = [@"Lyrics" stringByAppendingString:base];
+    if (!base.length || [base hasPrefix:@"."]) base = [SGLocalized(@"Lyrics") stringByAppendingString:base];
     name = [base stringByAppendingPathExtension:extension];
     for (NSUInteger n = 2; [NSFileManager.defaultManager fileExistsAtPath:[directory() stringByAppendingPathComponent:name]]; n++) {
         name = [[NSString stringWithFormat:@"%@ (%lu)", base, (unsigned long)n] stringByAppendingPathExtension:extension];
@@ -329,14 +329,14 @@ NSString *SGImportLRC(NSURL *url, NSString *uri, NSError **error) {
     NSData *data = [NSData dataWithContentsOfURL:url options:0 error:&readError];
     if (scoped) [url stopAccessingSecurityScopedResource];
     NSString *reason = nil, *text = nil;
-    if (!data) reason = readError.localizedDescription ?: @"The file could not be read.";
-    else if (!data.length) reason = @"The file is empty.";
-    else if (data.length > kMostBytes) reason = @"The file is over 1 MB, too large for lyrics.";
+    if (!data) reason = readError.localizedDescription ?: SGLocalized(@"The file could not be read.");
+    else if (!data.length) reason = SGLocalized(@"The file is empty.");
+    else if (data.length > kMostBytes) reason = SGLocalized(@"The file is over 1 MB, too large for lyrics.");
     else {
         text = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]
             ?: [[NSString alloc] initWithData:data encoding:NSUTF16StringEncoding];
-        if (!text) reason = @"The file is not UTF-8 or UTF-16 text.";
-        else if (![text containsString:@"]"]) reason = @"The file has no LRC tags or timestamps.";
+        if (!text) reason = SGLocalized(@"The file is not UTF-8 or UTF-16 text.");
+        else if (![text containsString:@"]"]) reason = SGLocalized(@"The file has no LRC tags or timestamps.");
     }
     if (reason) {
         if (error) *error = refusal(reason);

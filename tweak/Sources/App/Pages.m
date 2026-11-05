@@ -2,6 +2,8 @@
 #import "Shared/AppIcon/AppIcon.h"
 #import "Shared/Fonts/Fonts.h"
 #import "Shared/LyricsTranslation/LyricsTranslation.h"
+#import "Shared/LyricsTranslation/TranslationQueue.h"
+#import "Shared/LyricsTranslation/LyricsSelection.h"
 #import "Redesigned/Player/Player.h"
 #import "Settings/SGModPage.h"
 #import "Settings/SGPageStyle.h"
@@ -34,27 +36,27 @@ void SGSetRedesignedUI(BOOL on) {
 }
 
 NSString *SGRedesignUntestedWarning(void) {
-    return [NSString stringWithFormat:@"The redesign is built on iOS 26's Liquid Glass. iOS %@ draws a blur in its place, and nobody has tested the redesign there: pages can be laid out wrongly, and Spotify can freeze as it starts. If Spotify does not start with it, the next launch goes back to Legacy.",
+    return [NSString stringWithFormat:SGLocalized(@"The redesign is built on iOS 26's Liquid Glass. iOS %@ draws a blur in its place, and nobody has tested the redesign there: pages can be laid out wrongly, and Spotify can freeze as it starts. If Spotify does not start with it, the next launch goes back to Legacy."),
             UIDevice.currentDevice.systemVersion];
 }
 
 // The whole look changes hands at launch, so the switch asks for the restart straight away rather than
 // leaving Spotify half in the old look.
 static void offerRestart(BOOL on) {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Restart Spotify"
-        message:on ? @"The redesign takes over when Spotify starts again. Spotify closes now; open it again to see it." : @"Spotify's own look comes back when Spotify starts again. Spotify closes now; open it again to see it."
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Restart Spotify")
+        message:on ? SGLocalized(@"The redesign takes over when Spotify starts again. Spotify closes now; open it again to see it.") : SGLocalized(@"Spotify's own look comes back when Spotify starts again. Spotify closes now; open it again to see it.")
         preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Later" style:UIAlertActionStyleCancel handler:nil]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Restart now" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) { SGRestartSpotify(); }]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Later") style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Restart now") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) { SGRestartSpotify(); }]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
 // Below iOS 26 the switch stores the warning's key, not the look's: it is on only once the warning has
 // been accepted, which restarts Spotify at once, so the switch never reads on for a look that is not coming.
 static SGModRow *untestedRow(void) {
-    SGModRow *row = SGOptionRow(@"Redesigned UI", [NSString stringWithFormat:@"Untested on iOS %@", UIDevice.currentDevice.systemVersion], SGKeyRedesignUntested);
+    SGModRow *row = SGOptionRow(SGLocalized(@"Redesigned UI"), [NSString stringWithFormat:SGLocalized(@"Untested on iOS %@"), UIDevice.currentDevice.systemVersion], SGKeyRedesignUntested);
     row.glows = YES;
-    row.info = SGRedesignedUIInfo;
+    row.info = SGLocalized(SGRedesignedUIInfo);
     row.changed = ^(BOOL on) {
         if (!on) {
             SGSetRedesignedUI(NO);
@@ -62,11 +64,11 @@ static SGModRow *untestedRow(void) {
             return;
         }
         SGSetEnabled(SGKeyRedesignUntested, NO);   // the page reloads to off; the warning's button turns it on
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Turn on the redesign?"
-            message:[SGRedesignUntestedWarning() stringByAppendingString:@"\n\nSpotify restarts to turn it on."]
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Turn on the redesign?")
+            message:[SGRedesignUntestedWarning() stringByAppendingString:SGLocalized(@"\n\nSpotify restarts to turn it on.")]
             preferredStyle:UIAlertControllerStyleAlert];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Turn On and Restart" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+        [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
+        [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Turn On and Restart") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
             SGSetRedesignedUI(YES);
             SGRestartSpotify();
         }]];
@@ -77,9 +79,9 @@ static SGModRow *untestedRow(void) {
 
 SGModRow *SGRedesignedUIRow(void) {
     if (!SGRedesignAvailable()) return untestedRow();
-    SGModRow *redesign = SGOptionRow(@"Redesigned UI", nil, SGKeyRedesign);
+    SGModRow *redesign = SGOptionRow(SGLocalized(@"Redesigned UI"), nil, SGKeyRedesign);
     redesign.glows = YES;
-    redesign.info = SGRedesignedUIInfo;
+    redesign.info = SGLocalized(SGRedesignedUIInfo);
     redesign.changed = ^(BOOL on) {
         SGSetRedesignedUI(on);
         offerRestart(on);
@@ -93,7 +95,7 @@ UIViewController *SGAppearancePage(void) {
     NSMutableArray<SGModRow *> *everywhere = [NSMutableArray arrayWithArray:SGAppFontRows()];
     SGModRow *icon = SGAppIconRow();
     if (icon) [everywhere addObject:icon];
-    return [[SGModPage alloc] initWithTitle:@"Appearance" intro:SGRestartNote sections:@[
+    return [[SGModPage alloc] initWithTitle:SGLocalized(@"Appearance") intro:SGLocalized(SGRestartNote) sections:@[
         SGSection(nil, SGRedesignedUIStored() ? SGRAppearanceRows() : SGNativeAppearanceRows()),
         SGSection(nil, everywhere),
     ] footer:nil];
@@ -112,25 +114,27 @@ static UIViewController *lyricsPage(void) {
     sing.value = ^NSString *{ return SGSingSummary(); };
     NSMutableArray<SGModSection *> *sections = [NSMutableArray arrayWithObjects:SGSection(nil, @[SGWithTile(sing, @"music.mic", UIColor.systemRedColor)]),
                                                 SGLyricsSourcesSection(redesigned), nil];
-    SGModSection *timing = SGNotedSection(@"Timing", @[SGLyricsDelayRow()],
-        @"Every line shows this much later than the song, for Bluetooth headphones that play a little behind the lyrics. Applies at once.");
+    SGModSection *timing = SGNotedSection(SGLocalized(@"Timing"), @[SGLyricsDelayRow()],
+        SGLocalized(@"Every line shows this much later than the song, for Bluetooth headphones that play a little behind the lyrics. Applies at once."));
     if (redesigned) {
         [sections addObjectsFromArray:@[
-            SGSection(@"Display", @[SGRLyricsTextSizesRow(), SGLyricsWordTimingRow(), SGLyricsRomanisedRow(), SGLyricsRomanisedReplaceRow(),
+            SGSection(SGLocalized(@"Display"), @[SGRLyricsTextSizesRow(), SGLyricsWordTimingRow(), SGLyricsRomanisedRow(), SGLyricsRomanisedReplaceRow(),
                 SGRLyricsHideRow(),
-                SGSwitchRow(@"Landscape lyrics", @"Turn the phone with the lyrics open", SGRKeyLyricsLandscape)]),
+                SGSwitchRow(SGLocalized(@"Landscape lyrics"), SGLocalized(@"Turn the phone with the lyrics open"), SGRKeyLyricsLandscape)]),
             timing,
-            SGSection(@"Translation", [[[@[SGLyricsTranslationLanguageRow(), SGTranslateEverySongRow()] arrayByAddingObjectsFromArray:SGOnDeviceTranslatorRows()]
+            SGSection(SGLocalized(@"Translation"), [[[@[SGLyricsTranslationLanguageRow(), SGTranslateEverySongRow()] arrayByAddingObjectsFromArray:SGOnDeviceTranslatorRows()]
                                           arrayByAddingObjectsFromArray:SGAITranslatorRows()] arrayByAddingObject:SGSavedTranslationsRow()]),
             SGSection(nil, @[SGLyricsMeaningsRow()]),
+            SGNotedSection(nil, @[SGLyricsShareSelectionRow()], SGLocalized(@"Experimental selection preview. Native Spotify sharing is not verified; Apple Music sharing is unavailable.")),
         ]];
     } else {
         [sections addObject:timing];
     }
+    [sections addObject:SGSection(nil, @[SGBatchQueueRow()])];
     [sections addObject:SGSection(nil, more)];
     // The redesign's page leads with its lyrics playing in the look the page sets, and that look's presets.
-    if (redesigned) return SGRLyricsSettingsPage(@"Lyrics", @"The look applies at once. The settings below apply after you restart Spotify.", sections);
-    return [[SGModPage alloc] initWithTitle:@"Lyrics" intro:SGRestartNote sections:sections footer:nil];
+    if (redesigned) return SGRLyricsSettingsPage(SGLocalized(@"Lyrics"), SGLocalized(@"The look applies at once. The settings below apply after you restart Spotify."), sections);
+    return [[SGModPage alloc] initWithTitle:SGLocalized(@"Lyrics") intro:SGLocalized(SGRestartNote) sections:sections footer:nil];
 }
 
 // Lyrics has its own row on Mod Settings' main page, beside Sing.
@@ -139,42 +143,42 @@ UIViewController *SGLyricsSettingsPage(void) {
 }
 
 UIViewController *SGPlayerSettingsPage(void) {
-    SGModRow *blocked = SGPageRow(@"Blocked artists", ^UIViewController *{ return SGArtistBlockSettingsPage(); });
+    SGModRow *blocked = SGPageRow(SGLocalized(@"Blocked artists"), ^UIViewController *{ return SGArtistBlockSettingsPage(); });
     blocked.value = ^NSString *{
-        return SGFlag(SGKeyArtistBlock, NO) ? @(SGBlockedArtists().count).stringValue : @"Off";
+        return SGFlag(SGKeyArtistBlock, NO) ? @(SGBlockedArtists().count).stringValue : SGLocalized(@"Off");
     };
     BOOL native = !SGRedesignedUIStored();
 
     // AirPods gestures, the lock screen widget and Vibrations have rows of their own on Mod Settings' main page.
     NSMutableArray<SGModSection *> *sections = [NSMutableArray arrayWithObject:SGSection(nil, @[
-        SGWithTile(SGPageRow(@"Gestures", ^UIViewController *{ return SGGesturesSettingsPage(); }), @"hand.tap", UIColor.systemBlueColor),
+        SGWithTile(SGPageRow(SGLocalized(@"Gestures"), ^UIViewController *{ return SGGesturesSettingsPage(); }), @"hand.tap", UIColor.systemBlueColor),
         SGWithTile(blocked, @"person.crop.circle.badge.xmark", UIColor.systemRedColor),
     ])];
     if (native) {
         [sections addObject:SGSection(nil, @[
-            SGWithTile(SGPageRow(@"Now playing bar", ^UIViewController *{ return SGNowPlayingBarSettingsPage(); }), @"rectangle.bottomthird.inset.filled", UIColor.systemPinkColor),
-            SGWithTile(SGPageRow(@"Queue & devices", ^UIViewController *{ return SGQueueSettingsPage(); }), @"text.line.first.and.arrowtriangle.forward", UIColor.systemIndigoColor),
+            SGWithTile(SGPageRow(SGLocalized(@"Now playing bar"), ^UIViewController *{ return SGNowPlayingBarSettingsPage(); }), @"rectangle.bottomthird.inset.filled", UIColor.systemPinkColor),
+            SGWithTile(SGPageRow(SGLocalized(@"Queue & devices"), ^UIViewController *{ return SGQueueSettingsPage(); }), @"text.line.first.and.arrowtriangle.forward", UIColor.systemIndigoColor),
         ])];
         [sections addObjectsFromArray:SGNativePlayerScreenSections()];
     }
     // Switch to video is the same chip of Spotify's player under either look.
-    SGModRow *video = SGHideRow(@"Switch to video", @"The chip over the title of a song with a music video", SGKeyHideVideoSwitch);
+    SGModRow *video = SGHideRow(SGLocalized(@"Switch to video"), SGLocalized(@"The chip over the title of a song with a music video"), SGKeyHideVideoSwitch);
     // Spotify's own, under either look: a tap on the cover opens it full screen, where it turns a little with the phone.
-    SGModRow *tilt = SGHideRow(@"Full screen cover", @"What a tap on the cover opens", SGKeyHideFullScreenCover);
+    SGModRow *tilt = SGHideRow(SGLocalized(@"Full screen cover"), SGLocalized(@"What a tap on the cover opens"), SGKeyHideFullScreenCover);
     // The native look's Shuffle and Repeat rows are in its Hide on the player section, with their own keys.
     NSArray<SGModRow *> *hidden = native ? @[video, tilt]
-        : @[SGHideRow(@"Shuffle", nil, SGRKeyPlayerHideShuffle), SGHideRow(@"Repeat", nil, SGRKeyPlayerHideRepeat), video, tilt];
-    [sections addObject:SGSection(native ? nil : @"Hide on the player", hidden)];
+        : @[SGHideRow(SGLocalized(@"Shuffle"), nil, SGRKeyPlayerHideShuffle), SGHideRow(SGLocalized(@"Repeat"), nil, SGRKeyPlayerHideRepeat), video, tilt];
+    [sections addObject:SGSection(native ? nil : SGLocalized(@"Hide on the player"), hidden)];
 
     [sections addObject:SGNotedSection(@"Lossless", @[
-        SGOptionRow(@"Lossless files", @"Your own FLACs in place of Spotify's stream", SGKeyLossless),
-    ], @"Put FLAC or ALAC files in Files › Spotify › Lossless. A file plays when its title and length match the song "
+        SGOptionRow(SGLocalized(@"Lossless files"), SGLocalized(@"Your own FLACs in place of Spotify's stream"), SGKeyLossless),
+    ], SGLocalized(@"Put FLAC or ALAC files in Files › Spotify › Lossless. A file plays when its title and length match the song "
        @"and its sound matches what Spotify plays, from about 4 s after the song starts or you seek. Spotify still "
        @"streams its own copy, at its lowest quality while the next song has a file. Karaoke and speeds other than "
-       @"1x keep Spotify's sound. Applies after you restart Spotify.")];
+       @"1x keep Spotify's sound. Applies after you restart Spotify."))];
 
     // The redesign's page leads with a card of its player and the background's control, the background's
     // rows and the Mini player section under it.
     if (!native) return SGRPlayerSettingsPage(sections);
-    return [[SGModPage alloc] initWithTitle:@"Player" intro:SGRestartNote sections:sections footer:nil];
+    return [[SGModPage alloc] initWithTitle:SGLocalized(@"Player") intro:SGLocalized(SGRestartNote) sections:sections footer:nil];
 }

@@ -61,6 +61,12 @@ SGTranslationSource *SGAITranslatorSource(void);
 // same language, provider, model and prompt is asked once a launch.
 void SGLyricsTranslateWithAI(NSString *trackID, NSArray<SGKaraokeLine *> *lines, NSString *languageTag,
                              void (^done)(NSArray<NSString *> *translations, NSString *error));
+// Same single-song request and parser, with batch rules appended; the queue owns bounded retries.
+void SGLyricsTranslateQueuedWithAI(NSString *trackID, NSArray<SGKaraokeLine *> *lines, NSString *languageTag,
+                                   void (^done)(NSArray<NSString *> *translations, NSError *error));
+// A repair sends only missing lines as output targets, with the complete original song as context.
+void SGLyricsTranslateQueuedWithContext(NSString *trackID, NSArray<SGKaraokeLine *> *lines, NSArray<SGKaraokeLine *> *context,
+                                       NSString *languageTag, void (^done)(NSArray<NSString *> *translations, NSError *error));
 // Multiple songs translated in one prompt, keyed by track URI (or ID). Streams live phase ("Thinking…",
 // "Writing") and per-song completions as each song's array closes in the SSE stream. Main queue.
 void SGLyricsTranslateBatchWithAI(NSDictionary<NSString *, NSArray<NSString *> *> *songs, NSString *languageTag,
@@ -109,6 +115,8 @@ NSArray<SGModRow *> *SGAITranslatorRows(void);
 SGTranslationSource *SGLyricsSyncSavedTranslation(NSString *track, NSString *language, NSArray<SGKaraokeLine *> *lines);
 SGTranslationSource *SGLyricsSaveTranslation(NSString *track, NSString *language, NSArray<SGKaraokeLine *> *lines, SGTranslationSource *source);
 BOOL SGLyricsHasSavedTranslation(NSString *track, NSString *language);
+// Coverage against the actual source the player will display, not just existence of a stored record.
+NSUInteger SGLyricsSavedTranslationMissing(NSString *track, NSString *language, NSArray<SGKaraokeLine *> *lines);
 // Whether a song's lines read as another language than `language`.
 BOOL SGKaraokeInAnotherLanguage(NSArray<SGKaraokeLine *> *lines, NSString *language);
 // Deletes the song's saved translation and the launch's answers for it, then posts SGLyricsTranslationsDidChangeNotification.
@@ -116,5 +124,5 @@ void SGLyricsDeleteSavedTranslation(NSString *track, NSString *language);
 // A saved file read: its lines (text to translation) and its source, or nil. A file from before sources were
 // kept is the lines alone.
 NSDictionary<NSString *, NSString *> *SGSavedTranslationLines(id json, SGTranslationSource **source);
-// The Lyrics page's row: how many songs are kept, and a tap to delete them.
+// The Lyrics page's row: durable translation library, import and export.
 SGModRow *SGSavedTranslationsRow(void);

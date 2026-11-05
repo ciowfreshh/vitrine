@@ -144,7 +144,7 @@ static UILabel *makeLabel(UIFont *font, UIColor *color) {
     [button setTitleColor:[primary() colorWithAlphaComponent:0.4] forState:UIControlStateHighlighted];
     [button setTitleColor:primary() forState:UIControlStateDisabled];
     button.contentHorizontalAlignment = UIControlContentHorizontalAlignmentRight;
-    button.accessibilityHint = @"Resets it";
+    button.accessibilityHint = SGLocalized(@"Resets it");
     [button addTarget:self action:reset forControlEvents:UIControlEventTouchUpInside];
     return button;
 }
@@ -212,7 +212,7 @@ static void placeTick(UISlider *slider) {
     _icon = [[UIImageView alloc] initWithImage:paintedSymbol(@"slider.horizontal.3", 20, UIImageSymbolWeightRegular, secondary())];
     _icon.contentMode = UIViewContentModeCenter;
     _title = makeLabel(font(UIFontTextStyleBody, UIFontWeightRegular, UIContentSizeCategoryExtraLarge), primary());
-    _title.text = @"Speed and pitch";
+    _title.text = SGLocalized(@"Speed and pitch");
     _summary = makeLabel(monospacedDigits(font(UIFontTextStyleSubheadline, UIFontWeightRegular, UIContentSizeCategoryExtraLarge)), secondary());
     _summary.textAlignment = NSTextAlignmentRight;
     _chevron = [[UIImageView alloc] initWithImage:paintedSymbol(@"chevron.down", 13, UIImageSymbolWeightSemibold, secondary())];
@@ -226,24 +226,24 @@ static void placeTick(UISlider *slider) {
     [self addSubview:_panel];
     UIFont *nameFont = font(UIFontTextStyleSubheadline, UIFontWeightRegular, UIContentSizeCategoryExtraLarge);
     _speedName = makeLabel(nameFont, secondary());
-    _speedName.text = @"Speed";
+    _speedName.text = SGLocalized(@"Speed");
     _pitchName = makeLabel(nameFont, secondary());
-    _pitchName.text = @"Pitch";
+    _pitchName.text = SGLocalized(@"Pitch");
     _speedValue = [self valueButton:@selector(resetSpeed)];
     _pitchValue = [self valueButton:@selector(resetPitch)];
     _speed = [self slider:kMinSpeed max:kMaxSpeed normal:1 minImage:@"tortoise.fill" maxImage:@"hare.fill"];
-    _speed.accessibilityLabel = @"Speed";
+    _speed.accessibilityLabel = SGLocalized(@"Speed");
     _pitch = [self slider:-kMaxPitch max:kMaxPitch normal:0 minImage:@"arrow.down" maxImage:@"arrow.up"];
-    _pitch.accessibilityLabel = @"Pitch";
+    _pitch.accessibilityLabel = SGLocalized(@"Pitch");
     _reverbName = makeLabel(nameFont, secondary());
-    _reverbName.text = @"Reverb";
+    _reverbName.text = SGLocalized(@"Reverb");
     _reverbValue = [self valueButton:@selector(resetReverb)];
     _reverb = [self slider:0 max:100 normal:0 minImage:@"speaker" maxImage:@"building.columns"];
-    _reverb.accessibilityLabel = @"Reverb";
+    _reverb.accessibilityLabel = SGLocalized(@"Reverb");
     _followsName = makeLabel(nameFont, primary());
-    _followsName.text = @"Pitch follows speed";
+    _followsName.text = SGLocalized(@"Pitch follows speed");
     _follows = [UISwitch new];
-    _follows.accessibilityLabel = @"Pitch follows speed";
+    _follows.accessibilityLabel = SGLocalized(@"Pitch follows speed");
     [_follows addTarget:self action:@selector(followsChanged) forControlEvents:UIControlEventValueChanged];
     for (UIView *view in @[_speedName, _speedValue, _speed, _pitchName, _pitchValue, _pitch, _reverbName, _reverbValue, _reverb,
                            _followsName, _follows]) [_panel addSubview:view];
@@ -253,9 +253,9 @@ static void placeTick(UISlider *slider) {
         _animatedIcon = [[UIImageView alloc] initWithImage:paintedSymbol(@"play.rectangle.on.rectangle", 18, UIImageSymbolWeightRegular, secondary())];
         _animatedIcon.contentMode = UIViewContentModeCenter;
         _animatedName = makeLabel(font(UIFontTextStyleBody, UIFontWeightRegular, UIContentSizeCategoryExtraLarge), primary());
-        _animatedName.text = @"Animated artwork";
+        _animatedName.text = SGLocalized(@"Animated artwork");
         _animated = [UISwitch new];
-        _animated.accessibilityLabel = @"Animated artwork";
+        _animated.accessibilityLabel = SGLocalized(@"Animated artwork");
         [_animated addTarget:self action:@selector(animatedChanged) forControlEvents:UIControlEventValueChanged];
         for (UIView *view in @[_animatedIcon, _animatedName, _animated]) [_animatedRow addSubview:view];
         [self addSubview:_animatedRow];
@@ -371,8 +371,8 @@ static NSString *pitchText(float pitch) {
     BOOL following = speedAllowed && _follows.on && _shownSpeed != 1;
     float pitch = following ? 0 : _shownPitch;
     [UIView performWithoutAnimation:^{
-        [_speedValue setTitle:speedAllowed ? speedText(_shownSpeed) : @"Unavailable here" forState:UIControlStateNormal];
-        [_pitchValue setTitle:!pitchAvailable ? @"Unavailable" : following ? @"Follows speed" : [pitchText(pitch) stringByAppendingString:pitch ? @" st" : @""]
+        [_speedValue setTitle:speedAllowed ? speedText(_shownSpeed) : SGLocalized(@"Unavailable here") forState:UIControlStateNormal];
+        [_pitchValue setTitle:!pitchAvailable ? SGLocalized(@"Unavailable") : following ? SGLocalized(@"Follows speed") : [pitchText(pitch) stringByAppendingString:pitch ? @" st" : @""]
                      forState:UIControlStateNormal];
         [_speedValue layoutIfNeeded];
         [_pitchValue layoutIfNeeded];
@@ -383,22 +383,22 @@ static NSString *pitchText(float pitch) {
     _speedValue.enabled = speedAllowed && _shownSpeed != 1;
     _pitchValue.enabled = pitchFree && pitch != 0;
     [UIView performWithoutAnimation:^{
-        [_reverbValue setTitle:_shownReverb > 0 ? [NSString stringWithFormat:@"%.0f%%", _shownReverb] : @"Off" forState:UIControlStateNormal];
+        [_reverbValue setTitle:_shownReverb > 0 ? [NSString stringWithFormat:@"%.0f%%", _shownReverb] : SGLocalized(@"Off") forState:UIControlStateNormal];
         [_reverbValue layoutIfNeeded];
     }];
     _reverbValue.enabled = _shownReverb > 0;
-    _reverb.accessibilityValue = _shownReverb > 0 ? [NSString stringWithFormat:@"%.0f percent", _shownReverb] : @"Off";
-    _speed.accessibilityValue = speedAllowed ? speedText(_shownSpeed) : @"Unavailable";
-    _pitch.accessibilityValue = following ? @"Follows speed" : pitch == 0 ? @"Original pitch"
-                                : [NSString stringWithFormat:@"%.0f semitones %@", fabsf(pitch), pitch > 0 ? @"up" : @"down"];
+    _reverb.accessibilityValue = _shownReverb > 0 ? [NSString stringWithFormat:SGLocalized(@"%.0f percent"), _shownReverb] : SGLocalized(@"Off");
+    _speed.accessibilityValue = speedAllowed ? speedText(_shownSpeed) : SGLocalized(@"Unavailable");
+    _pitch.accessibilityValue = following ? SGLocalized(@"Follows speed") : pitch == 0 ? SGLocalized(@"Original pitch")
+                                : [NSString stringWithFormat:SGLocalized(@"%.0f semitones %@"), fabsf(pitch), pitch > 0 ? @"up" : @"down"];
 
     NSMutableArray<NSString *> *changed = [NSMutableArray array];
     if (_shownSpeed != 1) [changed addObject:speedText(_shownSpeed)];
     if (pitch != 0) [changed addObject:[pitchText(pitch) stringByAppendingString:@" st"]];
-    if (_shownReverb > 0) [changed addObject:@"Reverb"];
+    if (_shownReverb > 0) [changed addObject:SGLocalized(@"Reverb")];
     _summary.text = sg_open ? nil : [changed componentsJoinedByString:@"  "];
-    _row.accessibilityLabel = changed.count ? [@"Speed and pitch, " stringByAppendingString:[changed componentsJoinedByString:@", "]] : @"Speed and pitch";
-    _row.accessibilityValue = sg_open ? @"Expanded" : @"Collapsed";
+    _row.accessibilityLabel = changed.count ? [SGLocalized(@"Speed and pitch, ") stringByAppendingString:[changed componentsJoinedByString:@", "]] : SGLocalized(@"Speed and pitch");
+    _row.accessibilityValue = sg_open ? SGLocalized(@"Expanded") : SGLocalized(@"Collapsed");
     _chevron.transform = sg_open ? CGAffineTransformMakeRotation(M_PI) : CGAffineTransformIdentity;
     _panel.alpha = sg_open || self.panelOnly ? 1 : 0;
     _panel.accessibilityElementsHidden = !sg_open && !self.panelOnly;

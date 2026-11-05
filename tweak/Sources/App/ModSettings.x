@@ -35,9 +35,11 @@
 #import "Redesigned/Album/Album.h"
 #import "Redesigned/Artist/Artist.h"
 #import "Pages.h"
+#import "LanguageSettings.h"
+#import "SettingsPlacement.h"
 
 static const CGFloat kRowHeight = 56;
-static char kRowKey, kInsetKey;
+static char kRowKey;
 
 // Each part of Spotify on a tile of its own color, as Settings lists its own, so a row is found by its color.
 static SGModRow *pageRow(NSString *title, NSString *symbol, UIColor *color, UIViewController *(^page)(void)) {
@@ -63,35 +65,36 @@ static UIViewController *modSettingsPage(void) {
 
     // The tile colors are the system palette's, in dark mode except where SGColorRGB gives a lighter or deeper shade.
     [sections addObject:SGNotedSection(nil, @[
+        SGInterfaceLanguageRow(),
         SGRedesignedUIRow(),
-        pageRow(@"Appearance", @"paintpalette.fill", UIColor.systemPurpleColor, ^UIViewController *{ return SGAppearancePage(); }),
-        pageRow(@"Tab bar", @"rectangle.bottomthird.inset.filled", UIColor.systemGrayColor, ^UIViewController *{ return SGNavbarPage(); }),
-    ], SGRestartNote)];
+        pageRow(SGLocalized(@"Appearance"), @"paintpalette.fill", UIColor.systemPurpleColor, ^UIViewController *{ return SGAppearancePage(); }),
+        pageRow(SGLocalized(@"Tab bar"), @"rectangle.bottomthird.inset.filled", UIColor.systemGrayColor, ^UIViewController *{ return SGNavbarPage(); }),
+    ], SGLocalized(SGRestartNote))];
 
     // Home & Library holds only the native look's switches; the redesign has its album and artist pages instead.
-    SGModRow *albums = pageRow(@"Albums", @"square.stack.fill", SGColorRGB(0x34C759), ^UIViewController *{ return SGRAlbumSettingsPage(); });
+    SGModRow *albums = pageRow(SGLocalized(@"Albums"), @"square.stack.fill", SGColorRGB(0x34C759), ^UIViewController *{ return SGRAlbumSettingsPage(); });
     albums.visible = redesigned;
-    SGModRow *artists = pageRow(@"Artists", @"music.mic", SGColorRGB(0x30B0C7), ^UIViewController *{ return SGRArtistSettingsPage(); });
+    SGModRow *artists = pageRow(SGLocalized(@"Artists"), @"music.mic", SGColorRGB(0x30B0C7), ^UIViewController *{ return SGRArtistSettingsPage(); });
     artists.visible = redesigned;
-    SGModRow *home = pageRow(@"Home & Library", @"house.fill", UIColor.systemBrownColor, ^UIViewController *{ return SGHomeSettingsPage(); });
+    SGModRow *home = pageRow(SGLocalized(@"Home & Library"), @"house.fill", UIColor.systemBrownColor, ^UIViewController *{ return SGHomeSettingsPage(); });
     home.visible = native;
-    SGModRow *redesignedHome = pageRow(@"Home", @"house.fill", UIColor.systemBrownColor, ^UIViewController *{ return SGRHomeSettingsPage(); });
+    SGModRow *redesignedHome = pageRow(SGLocalized(@"Home"), @"house.fill", UIColor.systemBrownColor, ^UIViewController *{ return SGRHomeSettingsPage(); });
     redesignedHome.visible = redesigned;
     [sections addObject:SGSection(nil, @[
         redesignedHome,
         home,
-        pageRow(@"Player", @"play.fill", UIColor.systemPinkColor, ^UIViewController *{ return SGPlayerSettingsPage(); }),
-        pageRow(@"Lyrics", @"quote.bubble.fill", UIColor.systemOrangeColor, ^UIViewController *{ return SGLyricsSettingsPage(); }),
+        pageRow(SGLocalized(@"Player"), @"play.fill", UIColor.systemPinkColor, ^UIViewController *{ return SGPlayerSettingsPage(); }),
+        pageRow(SGLocalized(@"Lyrics"), @"quote.bubble.fill", UIColor.systemOrangeColor, ^UIViewController *{ return SGLyricsSettingsPage(); }),
         albums,
         artists,
     ])];
 
     // Sing and the audio effects work on the sound, so both looks have them; Audio effects says how many are on.
     SGModRow *sing = pageRow(@"Karaoke", @"mic.fill", SGColorRGB(0x8C42B3), ^UIViewController *{ return SGSingSettingsPage(); });
-    SGModRow *audioEffects = pageRow(@"Audio effects", @"slider.vertical.3", UIColor.systemRedColor, ^UIViewController *{ return SGDSPSettingsPage(); });
+    SGModRow *audioEffects = pageRow(SGLocalized(@"Audio effects"), @"slider.vertical.3", UIColor.systemRedColor, ^UIViewController *{ return SGDSPSettingsPage(); });
     audioEffects.value = ^NSString *{ return SGDSPSummary(); };
     // Spatial voice is Sing's too, and shows where the iPhone reads headphone motion, as on Sing's page.
-    SGModRow *spatial = pageRow(@"Spatial voice", @"person.wave.2.fill", SGColorRGB(0x5856D6), ^UIViewController *{ return SGSpatialVoiceSettingsPage(); });
+    SGModRow *spatial = pageRow(SGLocalized(@"Spatial voice"), @"person.wave.2.fill", SGColorRGB(0x5856D6), ^UIViewController *{ return SGSpatialVoiceSettingsPage(); });
     spatial.visible = ^BOOL { return SGSingSpatialAvailable(); };
     // AutoMix sets Spotify's own Automix and Crossfade, which its player does under either look.
     SGModRow *autoMix = pageRow(@"AutoMix", @"arrow.triangle.merge", SGColorRGB(0xF05D6C), ^UIViewController *{ return SGAutoMixSettingsPage(); });
@@ -99,27 +102,27 @@ static UIViewController *modSettingsPage(void) {
     NSMutableArray<SGModRow *> *features = [NSMutableArray arrayWithObjects:sing, spatial, audioEffects, autoMix, nil];
     // The Live Activity works under both looks, where ActivityKit's card does.
     if (@available(iOS 17.0, *)) {
-        SGModRow *liveActivity = pageRow(@"Live Activity", @"iphone", UIColor.systemOrangeColor, ^UIViewController *{ return SGLiveActivitySettingsPage(); });
+        SGModRow *liveActivity = pageRow(SGLocalized(@"Live Activity"), @"iphone", UIColor.systemOrangeColor, ^UIViewController *{ return SGLiveActivitySettingsPage(); });
         [features addObject:liveActivity];
     }
     [features addObjectsFromArray:@[
-        pageRow(@"AirPods gestures", @"airpods", UIColor.systemCyanColor, ^UIViewController *{ return SGHeadGesturesSettingsPage(); }),
-        pageRow(@"Listening stats", @"chart.bar.fill", UIColor.systemBlueColor, ^UIViewController *{ return SGListeningStatsPage(); }),
+        pageRow(SGLocalized(@"AirPods gestures"), @"airpods", UIColor.systemCyanColor, ^UIViewController *{ return SGHeadGesturesSettingsPage(); }),
+        pageRow(SGLocalized(@"Listening stats"), @"chart.bar.fill", UIColor.systemBlueColor, ^UIViewController *{ return SGListeningStatsPage(); }),
     ]];
     [sections addObject:SGSection(nil, features)];
 
-    SGModRow *mod = pageRow(@"Mod", @"info.circle", SGColorRGB(0x7D7D81), ^UIViewController *{ return SGAboutPage(); });
+    SGModRow *mod = pageRow(SGLocalized(@"Mod"), @"info.circle", SGColorRGB(0x7D7D81), ^UIViewController *{ return SGAboutPage(); });
     mod.value = ^NSString *{ return @(SG_VERSION); };
     [sections addObjectsFromArray:@[
         SGSection(nil, @[
-            pageRow(@"Lock screen", @"lock.iphone", SGColorRGB(0x32ADE6), ^UIViewController *{ return SGLockScreenWidgetPage(); }),
+            pageRow(SGLocalized(@"Lock screen"), @"lock.iphone", SGColorRGB(0x32ADE6), ^UIViewController *{ return SGLockScreenWidgetPage(); }),
             // Vibrations hook Spotify's own controls and its audio, so they answer under either look.
-            pageRow(@"Vibrations", @"waveform", UIColor.systemGreenColor, ^UIViewController *{ return SGVibrationsSettingsPage(); }),
-            pageRow(@"Premium, ads & privacy", @"hand.raised.fill", UIColor.systemBlueColor, ^UIViewController *{ return SGAdsSettingsPage(); }),
+            pageRow(SGLocalized(@"Vibrations"), @"waveform", UIColor.systemGreenColor, ^UIViewController *{ return SGVibrationsSettingsPage(); }),
+            pageRow(SGLocalized(@"Premium, ads & privacy"), @"hand.raised.fill", UIColor.systemBlueColor, ^UIViewController *{ return SGAdsSettingsPage(); }),
         ]),
         SGSection(nil, @[
-            pageRow(@"Labs", @"testtube.2", UIColor.systemGreenColor, ^UIViewController *{ return SGLabsPage(); }),
-            pageRow(@"All flags", @"flag.fill", UIColor.systemOrangeColor, ^UIViewController *{ return SGAllFlagsPage(); }),
+            pageRow(SGLocalized(@"Labs"), @"testtube.2", UIColor.systemGreenColor, ^UIViewController *{ return SGLabsPage(); }),
+            pageRow(SGLocalized(@"All flags"), @"flag.fill", UIColor.systemOrangeColor, ^UIViewController *{ return SGAllFlagsPage(); }),
         ]),
         SGSection(nil, @[mod]),
     ]];
@@ -139,6 +142,7 @@ static UIViewController *modSettingsPage(void) {
 @implementation SGModSettingsRow {
     UIImageView *_icon;
     UILabel *_title;
+    UILabel *_subtitle;
     UIImageView *_chevron;
 }
 
@@ -146,8 +150,14 @@ static UIViewController *modSettingsPage(void) {
     if (!(self = [super initWithFrame:frame])) return nil;
     _icon = SGSymbolView(@"slider.horizontal.3", 20, UIImageSymbolWeightRegular, 24);
     _title = [UILabel new];
-    _title.text = @"Mod Settings";
+    _title.text = SGLocalized(@"Vitrine Settings");
     _title.textColor = UIColor.whiteColor;
+    _subtitle = [UILabel new];
+    _subtitle.text = SGLocalized(@"Customize appearance, lyrics, Karaoke and AI translation");
+    _subtitle.textColor = UIColor.secondaryLabelColor;
+    _subtitle.font = [UIFont systemFontOfSize:11];
+    _subtitle.numberOfLines = 2;
+    [self addSubview:_subtitle];
     _chevron = SGSymbolView(@"chevron.right", 11, UIImageSymbolWeightSemibold, 12);
     for (UIView *v in @[_icon, _title, _chevron]) [self addSubview:v];
     [self addTarget:self action:@selector(open) forControlEvents:UIControlEventTouchUpInside];
@@ -159,7 +169,9 @@ static UIViewController *modSettingsPage(void) {
     _title.font = SGSpotifyListFont(self.drawer);
     CGFloat width = self.bounds.size.width, height = self.bounds.size.height, lead = self.drawer ? 4 : 0;
     _icon.frame = CGRectMake(12 + lead, (height - 24) / 2, 24, 24);
-    _title.frame = CGRectMake(48 + lead, 0, width - 96, height);
+    _title.frame = CGRectMake(48 + lead, self.drawer ? 0 : 7, width - 96, self.drawer ? height : 19);
+    _subtitle.hidden = self.drawer;
+    _subtitle.frame = CGRectMake(48, 26, width - 80, height - 29);
     _chevron.frame = CGRectMake(width - 24, (height - 12) / 2, 12, 12);
     _chevron.hidden = self.drawer;
 }
@@ -213,17 +225,7 @@ void SGOpenModSettings(UIView *source) {
 static void placeRow(UICollectionView *list, SGModSettingsRow *row) {
     // The row took the fallback font if it laid out before the list had rows to read.
     if (SGAdoptFonts(list, row, row.drawer)) [row setNeedsLayout];
-    CGFloat bottom = list.contentSize.height;
-    row.hidden = !row.drawer && bottom <= 0;
-    row.frame = CGRectMake(0, row.drawer ? -kRowHeight : bottom, list.bounds.size.width, kRowHeight);
-
-    UIEdgeInsets inset = list.contentInset;
-    NSValue *applied = objc_getAssociatedObject(list, &kInsetKey);
-    if (applied && UIEdgeInsetsEqualToEdgeInsets(inset, applied.UIEdgeInsetsValue)) return;
-    if (row.drawer) inset.top += kRowHeight;
-    else inset.bottom += kRowHeight;
-    objc_setAssociatedObject(list, &kInsetKey, [NSValue valueWithUIEdgeInsets:inset], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    list.contentInset = inset;
+    SGPlaceSettingsEntry(list, row, row.drawer, kRowHeight);
 }
 
 // Media quality, Playback, Account and most of the rest of settings are the same controller class
@@ -261,6 +263,7 @@ static BOOL isSettingsRoot(UIViewController *list) {
         // A page that laid itself out before it was on the stack looked like the list for as long
         // as that took; the row goes again as soon as it can be seen for what it is.
         if (!root) {
+            SGRemoveSettingsEntry((UICollectionView *)sub);
             [row removeFromSuperview];
             objc_setAssociatedObject(sub, &kRowKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
             continue;

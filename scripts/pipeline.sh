@@ -216,6 +216,8 @@ if [ -n "${EXT_DIR:-}" ]; then
   "$ROOT/scripts/merge-appintents.py" "$OUT" "$APP_DIR" "$EXT_DIR/app/Metadata.appintents"
 fi
 
+python3 "$ROOT/scripts/install-localizations.py" "$OUT" "$APP_DIR"
+
 echo "==> done: $OUT"
 [ "$INSTALL" = 1 ] && exec "$ROOT/scripts/install.sh" "$OUT"
 exit 0

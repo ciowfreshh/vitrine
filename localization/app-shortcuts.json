@@ -1,0 +1,12 @@
+{
+  "Like this song in ${applicationName}": "Thích bài này trong ${applicationName}",
+  "Add this song to Liked Songs in ${applicationName}": "Thêm bài này vào Bài hát đã thích trong ${applicationName}",
+  "Play or pause ${applicationName}": "Phát hoặc tạm dừng ${applicationName}",
+  "Skip this song in ${applicationName}": "Bỏ qua bài này trong ${applicationName}",
+  "Next track in ${applicationName}": "Bài tiếp theo trong ${applicationName}",
+  "Previous track in ${applicationName}": "Bài trước trong ${applicationName}",
+  "${mode} Karaoke in ${applicationName}": "${mode} Karaoke trong ${applicationName}",
+  "Sing along in ${applicationName}": "Hát theo trong ${applicationName}",
+  "Set a sleep timer in ${applicationName}": "Hẹn giờ dừng nhạc trong ${applicationName}",
+  "Sleep timer ${length} in ${applicationName}": "Hẹn giờ dừng nhạc ${length} trong ${applicationName}"
+}

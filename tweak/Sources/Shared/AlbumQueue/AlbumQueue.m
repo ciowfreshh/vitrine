@@ -41,14 +41,14 @@ static SGAlbumQueueRequest *sg_request;
 
 void SGAlbumQueueAdd(NSString *uri, void (^done)(NSUInteger, NSString *)) {
     NSCAssert(NSThread.isMainThread, @"album queue runs on main");
-    if (!SGAlbumQueueIsAlbumURI(uri)) { done(0, @"This is not a Spotify album."); return; }
-    if (sg_request) { done(0, @"An album is already being added to the queue."); return; }
+    if (!SGAlbumQueueIsAlbumURI(uri)) { done(0, SGLocalized(@"This is not a Spotify album.")); return; }
+    if (sg_request) { done(0, SGLocalized(@"An album is already being added to the queue.")); return; }
     id player = SGPlayer();
     Class wrapper = NSClassFromString(@"SPTPlayerQueueWrapperImpl"), track = NSClassFromString(@"SPTPlayerTrack");
     if (!player || ![wrapper instancesRespondToSelector:@selector(initWithPlayer:)] ||
         ![wrapper instancesRespondToSelector:@selector(queueMultipleTracks:loggingParams:)] ||
         ![track instancesRespondToSelector:@selector(initWithURI:albumURI:artistURI:andUID:)]) {
-        done(0, @"Spotify's queue is not ready."); return;
+        done(0, SGLocalized(@"Spotify's queue is not ready.")); return;
     }
     SGAlbumQueueRequest *request = [SGAlbumQueueRequest new];
     request.player = player;
@@ -57,7 +57,7 @@ void SGAlbumQueueAdd(NSString *uri, void (^done)(NSUInteger, NSString *)) {
     // SGSpclientHeaders can wait for Spotify's next request. A late header or metadata answer must
     // never queue an album after the user has already been told that loading failed.
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 25 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-        if (!request.submitted) [request finish:0 error:@"Spotify took too long to load the album. Try again."];
+        if (!request.submitted) [request finish:0 error:SGLocalized(@"Spotify took too long to load the album. Try again.")];
     });
     __weak SGAlbumQueueRequest *weakRequest = request;
     SGSpclientHeaders(^(NSDictionary<NSString *, NSString *> *headers) {
@@ -77,32 +77,32 @@ void SGAlbumQueueAdd(NSString *uri, void (^done)(NSUInteger, NSString *)) {
                 if (request.finished) return;
                 if (!uris) { 
                     if (error || status != 200) SGLog(@"album queue: context-resolve status %ld, %@", (long)status, error);
-                    [request finish:0 error:error || status != 200 ? @"Spotify could not load the album. Try again." : reason];
+                    [request finish:0 error:error || status != 200 ? SGLocalized(@"Spotify could not load the album. Try again.") : reason];
                     return;
                 }
                 NSMutableArray *tracks = [NSMutableArray arrayWithCapacity:uris.count];
                 for (NSString *trackURI in uris) {
                     SPTPlayerTrack *item = [[track alloc] initWithURI:[NSURL URLWithString:trackURI] albumURI:[NSURL URLWithString:uri] artistURI:nil andUID:nil];
-                    if (!item) { [request finish:0 error:@"Spotify could not prepare the album."]; return; }
+                    if (!item) { [request finish:0 error:SGLocalized(@"Spotify could not prepare the album.")]; return; }
                     [tracks addObject:item];
                 }
                 request.wrapper = [[wrapper alloc] initWithPlayer:request.player];
                 SPTask *task = [request.wrapper queueMultipleTracks:tracks loggingParams:nil];
                 if (![task respondsToSelector:@selector(addCallback:on:)] || ![task respondsToSelector:@selector(addErrorCallback:on:)]) {
-                    [request finish:0 error:@"Spotify did not return a queue result."]; return;
+                    [request finish:0 error:SGLocalized(@"Spotify did not return a queue result.")]; return;
                 }
                 request.submitted = YES;
                 request.task = task;
                 // A task that never answers would otherwise hold sg_request and refuse every later album.
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 15 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-                    [request finish:0 error:@"Spotify did not confirm the album was queued. Check the queue before trying again."];
+                    [request finish:0 error:SGLocalized(@"Spotify did not confirm the album was queued. Check the queue before trying again.")];
                 });
                 [task addCallback:^(id value) {
                     SGLog(@"album queue: %lu tracks added", (unsigned long)uris.count);
                     [request finish:uris.count error:nil];
                 } on:dispatch_get_main_queue()];
                 [task addErrorCallback:^(NSError *failure) {
-                    [request finish:0 error:@"Spotify could not add the album to the queue."];
+                    [request finish:0 error:SGLocalized(@"Spotify could not add the album to the queue.")];
                 } on:dispatch_get_main_queue()];
             });
         }] resume];

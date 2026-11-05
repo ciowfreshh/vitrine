@@ -130,7 +130,7 @@ static void fetchPicture(NSString *key, NSURL *url, NSUInteger attempt) {
                 return;
             }
             if (!image) {
-                artworkLog(@"%@ not fetched (%ld, %@), attempt %lu", key, (long)status, error.localizedDescription, (unsigned long)attempt + 1);
+                artworkLog(@"%@ not fetched (%ld, %@), attempt %lu", key, (long)status, SGLocalizedError(error), (unsigned long)attempt + 1);
                 if (attempt + 1 >= kFetchAttempts) return;
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kFetchRetry * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                     if ([key isEqualToString:sg_wantedKey] && !([sg_artworkKey isEqualToString:key] && sg_artworkQuality == SGRArtworkQualityExact)) {

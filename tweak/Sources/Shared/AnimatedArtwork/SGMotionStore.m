@@ -68,7 +68,7 @@ static void download(NSURL *remote, NSURL *local, NSUInteger retries) {
             [local getResourceValue:&bytes forKey:NSURLFileSizeKey error:nil];
             SGLog(@"motion: %@ kept, %.1f MB", local.lastPathComponent, bytes.doubleValue / 1e6);
         }
-        else SGLog(@"motion: %@ not downloaded (%ld, %@)%@", remote.lastPathComponent, (long)status, error.localizedDescription,
+        else SGLog(@"motion: %@ not downloaded (%ld, %@)%@", remote.lastPathComponent, (long)status, SGLocalizedError(error),
                    again ? @", tried again" : @"");
         dispatch_async(dispatch_get_main_queue(), ^{
             if (again) {

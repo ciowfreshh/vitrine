@@ -83,7 +83,7 @@ static void askSpotify(NSString *uri, NSUInteger triesLeft, void (^done)(NSStrin
                     return;
                 }
                 SGLog(@"isrc: Spotify's metadata for %@ not answered (%ld, %@), %lu tries left", uri, (long)status,
-                      error.localizedDescription, (unsigned long)triesLeft - 1);
+                      SGLocalizedError(error), (unsigned long)triesLeft - 1);
                 if (triesLeft <= 1) {
                     done(nil);
                     return;
@@ -194,12 +194,12 @@ API_AVAILABLE(ios(18.0))
     BOOL starting = _phase == SGNativeChecking || (_phase == SGNativeReady && !_graceOver);
     SGMusicHapticsSetSystemCovers(SGMusicHapticsListedByInstall() && _enabled && _active && ([self iOSPlays] || starting));
     NSString *status;
-    if (!_enabled) status = @"Off in iOS";
-    else if (!_active) status = @"Paused in Control Center";
-    else if (_phase == SGNativeChecking) status = @"Checking";
-    else if (_phase == SGNativeUnavailable) status = @"Unavailable";
-    else if (_phase == SGNativeWaiting) status = @"Waiting";
-    else status = [self iOSPlays] ? @"Playing" : @"Sent, iOS not playing yet";
+    if (!_enabled) status = SGLocalized(@"Off in iOS");
+    else if (!_active) status = SGLocalized(@"Paused in Control Center");
+    else if (_phase == SGNativeChecking) status = SGLocalized(@"Checking");
+    else if (_phase == SGNativeUnavailable) status = SGLocalized(@"Unavailable");
+    else if (_phase == SGNativeWaiting) status = SGLocalized(@"Waiting");
+    else status = [self iOSPlays] ? SGLocalized(@"Playing") : SGLocalized(@"Sent, iOS not playing yet");
     SGSetMusicHapticsStatus(status);
 }
 
@@ -328,6 +328,6 @@ API_AVAILABLE(ios(18.0))
         }];
         dispatch_async(dispatch_get_main_queue(), ^{ [native systemChanged]; });
     } else {
-        SGSetMusicHapticsStatus(@"Needs iOS 18");
+        SGSetMusicHapticsStatus(SGLocalized(@"Needs iOS 18"));
     }
 }

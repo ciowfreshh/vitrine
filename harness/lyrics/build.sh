@@ -18,7 +18,8 @@ fi
 SDK=$(xcrun --sdk iphonesimulator --show-sdk-path)
 xcrun -sdk iphonesimulator clang -target arm64-apple-ios17.0-simulator -fobjc-arc -g ${OPT:--O0} \
     -I"$SRC" -I"$SRC/Redesigned/Lyrics" -isysroot "$SDK" -Wall -Wno-deprecated-declarations \
-    "$HERE/main.m" "$HERE/../scene.m" "$HERE/stubs.m" \
+    "$HERE/main.m" "$HERE/../scene.m" "$HERE/stubs.m" ${EXTRA_SOURCES:-} \
+    "$SRC"/Core/SGLocalization.m "$SRC"/Shared/LyricsTranslation/LyricsSelection.m \
     "$SRC"/Redesigned/Lyrics/SGRKaraokeView.m $( [ -f "$SRC"/Redesigned/Lyrics/LyricsText.m ] && echo "$SRC"/Redesigned/Lyrics/LyricsText.m ) $( [ -f "$SRC"/Redesigned/Lyrics/LyricsLook.m ] && echo "$SRC"/Redesigned/Lyrics/LyricsLook.m ) "$SRC"/Shared/Lyrics/KaraokeTiming.m $( [ -f "$SRC"/Shared/Lyrics/Romanise.m ] && echo "$SRC"/Shared/Lyrics/Romanise.m ) "$SRC"/Shared/AdBlock/Protobuf.m \
     "$SRC"/Shared/LyricsSources/SGTTML.m "$SRC"/Redesigned/Kit/SGRTokens.m \
     $( [ -f "$SRC"/Shared/LyricsMeanings/Meanings.m ] && echo "$SRC"/Shared/LyricsMeanings/Meanings.m "$SRC"/Redesigned/Lyrics/MeaningSheet.m ) $( [ -f "$SRC"/Shared/LyricsSources/SongMatch.m ] && echo "$SRC"/Shared/LyricsSources/SongMatch.m ) \

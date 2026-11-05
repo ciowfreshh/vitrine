@@ -1,3 +1,4 @@
+#import "Core/SGLocalization.h"
 #import "SGPreparedPCM.h"
 #import <AudioToolbox/AudioToolbox.h>
 #import <stdatomic.h>
@@ -22,19 +23,19 @@ static void fail(NSError **error, NSInteger code, NSString *message) {
 + (instancetype)prepareURL:(NSURL *)url sampleRate:(double)rate maxBytes:(NSUInteger)maxBytes
               cancellation:(SGPCMDecodeCancellation *)cancellation error:(NSError **)error {
     if (error) *error = nil;
-    if (cancellation.cancelled) { fail(error, 1, @"Preparation cancelled."); return nil; }
+    if (cancellation.cancelled) { fail(error, 1, SGLocalized(@"Preparation cancelled.")); return nil; }
     if (!url.isFileURL || !isfinite(rate) || rate < 8000 || rate > 192000 || maxBytes < 8192 || maxBytes > 32*1024*1024) {
-        fail(error, 2, @"Unsupported file, sample rate or PCM budget."); return nil;
+        fail(error, 2, SGLocalized(@"Unsupported file, sample rate or PCM budget.")); return nil;
     }
     NSNumber *regular = nil, *fileSize = nil;
     [url getResourceValue:&regular forKey:NSURLIsRegularFileKey error:nil];
     [url getResourceValue:&fileSize forKey:NSURLFileSizeKey error:nil];
     if (!regular.boolValue || !fileSize || fileSize.unsignedLongLongValue > 64*1024*1024) {
-        fail(error, 2, @"Expected a complete local file within the encoded size limit."); return nil;
+        fail(error, 2, SGLocalized(@"Expected a complete local file within the encoded size limit.")); return nil;
     }
     ExtAudioFileRef file = NULL;
     OSStatus status = ExtAudioFileOpenURL((__bridge CFURLRef)url, &file);
-    if (status) { fail(error, status, @"The native decoder could not open the file."); return nil; }
+    if (status) { fail(error, status, SGLocalized(@"The native decoder could not open the file.")); return nil; }
     AudioStreamBasicDescription source = {0}; UInt32 size = sizeof(source);
     status = ExtAudioFileGetProperty(file, kExtAudioFileProperty_FileDataFormat, &size, &source);
     SInt64 sourceFrames = 0; size = sizeof(sourceFrames);
@@ -46,7 +47,7 @@ static void fail(NSError **error, NSInteger code, NSString *message) {
     uint64_t limit = maxBytes / (2 * sizeof(float));
     if (status || !formatOK || !isfinite(expected) || expected < 1 || expected > limit) {
         ExtAudioFileDispose(file);
-        fail(error, status ?: 3, @"The file is not supported stereo lossless audio within the PCM budget."); return nil;
+        fail(error, status ?: 3, SGLocalized(@"The file is not supported stereo lossless audio within the PCM budget.")); return nil;
     }
     AudioStreamBasicDescription target = {rate, kAudioFormatLinearPCM,
         kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved, 4, 1, 4, 2, 32, 0};
@@ -80,9 +81,9 @@ static void fail(NSError **error, NSInteger code, NSString *message) {
         result->_frameCount += frames;
     }
     ExtAudioFileDispose(file);
-    if (cancellation.cancelled) { fail(error, 1, @"Preparation cancelled."); return nil; }
+    if (cancellation.cancelled) { fail(error, 1, SGLocalized(@"Preparation cancelled.")); return nil; }
     if (status || fabs((double)result->_frameCount - expected) > 1) {
-        fail(error, status ?: 4, @"The file did not decode completely within its declared length and budget."); return nil;
+        fail(error, status ?: 4, SGLocalized(@"The file did not decode completely within its declared length and budget.")); return nil;
     }
     return result;
 }

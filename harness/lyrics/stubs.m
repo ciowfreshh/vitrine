@@ -4,6 +4,8 @@
 #import <UIKit/UIKit.h>
 #import "Shared/Lyrics/Lyrics.h"
 #import "Shared/LyricsTranslation/LyricsTranslation.h"
+#import "Shared/Sing/Sing.h"
+#import "Core/SGPrefs.h"
 
 UIColor *SGRAccentColor(void) { return nil; }
 
@@ -42,6 +44,9 @@ void SGLyricsOpenCreditLinks(NSArray<SGLyricsLink *> *links, UIView *from) { NSL
 NSString *SGLyricsTranslationLanguage(void) { return [NSUserDefaults.standardUserDefaults stringForKey:@"translateTo"]; }
 
 // -gemini 1: a Gemini key is set, and Translate with Gemini answers each line with itself, marked.
+// The harness supplies a foreign-language fixture and a supported Karaoke device; no AI or voice model is run.
+BOOL SGKaraokeInAnotherLanguage(NSArray<SGKaraokeLine *> *lines, NSString *language) { return lines.count > 0; }
+BOOL SGSingButtonShown(void) { return SGFlag(SGKeySingButton, YES); }
 BOOL SGAITranslatorReady(void) { return [NSUserDefaults.standardUserDefaults boolForKey:@"gemini"]; }
 NSString *SGAITranslatorName(void) { return @"Gemini"; }
 NSString *SGAITranslatorRecipient(void) { return @"Google"; }
@@ -77,6 +82,7 @@ void SGLyricsTranslateWithAI(NSString *trackID, NSArray<SGKaraokeLine *> *lines,
 + (void)answer:(NSArray<NSString *> *)lines as:(NSString *)mark done:(void (^)(NSArray<NSString *> *, NSString *))done;
 @end
 @implementation SGOnDeviceTranslation
++ (void)openTranslateSettings {}
 + (BOOL)translationAvailable { return [NSUserDefaults.standardUserDefaults boolForKey:@"onDevice"]; }
 + (BOOL)appleIntelligenceAvailable:(NSString *)languageTag { return [NSUserDefaults.standardUserDefaults boolForKey:@"intelligence"]; }
 + (void)answer:(NSArray<NSString *> *)lines as:(NSString *)mark done:(void (^)(NSArray<NSString *> *, NSString *))done {
@@ -84,7 +90,7 @@ void SGLyricsTranslateWithAI(NSString *trackID, NSArray<SGKaraokeLine *> *lines,
     for (NSString *line in lines) [out addObject:line.length ? [mark stringByAppendingString:line] : @""];
     dispatch_async(dispatch_get_main_queue(), ^{ done(out, nil); });
 }
-+ (void)translate:(NSArray<NSString *> *)lines to:(NSString *)languageTag done:(void (^)(NSArray<NSString *> *, NSString *))done {
++ (void)translate:(NSArray<NSString *> *)lines to:(NSString *)languageTag from:(UIView *)view done:(void (^)(NSArray<NSString *> *, NSString *))done {
     [self answer:lines as:@"iPhone: " done:done];
 }
 // A batch at a time, as the model works: the first half shows a second before the rest.
@@ -119,10 +125,11 @@ id SGKaraokeTrackFor(NSString *trackID) {
     SGHarnessTrack *track = [SGHarnessTrack new];
     track.trackTitle = [NSUserDefaults.standardUserDefaults stringForKey:@"title"];
     track.artistName = [NSUserDefaults.standardUserDefaults stringForKey:@"artist"];
-    return track;
+    return (id)track;
 }
 // lyrics-page links the real Settings/ framework, which has both.
 #ifndef SG_HARNESS_SETTINGS
+id SGOptionRow(NSString *title, NSString *subtitle, NSString *key) { return nil; }
 id SGChoiceRow(NSString *title, NSString *subtitle, NSString *key, NSArray *choices, NSInteger fallback) { return nil; }
 UIViewController *SGTopController(void) {
     UIWindowScene *scene = (UIWindowScene *)UIApplication.sharedApplication.connectedScenes.anyObject;

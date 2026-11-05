@@ -532,6 +532,8 @@ static void runChecks(SGRKaraokeView *karaoke, UIView *host) {
     });
 }
 
+__attribute__((weak)) void SGV21UIChecks(SGRKaraokeView *view);
+
 #pragma mark - the app
 
 @interface SGHarnessDelegate : UIResponder <UIApplicationDelegate>
@@ -589,6 +591,7 @@ static void runChecks(SGRKaraokeView *karaoke, UIView *host) {
     self.window.rootViewController = root;
     [self.window makeKeyAndVisible];
     if ([args boolForKey:@"check"]) after(2, ^{ runChecks(karaoke, host); });
+    if ([args boolForKey:@"v21"] && SGV21UIChecks) after(3, ^{ SGV21UIChecks(karaoke); });
     if ([args objectForKey:@"openMenu"]) {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)([args doubleForKey:@"openMenu"] * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             // The button sits in a box with its glass, as the mic does.

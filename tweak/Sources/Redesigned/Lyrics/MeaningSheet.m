@@ -9,9 +9,9 @@ static const CGFloat kRow = 22, kTouch = 44;
 
 static NSString *authorName(SGLyricsMeaningAuthor author) {
     switch (author) {
-        case SGLyricsMeaningByArtist: return @"From the artist";
-        case SGLyricsMeaningByEditors: return @"Genius editors";
-        case SGLyricsMeaningByCommunity: return @"Genius community";
+        case SGLyricsMeaningByArtist: return SGLocalized(@"From the artist");
+        case SGLyricsMeaningByEditors: return SGLocalized(@"Genius editors");
+        case SGLyricsMeaningByCommunity: return SGLocalized(@"Genius community");
     }
     return nil;
 }
@@ -132,8 +132,8 @@ static NSAttributedString *linkedBody(NSString *body) {
     [_scroll addSubview:_body];
     _count = [self labelWithFont:[UIFont systemFontOfSize:13 weight:UIFontWeightRegular] color:SGRTertiary()];
     _count.numberOfLines = 1;
-    _next = [self buttonWithTitle:@"Next" action:@selector(showNext)];
-    _open = [self buttonWithTitle:@"View on Genius" action:@selector(openGenius)];
+    _next = [self buttonWithTitle:SGLocalized(@"Next") action:@selector(showNext)];
+    _open = [self buttonWithTitle:SGLocalized(@"View on Genius") action:@selector(openGenius)];
     [self show];
 }
 
@@ -146,7 +146,7 @@ static NSAttributedString *linkedBody(NSString *body) {
                           withConfiguration:[UIImageSymbolConfiguration configurationWithPointSize:11 weight:UIImageSymbolWeightSemibold]];
     _author.configuration = badge;
     _body.attributedText = linkedBody(meaning.body);
-    _count.text = _meanings.count > 1 ? [NSString stringWithFormat:@"Genius · %lu of %lu", (unsigned long)_index + 1, (unsigned long)_meanings.count]
+    _count.text = _meanings.count > 1 ? [NSString stringWithFormat:SGLocalized(@"Genius · %lu of %lu"), (unsigned long)_index + 1, (unsigned long)_meanings.count]
                                       : @"Genius";
     _next.hidden = _meanings.count < 2;
     _open.hidden = !meaning.url.length;

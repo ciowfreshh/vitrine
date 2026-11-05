@@ -1,3 +1,4 @@
+#import "Core/SGLocalization.h"
 #import "AlbumQueue.h"
 
 static BOOL validURI(NSString *uri, NSString *prefix) {
@@ -10,7 +11,7 @@ static BOOL validURI(NSString *uri, NSString *prefix) {
 }
 
 NSArray<NSString *> *SGAlbumQueueTrackURIs(id context, NSString *uri, NSString **error) {
-    if (error) *error = @"Spotify did not return a complete album.";
+    if (error) *error = SGLocalized(@"Spotify did not return a complete album.");
     if (!validURI(uri, @"spotify:album:") || ![context isKindOfClass:NSDictionary.class] || ![context[@"uri"] isEqual:uri]) return nil;
     id pages = context[@"pages"];
     if (![pages isKindOfClass:NSArray.class] || ![pages count]) return nil;

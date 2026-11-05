@@ -13,13 +13,13 @@ struct SGLikeControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "spotifyglass.control.like") {
             ControlWidgetButton(action: SGLikeIntent()) {
-                Label("Like This Song", systemImage: "heart")
-                    .controlWidgetActionHint("Like")
+                Label { Text("Like This Song", tableName: "Vitrine") } icon: { Image(systemName: "heart") }
+                    .controlWidgetActionHint(LocalizedStringResource("Like", table: "Vitrine", locale: SGUIL10n.locale))
             }
             .tint(green)
         }
-        .displayName("Like This Song")
-        .description("Adds the song playing in Spotify to Liked Songs.")
+        .displayName(LocalizedStringResource("Like This Song", table: "Vitrine", locale: SGUIL10n.locale))
+        .description(LocalizedStringResource("Adds the song playing in Spotify to Liked Songs.", table: "Vitrine", locale: SGUIL10n.locale))
     }
 }
 
@@ -28,23 +28,23 @@ struct SGSingControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "spotifyglass.control.sing") {
             ControlWidgetButton(action: SGSingIntent(.toggle)) {
-                Label("Karaoke", systemImage: "music.mic")
-                    .controlWidgetActionHint("Turn Karaoke On or Off")
+                Label { Text("Karaoke", tableName: "Vitrine") } icon: { Image(systemName: "music.mic") }
+                    .controlWidgetActionHint(LocalizedStringResource("Turn Karaoke On or Off", table: "Vitrine", locale: SGUIL10n.locale))
             }
             .tint(green)
         }
-        .displayName("Karaoke")
-        .description("Turns the vocals down in Spotify so you can sing along, or brings them back.")
+        .displayName(LocalizedStringResource("Karaoke", table: "Vitrine", locale: SGUIL10n.locale))
+        .description(LocalizedStringResource("Turns the vocals down in Spotify so you can sing along, or brings them back.", table: "Vitrine", locale: SGUIL10n.locale))
     }
 }
 
 // Which length the sleep timer control sets, picked when it is added.
 @available(iOS 18.0, *)
 struct SGSleepTimerControlConfiguration: ControlConfigurationIntent {
-    static let title: LocalizedStringResource = "Sleep Timer"
+    static let title = LocalizedStringResource("Sleep Timer", table: "Vitrine", locale: SGUIL10n.locale)
     static let isDiscoverable = false
 
-    @Parameter(title: "Length", default: .thirty)
+    @Parameter(title: LocalizedStringResource("Length", table: "Vitrine", locale: SGUIL10n.locale), default: .thirty)
     var length: SGSleepTimerLength
 }
 
@@ -54,17 +54,17 @@ struct SGSleepTimerControl: ControlWidget {
         AppIntentControlConfiguration(kind: "spotifyglass.control.sleeptimer", intent: SGSleepTimerControlConfiguration.self) { configuration in
             ControlWidgetButton(action: SGSleepTimerIntent(configuration.length)) {
                 Label {
-                    Text("Sleep Timer")
+                    Text("Sleep Timer", tableName: "Vitrine")
                     Text(SGSleepTimerLength.caseDisplayRepresentations[configuration.length]?.title ?? "")
                 } icon: {
                     Image(systemName: "moon.zzz")
                 }
-                .controlWidgetActionHint(configuration.length == .off ? "Turn Off the Sleep Timer" : "Start the Sleep Timer")
+                .controlWidgetActionHint(configuration.length == .off ? LocalizedStringResource("Turn Off the Sleep Timer", table: "Vitrine", locale: SGUIL10n.locale) : LocalizedStringResource("Start the Sleep Timer", table: "Vitrine", locale: SGUIL10n.locale))
             }
             .tint(green)
         }
-        .displayName("Sleep Timer")
-        .description("Pauses Spotify after the length you pick, or at the end of the track or the album.")
+        .displayName(LocalizedStringResource("Sleep Timer", table: "Vitrine", locale: SGUIL10n.locale))
+        .description(LocalizedStringResource("Pauses Spotify after the length you pick, or at the end of the track or the album.", table: "Vitrine", locale: SGUIL10n.locale))
         .promptsForUserConfiguration()
     }
 }

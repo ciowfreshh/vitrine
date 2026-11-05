@@ -53,7 +53,7 @@ static char kButtonGlassKey, kPanelGlassKey;
     // goes again on a timer, which a swipe up or down never holds open.
     self.isAccessibilityElement = YES;
     self.accessibilityLabel = @"Karaoke";
-    self.accessibilityHint = @"Turns the vocals down";
+    self.accessibilityHint = SGLocalized(@"Turns the vocals down");
     self.accessibilityTraits = UIAccessibilityTraitButton | UIAccessibilityTraitAdjustable;
 
     _ring = [CAShapeLayer layer];
@@ -190,7 +190,7 @@ static char kButtonGlassKey, kPanelGlassKey;
 #pragma mark - VoiceOver
 
 - (NSString *)accessibilityValue {
-    return [NSString stringWithFormat:@"%@. Vocals level: %@", SGSingStatusText(), SGSingLevelText(SGSingLevel())];
+    return [NSString stringWithFormat:SGLocalized(@"%@. Vocals level: %@"), SGSingStatusText(), SGSingLevelText(SGSingLevel())];
 }
 
 - (BOOL)accessibilityActivate {
@@ -222,7 +222,7 @@ static void tell(NSString *message, NSString *action, void (^then)(void)) {
     // Over the player, which is dark whatever the system's appearance.
     alert.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
     if (action) [alert addAction:[UIAlertAction actionWithTitle:action style:UIAlertActionStyleDefault handler:^(UIAlertAction *a) { then(); }]];
-    [alert addAction:[UIAlertAction actionWithTitle:action ? @"Cancel" : @"OK" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:action ? SGLocalized(@"Cancel") : SGLocalized(@"OK") style:UIAlertActionStyleCancel handler:nil]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
@@ -232,19 +232,19 @@ static void tell(NSString *message, NSString *action, void (^then)(void)) {
             tell(SGSingMissing(), nil, nil);
             return;
         case SGSingStateNoModel:
-            tell([NSString stringWithFormat:@"Karaoke turns the vocals down with a voice model that runs on this iPhone. Download it now (%@)? It is best over Wi-Fi.%@",
-                  SGSingModelSizeText(), SGSingModelError() ? [NSString stringWithFormat:@"\n\nThe last try failed: %@", SGSingModelError()] : @""],
-                 @"Download", ^{
+            tell([NSString stringWithFormat:SGLocalized(@"Karaoke turns the vocals down with a voice model that runs on this iPhone. Download it now (%@)? It is best over Wi-Fi.%@"),
+                  SGSingModelSizeText(), SGSingModelError() ? [NSString stringWithFormat:SGLocalized(@"\n\nThe last try failed: %@"), SGSingModelError()] : @""],
+                 SGLocalized(@"Download"), ^{
                      SGSingDownloadModel();
                      // Downloaded for the mic, so the mic is on once it is in.
                      SGSetSingOn(YES);
                  });
             return;
         case SGSingStateDownloading:
-            tell(SGSingStatusDetail(), @"Stop the download", ^{ SGSingCancelModelDownload(); });
+            tell(SGSingStatusDetail(), SGLocalized(@"Stop the download"), ^{ SGSingCancelModelDownload(); });
             return;
         case SGSingStateFailed:
-            tell(SGSingStatusDetail(), @"Turn Karaoke off", ^{ SGSetSingOn(NO); });
+            tell(SGSingStatusDetail(), SGLocalized(@"Turn Karaoke off"), ^{ SGSetSingOn(NO); });
             return;
         default:
             SGSetSingOn(!SGSingOn());
@@ -267,7 +267,7 @@ static void tell(NSString *message, NSString *action, void (^then)(void)) {
         _slider.minimumValue = 0;
         _slider.maximumValue = 2;
         _slider.transform = CGAffineTransformMakeRotation(-M_PI_2);
-        _slider.accessibilityLabel = @"Vocals";
+        _slider.accessibilityLabel = SGLocalized(@"Vocals");
         [_slider addTarget:self action:@selector(slid) forControlEvents:UIControlEventValueChanged];
         [_slider addTarget:self action:@selector(holdPanel) forControlEvents:UIControlEventTouchDown];
         [_slider addTarget:self action:@selector(letPanelGo) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel];

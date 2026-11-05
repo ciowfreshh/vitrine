@@ -449,13 +449,13 @@ static void runAction(NSString *action) {
 // What a shortcut set the sleep timer to, for Siri to say.
 static NSString *sleepTimerText(void) {
     switch (SGSleepTimerCurrentMode()) {
-        case SGSleepTimerEndOfTrack: return @"Spotify will pause at the end of this track.";
-        case SGSleepTimerEndOfAlbum: return @"Spotify will pause at the end of this album or playlist.";
+        case SGSleepTimerEndOfTrack: return SGLocalized(@"Spotify will pause at the end of this track.");
+        case SGSleepTimerEndOfAlbum: return SGLocalized(@"Spotify will pause at the end of this album or playlist.");
         case SGSleepTimerAtTime: {
             NSInteger minutes = lround(SGSleepTimerEnd().timeIntervalSinceNow / 60);
-            return [NSString stringWithFormat:@"Spotify will pause in %ld minutes.", (long)minutes];
+            return [NSString stringWithFormat:SGLocalized(@"Spotify will pause in %ld minutes."), (long)minutes];
         }
-        default: return @"The sleep timer is off.";
+        default: return SGLocalized(@"The sleep timer is off.");
     }
 }
 
@@ -473,7 +473,7 @@ static void runShortcut(NSString *action, NSMutableDictionary *reply) API_AVAILA
             reply[@"failed"] = missing;
         } else {
             if (on != SGSingOn()) SGSetSingOn(on);
-            reply[@"said"] = on ? @"Karaoke is on." : @"Karaoke is off.";
+            reply[@"said"] = on ? SGLocalized(@"Karaoke is on.") : SGLocalized(@"Karaoke is off.");
         }
     } else if (!title.length) {
         SGLog(@"shortcut: %@ waits for the player", action);
@@ -483,9 +483,9 @@ static void runShortcut(NSString *action, NSMutableDictionary *reply) API_AVAILA
         // can reach after the player has a track: only what is surely no track fails, the rest waits.
         NSString *uri = SGURIString(SGPlayerState().track.URI);
         if (SGLikePlayingTrack()) {
-            reply[@"said"] = [NSString stringWithFormat:@"Added %@ to Liked Songs.", title];
+            reply[@"said"] = [NSString stringWithFormat:SGLocalized(@"Added %@ to Liked Songs."), title];
         } else if (uri.length && ![uri hasPrefix:@"spotify:track:"]) {
-            reply[@"failed"] = @"What's playing can't be added to Liked Songs.";
+            reply[@"failed"] = SGLocalized(@"What's playing can't be added to Liked Songs.");
         } else {
             SGLog(@"shortcut: like waits for the player state and the collection platform");
             return;

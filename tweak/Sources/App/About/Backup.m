@@ -28,7 +28,7 @@ static NSDictionary *storedDefaults(void) {
 static void showAlert(NSString *title, NSString *message, UIAlertAction *confirm) {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
     if (confirm) [alert addAction:confirm];
-    [alert addAction:[UIAlertAction actionWithTitle:confirm ? @"Cancel" : @"OK" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:confirm ? SGLocalized(@"Cancel") : SGLocalized(@"OK") style:UIAlertActionStyleCancel handler:nil]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
@@ -82,7 +82,7 @@ void SGShareDiagnostics(void) {
     // ponytail: the last 1500 lines only; a whole day's launch can hold tens of thousands.
     NSUInteger keep = MIN(lines.count, 1500);
     [text appendString:[[lines subarrayWithRange:NSMakeRange(lines.count - keep, keep)] componentsJoinedByString:@"\n"]];
-    if (!lines.count) [text appendFormat:@"(none: %@)", error.localizedDescription ?: @"the log is empty"];
+    if (!lines.count) [text appendFormat:@"(none: %@)", SGLocalizedError(error) ?: @"the log is empty"];
     NSURL *caches = [NSFileManager.defaultManager URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask].firstObject;
     NSString *config = [NSString stringWithContentsOfURL:[caches URLByAppendingPathComponent:@"Vitrine/live-config.txt"]
                                                 encoding:NSUTF8StringEncoding error:nil];
@@ -167,12 +167,12 @@ static void importSettings(NSDictionary *settings) {
     id file = data ? [NSJSONSerialization JSONObjectWithData:data options:0 error:nil] : nil;
     NSDictionary *settings = [file isKindOfClass:NSDictionary.class] ? file[@"settings"] : nil;
     if (![settings isKindOfClass:NSDictionary.class]) {
-        showAlert(@"Not a settings file", @"Pick a file made by Export settings.", nil);
+        showAlert(SGLocalized(@"Not a settings file"), SGLocalized(@"Pick a file made by Export settings."), nil);
         return;
     }
     NSString *mod = [file[@"mod"] isKindOfClass:NSString.class] ? file[@"mod"] : @"unknown";
-    NSString *message = [NSString stringWithFormat:@"Your settings are replaced by the file's, exported from version %@. Anything it does not have goes back to its default, and Spotify restarts.", mod];
-    showAlert(@"Import settings?", message, [UIAlertAction actionWithTitle:@"Import and restart" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+    NSString *message = [NSString stringWithFormat:SGLocalized(@"Your settings are replaced by the file's, exported from version %@. Anything it does not have goes back to its default, and Spotify restarts."), mod];
+    showAlert(SGLocalized(@"Import settings?"), message, [UIAlertAction actionWithTitle:SGLocalized(@"Import and restart") style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         importSettings(settings);
     }]);
 }

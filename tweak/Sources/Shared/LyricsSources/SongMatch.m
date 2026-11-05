@@ -78,7 +78,7 @@ static NSSet<NSString *> *leadNames(NSString *artist) {
 // Lil Nas X.
 static NSArray<NSString *> *namesJoinedIn(NSString *name) {
     NSMutableString *split = [name mutableCopy];
-    for (NSString *joiner in @[@"&", @"/", @";", @"+", @"•", @",", @" and ", @" with ", @" vs ", @" vs. "]) {
+    for (NSString *joiner in @[@"&", @"/", @";", @"+", @"•", @",", SGLocalized(@" and "), @" with ", @" vs ", @" vs. "]) {
         [split replaceOccurrencesOfString:joiner withString:@"\n" options:NSCaseInsensitiveSearch range:NSMakeRange(0, split.length)];
     }
     [split replaceOccurrencesOfString:@" x " withString:@"\n" options:0 range:NSMakeRange(0, split.length)];

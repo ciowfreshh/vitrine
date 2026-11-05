@@ -7,6 +7,7 @@
 #import "Settings/SGPageStyle.h"
 #import "LyricsTranslation.h"
 #import "BatchTranslation.h"
+#import "TranslationQueue.h"
 
 @interface SGEntityPage : NSObject
 + (NSString *)entityURI:(id)controller;
@@ -122,7 +123,7 @@ void SGBatchTranslationMarkSource(UIView *view) {
 }
 
 BOOL SGBatchTranslationIsRunning(void) {
-    return sg_translating;
+    return sg_translating || SGBatchQueueRunning();
 }
 
 static NSArray<NSString *> *textsOfLines(NSArray<SGKaraokeLine *> *lines) {
@@ -139,7 +140,7 @@ static NSArray<NSString *> *textsOfLines(NSArray<SGKaraokeLine *> *lines) {
 static void resolveTracks(NSString *uri, void (^completion)(NSArray<NSString *> *trackIDs, NSString *error)) {
     SGSpclientHeaders(^(NSDictionary<NSString *, NSString *> *headers) {
         if (!headers) {
-            completion(nil, @"Spotify is not ready");
+            completion(nil, SGLocalized(@"Spotify is not ready"));
             return;
         }
         NSMutableArray<NSString *> *collected = [NSMutableArray array];
@@ -156,7 +157,7 @@ static void resolveTracks(NSString *uri, void (^completion)(NSArray<NSString *> 
                 if (![json isKindOfClass:NSDictionary.class]) {
                     fetchPage = nil;
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        completion(nil, @"Could not load songs");
+                        completion(nil, SGLocalized(@"Could not load songs"));
                     });
                     return;
                 }
@@ -305,37 +306,38 @@ static void filterCandidateSongs(NSArray<NSString *> *trackIDs, NSString *target
 #pragma mark - Batch translation execution
 
 void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindow *window) {
+    if (engine == SGBatchTranslationEngineAI) { SGBatchQueueStart(uri, window); return; }
     window = normalAppWindow(window);
     if (sg_translating) {
-        [SGAlbumQueueNotice showIn:window title:@"Already Translating" detail:@"Wait for this batch" symbol:@"exclamationmark.circle" persistent:NO];
+        [SGAlbumQueueNotice showIn:window title:SGLocalized(@"Already Translating") detail:SGLocalized(@"Wait for this batch") symbol:@"exclamationmark.circle" persistent:NO];
         return;
     }
     sg_translating = YES;
     BOOL isAlbum = SGAlbumQueueIsAlbumURI(uri);
-    NSString *entityName = isAlbum ? @"Album" : @"Playlist";
+    NSString *entityName = isAlbum ? SGLocalized(@"Album") : SGLocalized(@"Playlist");
     NSString *targetLang = SGLyricsTranslationTarget();
 
-    [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"Translating %@", entityName] detail:@"Resolving songs…" symbol:@"translate" persistent:YES];
+    [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:SGLocalized(@"Translating %@"), entityName] detail:SGLocalized(@"Resolving songs…") symbol:@"translate" persistent:YES];
 
     resolveTracks(uri, ^(NSArray<NSString *> *trackIDs, NSString *resolveError) {
         if (resolveError || !trackIDs.count) {
             sg_translating = NO;
-            [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"Could Not Load %@", entityName] detail:resolveError ?: @"No songs found" symbol:@"exclamationmark.circle" persistent:NO];
+            [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:SGLocalized(@"Could Not Load %@"), entityName] detail:resolveError ?: SGLocalized(@"No songs found") symbol:@"exclamationmark.circle" persistent:NO];
             return;
         }
-        [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"Translating %@", entityName] detail:@"Checking lyrics…" symbol:@"translate" persistent:YES];
+        [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:SGLocalized(@"Translating %@"), entityName] detail:SGLocalized(@"Checking lyrics…") symbol:@"translate" persistent:YES];
         filterCandidateSongs(trackIDs, targetLang, ^(NSArray<SGBatchCandidateSong *> *candidates, NSUInteger savedCount, NSUInteger sameLangCount) {
             if (!candidates.count) {
                 sg_translating = NO;
                 if (savedCount > 0 && sameLangCount == 0) {
-                    NSString *detail = savedCount == 1 ? @"1 song saved" : [NSString stringWithFormat:@"%lu songs saved", (unsigned long)savedCount];
-                    [SGAlbumQueueNotice showIn:window title:@"Already Translated" detail:detail symbol:@"checkmark.circle" persistent:NO];
+                    NSString *detail = savedCount == 1 ? SGLocalized(@"1 song saved") : [NSString stringWithFormat:SGLocalized(@"%lu songs saved"), (unsigned long)savedCount];
+                    [SGAlbumQueueNotice showIn:window title:SGLocalized(@"Already Translated") detail:detail symbol:@"checkmark.circle" persistent:NO];
                 } else if (sameLangCount > 0 && savedCount == 0) {
-                    [SGAlbumQueueNotice showIn:window title:@"Already in Your Language" detail:nil symbol:@"checkmark.circle" persistent:NO];
+                    [SGAlbumQueueNotice showIn:window title:SGLocalized(@"Already in Your Language") detail:nil symbol:@"checkmark.circle" persistent:NO];
                 } else if (savedCount > 0) {
-                    [SGAlbumQueueNotice showIn:window title:@"Already Translated" detail:nil symbol:@"checkmark.circle" persistent:NO];
+                    [SGAlbumQueueNotice showIn:window title:SGLocalized(@"Already Translated") detail:nil symbol:@"checkmark.circle" persistent:NO];
                 } else {
-                    [SGAlbumQueueNotice showIn:window title:@"No Lyrics Found" detail:nil symbol:@"exclamationmark.circle" persistent:NO];
+                    [SGAlbumQueueNotice showIn:window title:SGLocalized(@"No Lyrics Found") detail:nil symbol:@"exclamationmark.circle" persistent:NO];
                 }
                 return;
             }
@@ -355,10 +357,11 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                 NSMutableSet<NSString *> *savedTrackIDs = [NSMutableSet set];
                 SGTranslationSource *source = SGAITranslatorSource();
                 NSString *providerName = SGAITranslatorName() ?: @"AI";
-                NSString *translatingTitle = [NSString stringWithFormat:@"Translating %@", entityName];
+                NSString *translatingTitle = [NSString stringWithFormat:SGLocalized(@"Translating %@"), entityName];
+                __block NSString *storageError = nil;
 
                 void (^saveSongTranslation)(SGBatchCandidateSong *, NSArray<NSString *> *) = ^(SGBatchCandidateSong *song, NSArray<NSString *> *trans) {
-                    if (!song || trans.count != song.lines.count || [savedTrackIDs containsObject:song.trackID]) return;
+                    if (storageError || !song || trans.count != song.lines.count || [savedTrackIDs containsObject:song.trackID]) return;
                     for (NSUInteger idx = 0; idx < song.lines.count; idx++) {
                         SGKaraokeLine *line = song.lines[idx];
                         NSString *t = trans[idx];
@@ -367,7 +370,10 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                             line.translationMade = YES;
                         }
                     }
-                    SGLyricsSaveTranslation(song.trackID, targetLang, song.lines, source);
+                    if (!SGLyricsSaveTranslation(song.trackID, targetLang, song.lines, source)) {
+                        storageError = SGLocalized(@"Could not write translations. Check available storage.");
+                        return;
+                    }
                     [savedTrackIDs addObject:song.trackID];
                     completed++;
                 };
@@ -377,8 +383,8 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                     if (chunkIndex >= chunks.count) {
                         processChunk = nil;
                         sg_translating = NO;
-                        NSString *detail = completed == 1 ? @"1 song saved" : [NSString stringWithFormat:@"%lu songs saved", (unsigned long)completed];
-                        [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"%@ Translated", entityName] detail:detail symbol:@"checkmark.circle" persistent:NO];
+                        NSString *detail = completed == 1 ? SGLocalized(@"1 song saved") : [NSString stringWithFormat:SGLocalized(@"%lu songs saved"), (unsigned long)completed];
+                        [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:SGLocalized(@"%@ Translated"), entityName] detail:detail symbol:@"checkmark.circle" persistent:NO];
                         [NSNotificationCenter.defaultCenter postNotificationName:SGLyricsTranslationsDidChangeNotification object:nil];
                         return;
                     }
@@ -391,23 +397,23 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                         lookup[song.trackID] = song;
                     }
                     NSString *askDetail = completed > 0
-                        ? [NSString stringWithFormat:@"%lu of %lu songs…", (unsigned long)completed, (unsigned long)total]
-                        : [NSString stringWithFormat:@"Asking %@…", providerName];
+                        ? [NSString stringWithFormat:SGLocalized(@"%lu of %lu songs…"), (unsigned long)completed, (unsigned long)total]
+                        : [NSString stringWithFormat:SGLocalized(@"Asking %@…"), providerName];
                     [SGAlbumQueueNotice showIn:window title:translatingTitle detail:askDetail symbol:@"sparkles" persistent:YES];
 
                     SGLyricsTranslateBatchWithAI(songsMap, targetLang, ^(NSString *phase) {
-                        if (!sg_translating) return;
+                        if (!sg_translating || storageError) return;
                         if ([phase isEqualToString:@"Thinking…"]) {
                             NSString *thinkDetail = completed > 0
-                                ? [NSString stringWithFormat:@"Thinking • %lu/%lu…", (unsigned long)completed, (unsigned long)total]
-                                : @"Thinking…";
+                                ? [NSString stringWithFormat:SGLocalized(@"Thinking • %lu/%lu…"), (unsigned long)completed, (unsigned long)total]
+                                : SGLocalized(@"Thinking…");
                             [SGAlbumQueueNotice showIn:window title:translatingTitle detail:thinkDetail symbol:@"sparkles" persistent:YES];
                         } else if ([phase isEqualToString:@"Writing"]) {
-                            NSString *writeDetail = [NSString stringWithFormat:@"%lu of %lu songs…", (unsigned long)MIN(completed + 1, total), (unsigned long)total];
+                            NSString *writeDetail = [NSString stringWithFormat:SGLocalized(@"%lu of %lu songs…"), (unsigned long)MIN(completed + 1, total), (unsigned long)total];
                             [SGAlbumQueueNotice showIn:window title:translatingTitle detail:writeDetail symbol:@"sparkles" persistent:YES];
                         }
                     }, ^(NSString *trackKey, NSArray<NSString *> *lines) {
-                        if (!sg_translating) return;
+                        if (!sg_translating || storageError) return;
                         SGBatchCandidateSong *song = lookup[trackKey];
                         if (!song) {
                             for (SGBatchCandidateSong *c in chunk) {
@@ -420,7 +426,8 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                         }
                         if (song && lines.count == song.lines.count && ![savedTrackIDs containsObject:song.trackID]) {
                             saveSongTranslation(song, lines);
-                            NSString *progressDetail = [NSString stringWithFormat:@"%lu of %lu songs…", (unsigned long)MIN(completed + 1, total), (unsigned long)total];
+                            if (storageError) return;
+                            NSString *progressDetail = [NSString stringWithFormat:SGLocalized(@"%lu of %lu songs…"), (unsigned long)MIN(completed + 1, total), (unsigned long)total];
                             [SGAlbumQueueNotice showIn:window title:translatingTitle detail:progressDetail symbol:@"sparkles" persistent:YES];
                         }
                     }, ^(NSDictionary<NSString *, NSArray<NSString *> *> *results, NSString *error) {
@@ -432,13 +439,14 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                                 }
                             }
                         }
+                        if (storageError) error = storageError;
                         if (error || !results.count) {
                             processChunk = nil;
                             sg_translating = NO;
                             NSString *title = completed > 0
-                                ? [NSString stringWithFormat:@"Translated %lu of %lu", (unsigned long)completed, (unsigned long)total]
-                                : @"Translation Failed";
-                            NSString *detail = error ?: @"Could not read reply";
+                                ? [NSString stringWithFormat:SGLocalized(@"Translated %lu of %lu"), (unsigned long)completed, (unsigned long)total]
+                                : SGLocalized(@"Translation Failed");
+                            NSString *detail = error ?: SGLocalized(@"Could not read reply");
                             [SGAlbumQueueNotice showIn:window title:title detail:detail symbol:@"exclamationmark.circle" persistent:NO];
                             if (completed > 0) {
                                 [NSNotificationCenter.defaultCenter postNotificationName:SGLyricsTranslationsDidChangeNotification object:nil];
@@ -460,14 +468,14 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                         translateNext = nil;
                         sg_translating = NO;
                         if (completed == total) {
-                            NSString *detail = completed == 1 ? @"1 song saved" : [NSString stringWithFormat:@"%lu songs saved", (unsigned long)completed];
-                            [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"%@ Translated", entityName] detail:detail symbol:@"checkmark.circle" persistent:NO];
+                            NSString *detail = completed == 1 ? SGLocalized(@"1 song saved") : [NSString stringWithFormat:SGLocalized(@"%lu songs saved"), (unsigned long)completed];
+                            [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:SGLocalized(@"%@ Translated"), entityName] detail:detail symbol:@"checkmark.circle" persistent:NO];
                         } else if (completed > 0) {
-                            NSString *title = [NSString stringWithFormat:@"Translated %lu of %lu", (unsigned long)completed, (unsigned long)total];
-                            NSString *detail = lastError ?: [NSString stringWithFormat:@"%lu songs saved", (unsigned long)completed];
+                            NSString *title = [NSString stringWithFormat:SGLocalized(@"Translated %lu of %lu"), (unsigned long)completed, (unsigned long)total];
+                            NSString *detail = lastError ?: [NSString stringWithFormat:SGLocalized(@"%lu songs saved"), (unsigned long)completed];
                             [SGAlbumQueueNotice showIn:window title:title detail:detail symbol:@"exclamationmark.circle" persistent:NO];
                         } else {
-                            [SGAlbumQueueNotice showIn:window title:@"Translation Failed" detail:lastError ?: @"Could not translate songs" symbol:@"exclamationmark.circle" persistent:NO];
+                            [SGAlbumQueueNotice showIn:window title:SGLocalized(@"Translation Failed") detail:lastError ?: SGLocalized(@"Could not translate songs") symbol:@"exclamationmark.circle" persistent:NO];
                         }
                         if (completed > 0) {
                             [NSNotificationCenter.defaultCenter postNotificationName:SGLyricsTranslationsDidChangeNotification object:nil];
@@ -475,7 +483,7 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                         return;
                     }
                     SGBatchCandidateSong *song = candidates[idx];
-                    [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"Translating %@", entityName] detail:[NSString stringWithFormat:@"%lu of %lu songs…", (unsigned long)(idx + 1), (unsigned long)total] symbol:symbol persistent:YES];
+                    [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:SGLocalized(@"Translating %@"), entityName] detail:[NSString stringWithFormat:SGLocalized(@"%lu of %lu songs…"), (unsigned long)(idx + 1), (unsigned long)total] symbol:symbol persistent:YES];
                     void (^onDone)(NSArray<NSString *> *, NSString *) = ^(NSArray<NSString *> *translations, NSString *err) {
                         if (!err && translations.count == song.lines.count) {
                             for (NSUInteger lIdx = 0; lIdx < song.lines.count; lIdx++) {
@@ -485,18 +493,22 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                                     song.lines[lIdx].translationMade = YES;
                                 }
                             }
-                            SGLyricsSaveTranslation(song.trackID, targetLang, song.lines, [SGTranslationSource by:by model:nil made:nil]);
+                            if (!SGLyricsSaveTranslation(song.trackID, targetLang, song.lines, [SGTranslationSource by:by model:nil made:nil])) {
+                                lastError = SGLocalized(@"Could not write translations. Check available storage.");
+                                translateNext(total);
+                                return;
+                            }
                             completed++;
                         } else if (err.length) {
                             lastError = err;
-                            if ([err hasPrefix:@"Download "] ||
-                                [err containsString:@"needs iOS 26"] ||
-                                [err containsString:@"does not work in this language"]) {
+                            if ([err hasPrefix:SGLocalized(@"Download ")] ||
+                                [err containsString:SGLocalized(@"needs iOS 26")] ||
+                                [err containsString:SGLocalized(@"does not work in this language")]) {
                                 translateNext = nil;
                                 sg_translating = NO;
                                 NSString *title = completed > 0
-                                    ? [NSString stringWithFormat:@"Translated %lu of %lu", (unsigned long)completed, (unsigned long)total]
-                                    : @"Translation Failed";
+                                    ? [NSString stringWithFormat:SGLocalized(@"Translated %lu of %lu"), (unsigned long)completed, (unsigned long)total]
+                                    : SGLocalized(@"Translation Failed");
                                 [SGAlbumQueueNotice showIn:window title:title detail:err symbol:@"exclamationmark.circle" persistent:NO];
                                 if (completed > 0) {
                                     [NSNotificationCenter.defaultCenter postNotificationName:SGLyricsTranslationsDidChangeNotification object:nil];
@@ -573,7 +585,7 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
     _uri = [uri copy];
     _menuController = menu;
     BOOL isAlbum = SGAlbumQueueIsAlbumURI(uri);
-    NSString *rowTitle = isAlbum ? @"Translate Album" : @"Translate Playlist";
+    NSString *rowTitle = isAlbum ? SGLocalized(@"Translate Album") : SGLocalized(@"Translate Playlist");
     _title.text = rowTitle;
     self.accessibilityLabel = rowTitle;
     self.accessibilityIdentifier = @"spotifyglass.batchTranslate";
@@ -590,24 +602,24 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
     UIWindow *strongWindow = window;
 
     if (onDevice) {
-        UIAction *action = [UIAction actionWithTitle:@"Translate on iPhone" image:[UIImage systemImageNamed:@"translate"] identifier:nil handler:^(UIAction *a) {
+        UIAction *action = [UIAction actionWithTitle:SGLocalized(@"Translate on iPhone") image:[UIImage systemImageNamed:@"translate"] identifier:nil handler:^(UIAction *a) {
             [weakMenu dismissViewControllerAnimated:YES completion:nil];
             SGBatchTranslateURI(uri, SGBatchTranslationEngineOnDevice, strongWindow);
         }];
-        action.subtitle = @"Apple's Translate, on this iPhone";
+        action.subtitle = SGLocalized(@"Apple's Translate, on this iPhone");
         [items addObject:action];
     }
     if (intelligence) {
-        UIAction *action = [UIAction actionWithTitle:@"Translate with Apple Intelligence" image:[UIImage systemImageNamed:@"apple.intelligence"] identifier:nil handler:^(UIAction *a) {
+        UIAction *action = [UIAction actionWithTitle:SGLocalized(@"Translate with Apple Intelligence") image:[UIImage systemImageNamed:@"apple.intelligence"] identifier:nil handler:^(UIAction *a) {
             [weakMenu dismissViewControllerAnimated:YES completion:nil];
             SGBatchTranslateURI(uri, SGBatchTranslationEngineAppleIntelligence, strongWindow);
         }];
-        action.subtitle = @"On this iPhone";
+        action.subtitle = SGLocalized(@"On this iPhone");
         [items addObject:action];
     }
     if (ai) {
-        NSString *title = [@"Translate with " stringByAppendingString:SGAITranslatorName()];
-        NSString *subtitle = [@"Sends the lyrics to " stringByAppendingString:SGAITranslatorRecipient()];
+        NSString *title = [SGLocalized(@"Translate with ") stringByAppendingString:SGAITranslatorName()];
+        NSString *subtitle = [SGLocalized(@"Sends the lyrics to ") stringByAppendingString:SGAITranslatorRecipient()];
         UIAction *action = [UIAction actionWithTitle:title image:[UIImage systemImageNamed:@"sparkles"] identifier:nil handler:^(UIAction *a) {
             [weakMenu dismissViewControllerAnimated:YES completion:nil];
             SGBatchTranslateURI(uri, SGBatchTranslationEngineAI, strongWindow);
@@ -616,9 +628,9 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
         [items addObject:action];
     }
     if (!onDevice && !intelligence && !ai) {
-        UIAction *action = [UIAction actionWithTitle:@"No Translator Configured" image:[UIImage systemImageNamed:@"exclamationmark.circle"] identifier:nil handler:^(UIAction *a) {}];
+        UIAction *action = [UIAction actionWithTitle:SGLocalized(@"No Translator Configured") image:[UIImage systemImageNamed:@"exclamationmark.circle"] identifier:nil handler:^(UIAction *a) {}];
         action.attributes = UIMenuElementAttributesDisabled;
-        action.subtitle = @"Add an API key in Mod Settings > Lyrics";
+        action.subtitle = SGLocalized(@"Add an API key in Mod Settings > Lyrics");
         [items addObject:action];
     }
     self.menu = [UIMenu menuWithTitle:rowTitle image:[UIImage systemImageNamed:@"translate"] identifier:nil options:0 children:items];

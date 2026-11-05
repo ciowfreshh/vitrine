@@ -34,8 +34,8 @@ static NSString *speedText(double speed) {
 }
 
 static NSString *semitonesText(float semitones) {
-    if (semitones == 0) return @"Original";
-    return [NSString stringWithFormat:@"%@%.0f %@", semitones > 0 ? @"+" : @"−", fabsf(semitones), fabsf(semitones) == 1 ? @"Semitone" : @"Semitones"];
+    if (semitones == 0) return SGLocalized(@"Original");
+    return [NSString stringWithFormat:@"%@%.0f %@", semitones > 0 ? @"+" : @"−", fabsf(semitones), fabsf(semitones) == 1 ? SGLocalized(@"Semitone") : SGLocalized(@"Semitones")];
 }
 
 // While pitch follows a speed that is not normal, the speed sets the pitch and the semitones are not played
@@ -49,10 +49,10 @@ static UIAction *soundMenu(void) {
     NSMutableArray<NSString *> *changed = [NSMutableArray array];
     if (SGPlayerSpeedAllowed() && fabs(SGPlayerSpeed() - 1) >= 0.01) [changed addObject:speedText(SGPlayerSpeed())];
     if (SGPlayerPitchAvailable() && !pitchFollowing() && SGPlayerPitch() != 0) [changed addObject:semitonesText(SGPlayerPitch())];
-    if (SGPlayerReverb() > 0) [changed addObject:[NSString stringWithFormat:@"Reverb %.0f%%", SGPlayerReverb()]];
-    UIAction *open = [UIAction actionWithTitle:@"Speed, Pitch & Reverb" image:symbol(@"slider.horizontal.3") identifier:nil
+    if (SGPlayerReverb() > 0) [changed addObject:[NSString stringWithFormat:SGLocalized(@"Reverb %.0f%%"), SGPlayerReverb()]];
+    UIAction *open = [UIAction actionWithTitle:SGLocalized(@"Speed, Pitch & Reverb") image:symbol(@"slider.horizontal.3") identifier:nil
                                        handler:^(UIAction *action) { SGPlayerShowSpeedPitchPanel(sg_moreButton); }];
-    open.subtitle = changed.count ? [changed componentsJoinedByString:@", "] : @"Normal";
+    open.subtitle = changed.count ? [changed componentsJoinedByString:@", "] : SGLocalized(@"Normal");
     return open;
 }
 
@@ -60,9 +60,9 @@ static NSString *sheetKind(void);
 
 static NSString *timingText(NSArray<SGKaraokeLine *> *lines) {
     switch (SGKaraokeLinesTiming(lines)) {
-        case SGKaraokeTimingWords: return @"Word by word";
-        case SGKaraokeTimingLine: return @"Line by line";
-        default: return @"Not synced";
+        case SGKaraokeTimingWords: return SGLocalized(@"Word by word");
+        case SGKaraokeTimingLine: return SGLocalized(@"Line by line");
+        default: return SGLocalized(@"Not synced");
     }
 }
 
@@ -96,7 +96,7 @@ static const CGFloat kSourcePanelWidth = 300, kSourcePanelMaxHeight = 440;
     [super viewDidLoad];
     self.tableView.backgroundColor = UIColor.clearColor;
     UILabel *title = [UILabel new];
-    title.text = @"Lyrics Source";
+    title.text = SGLocalized(@"Lyrics Source");
     title.font = [UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];
     title.textColor = UIColor.labelColor;
     title.accessibilityTraits = UIAccessibilityTraitHeader;
@@ -120,8 +120,8 @@ static const CGFloat kSourcePanelWidth = 300, kSourcePanelMaxHeight = 440;
     NSDictionary<NSString *, SGLyricsResult *> *offers = SGLyricsOffersSoFar(_track, &asking);
     NSString *current = SGLyricsChosenSource(_track);
     SGRSourceRow *automatic = [SGRSourceRow new];
-    automatic.title = @"Automatic";
-    automatic.subtitle = current ? @"As the order chooses" : SGLyricsCreditFor(_track);
+    automatic.title = SGLocalized(@"Automatic");
+    automatic.subtitle = current ? SGLocalized(@"As the order chooses") : SGLyricsCreditFor(_track);
     automatic.picked = !current;
     NSMutableArray<SGRSourceRow *> *rows = [NSMutableArray arrayWithObject:automatic];
     for (NSString *key in SGLyricsOrder()) {
@@ -131,14 +131,14 @@ static const CGFloat kSourcePanelWidth = 300, kSourcePanelMaxHeight = 440;
         SGRSourceRow *row = [SGRSourceRow new];
         row.key = key;
         row.title = SGLyricsProviderFor(key).name;
-        row.subtitle = offer ? timingText(offer.karaokeLines) : @"Asking…";
+        row.subtitle = offer ? timingText(offer.karaokeLines) : SGLocalized(@"Asking…");
         row.asking = !offer;
         row.picked = offer && [key isEqualToString:current];
         [rows addObject:row];
     }
     if (rows.count == 1) {
         SGRSourceRow *none = [SGRSourceRow new];
-        none.title = @"No Source Has Lyrics";
+        none.title = SGLocalized(@"No Source Has Lyrics");
         none.note = YES;
         [rows addObject:none];
     }
@@ -192,7 +192,7 @@ static const CGFloat kSourcePanelWidth = 300, kSourcePanelMaxHeight = 440;
 static UIAction *lyricsSourceItem(void) {
     NSString *track = SGKaraokePlayingTrack();
     if (!SGLyricsEnabled() || !track.length || [sheetKind() isEqualToString:@"episode"]) return nil;
-    UIAction *open = [UIAction actionWithTitle:@"Lyrics Source" image:symbol(@"quote.bubble") identifier:nil handler:^(UIAction *action) {
+    UIAction *open = [UIAction actionWithTitle:SGLocalized(@"Lyrics Source") image:symbol(@"quote.bubble") identifier:nil handler:^(UIAction *action) {
         SGRLyricsSourcePanel *panel = [SGRLyricsSourcePanel new];
         panel.track = track;
         panel.preferredContentSize = CGSizeMake(kSourcePanelWidth, 200);
@@ -207,9 +207,9 @@ static NSArray<UIMenuElement *> *playerItems(void) {
     if (SGPlayerMenuOffersAnimatedArtwork()) {
         // Buttons named for what they do, not checkmarks: the HIG's changeable label for a toggled item.
         NSArray<NSArray *> *backgrounds = @[
-            @[@(SGRPlayerBackgroundFluid), @"Show Fluid Artwork", @"drop"],
-            @[@(SGRPlayerBackgroundAnimated), @"Show Animated Artwork", @"play.rectangle.on.rectangle"],
-            @[@(SGRPlayerBackgroundVisualiser), @"Show Visualizer", @"waveform"],
+            @[@(SGRPlayerBackgroundFluid), SGLocalized(@"Show Fluid Artwork"), @"drop"],
+            @[@(SGRPlayerBackgroundAnimated), SGLocalized(@"Show Animated Artwork"), @"play.rectangle.on.rectangle"],
+            @[@(SGRPlayerBackgroundVisualiser), SGLocalized(@"Show Visualizer"), @"waveform"],
         ];
         SGRPlayerBackgroundKind current = SGRPlayerBackground();
         for (NSArray *background in backgrounds) {

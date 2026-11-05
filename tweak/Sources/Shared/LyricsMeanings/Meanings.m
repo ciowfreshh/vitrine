@@ -19,9 +19,9 @@ SGLyricsMeaningsLevel SGLyricsMeaningsShown(void) {
 }
 
 SGModRow *SGLyricsMeaningsRow(void) {
-    SGModRow *row = SGChoiceRow(@"Line meanings", nil, SGKeyLyricsMeanings,
-                                @[@"Off", @"From the artist", @"Artist and editors", @"Everyone"], SGLyricsMeaningsOff);
-    row.choiceFooter = @"Explanations from Genius. Tap the bubble after a line, or hold the line.";
+    SGModRow *row = SGChoiceRow(SGLocalized(@"Line meanings"), nil, SGKeyLyricsMeanings,
+                                @[SGLocalized(@"Off"), SGLocalized(@"From the artist"), SGLocalized(@"Artist and editors"), SGLocalized(@"Everyone")], SGLyricsMeaningsOff);
+    row.choiceFooter = SGLocalized(@"Explanations from Genius. Tap the bubble after a line, or hold the line.");
     return row;
 }
 

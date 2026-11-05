@@ -116,7 +116,7 @@ static NSString *takeCommitURL(NSString **line) {
 // heading release-please leads with, blank lines -- is dropped, the version being known already.
 NSArray<SGUpdateChange *> *SGUpdateChangesIn(NSString *body) {
     NSMutableArray<SGUpdateChange *> *changes = [NSMutableArray array];
-    NSString *kind = @"Changes";
+    NSString *kind = SGLocalized(@"Changes");
     SGUpdateChange *open = nil;
     for (NSString *raw in [body componentsSeparatedByCharactersInSet:NSCharacterSet.newlineCharacterSet]) {
         NSString *line = [raw stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
@@ -197,9 +197,9 @@ NSString *SGUpdateStatus(void) {
     if (sg_running) return @"checking…";
     if (sg_failure) return sg_failure;
     NSString *latest = SGUpdateVersion();
-    if (latest) return [latest stringByAppendingString:@" is out"];
-    if (SGUpdateChecked()) return @"up to date";
-    return @"not checked";
+    if (latest) return [latest stringByAppendingString:SGLocalized(@" is out")];
+    if (SGUpdateChecked()) return SGLocalized(@"up to date");
+    return SGLocalized(@"not checked");
 }
 
 #pragma mark - the check
@@ -272,7 +272,7 @@ void SGCheckForUpdate(BOOL force) {
                 // carrier NAT can be told to wait, and that is worth reading apart from a dead network.
                 sg_failure = status == 403 || status == 429 ? @"asked too often" : @"check failed";
                 SGLog(@"update check failed: HTTP %ld, %@", (long)status,
-                      error.localizedDescription ?: @"no release in the reply");
+                      SGLocalizedError(error) ?: @"no release in the reply");
             } else {
                 [store setObject:releases forKey:kReleases];
                 [store setDouble:NSDate.date.timeIntervalSince1970 forKey:kChecked];

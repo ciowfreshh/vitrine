@@ -1,3 +1,4 @@
+#import "Core/SGLocalization.h"
 #import <TargetConditionals.h>
 #if TARGET_OS_IPHONE
 #import <os/proc.h>
@@ -91,7 +92,7 @@ static unsigned long long memoryLeft(void) {
 
 static NSString *memoryText(void) {
     unsigned long long left = memoryLeft();
-    return left ? [NSString stringWithFormat:@"%.2f GB left to the process", left / 1e9] : @"memory left unknown";
+    return left ? [NSString stringWithFormat:SGLocalized(@"%.2f GB left to the process"), left / 1e9] : @"memory left unknown";
 }
 
 // Whether `room` is left for a copy beside what is already in memory or still loading.
@@ -133,8 +134,8 @@ static SGSingLoad *startLoad(NSURL *url, BOOL neural, double deadline, void (^do
         dispatch_async(dispatch_get_main_queue(), ^{
             sg_outstanding--;
             load.finished = YES;
-            NSString *outcome = !model ? [NSString stringWithFormat:@"did not load after %.1f s: %@", loaded, error.localizedDescription]
-                              : warm < 0 ? [NSString stringWithFormat:@"loaded in %.1f s, and its warm-up failed: %@", loaded, error.localizedDescription]
+            NSString *outcome = !model ? [NSString stringWithFormat:@"did not load after %.1f s: %@", loaded, SGLocalizedError(error)]
+                              : warm < 0 ? [NSString stringWithFormat:@"loaded in %.1f s, and its warm-up failed: %@", loaded, SGLocalizedError(error)]
                                          : [NSString stringWithFormat:@"loaded in %.1f s, and its warm-up window of silence took %.1f s", loaded, warm];
             SGLog(@"sing: load %u, the %@ copy, %@ (memory loaded: %@; warm: %@)%@", load.number, load.name, outcome, loadedMemory, warmMemory,
                   load.abandoned ? @"; it was abandoned before, so it is let go" : @"");
@@ -213,8 +214,8 @@ static void startCPU(void) {
     if (!roomFor(sg_outstanding ? copyRoom(sg_url) : firstRoom(sg_url))) {
         sg_state = SGSingLoaderFailed;
         sg_error = sg_outstanding
-            ? [NSString stringWithFormat:@"A load abandoned earlier still holds memory, and %@. Close Spotify and open it again to load the voice model.", memoryText()]
-            : [NSString stringWithFormat:@"iOS leaves Spotify too little memory for the voice model: %@, and it needs %.1f GB. Closing Spotify and opening it again can free some.", memoryText(), firstRoom(sg_url) / 1e9];
+            ? [NSString stringWithFormat:SGLocalized(@"A load abandoned earlier still holds memory, and %@. Close Spotify and open it again to load the voice model."), memoryText()]
+            : [NSString stringWithFormat:SGLocalized(@"iOS leaves Spotify too little memory for the voice model: %@, and it needs %.1f GB. Closing Spotify and opening it again can free some."), memoryText(), firstRoom(sg_url) / 1e9];
         SGLog(@"sing: no new load: %@", sg_error);
         changed();
         return;
@@ -228,15 +229,15 @@ static void startCPU(void) {
             sg_state = SGSingLoaderReady;
         } else {
             sg_state = SGSingLoaderFailed;
-            sg_error = model ? @"Karaoke could not set aside memory for the voice model."
-                             : [NSString stringWithFormat:@"The voice model did not load: %@", error.localizedDescription ?: @"Core ML gave no reason."];
+            sg_error = model ? SGLocalized(@"Karaoke could not set aside memory for the voice model.")
+                             : [NSString stringWithFormat:SGLocalized(@"The voice model did not load: %@"), SGLocalizedError(error) ?: SGLocalized(@"Core ML gave no reason.")];
         }
         changed();
         startFast();
     }, ^{
         sg_cpuLoad = nil;
         sg_state = SGSingLoaderFailed;
-        sg_error = [NSString stringWithFormat:@"The voice model did not load in %.0f s, so that load was given up.", SGSingLoaderCPUDeadline];
+        sg_error = [NSString stringWithFormat:SGLocalized(@"The voice model did not load in %.0f s, so that load was given up."), SGSingLoaderCPUDeadline];
         changed();
     });
     changed();
@@ -272,7 +273,7 @@ void SGSingLoaderWant(NSURL *url, BOOL neural) {
     sg_wanted = YES;
     sg_url = url;
     sg_neural = neural;
-    if (!neural) SGSingLoaderDropFast(@"Karaoke runs on the CPU alone now");
+    if (!neural) SGSingLoaderDropFast(SGLocalized(@"Karaoke runs on the CPU alone now"));
     if (sg_state == SGSingLoaderIdle) startCPU();
     else startFast();
 }

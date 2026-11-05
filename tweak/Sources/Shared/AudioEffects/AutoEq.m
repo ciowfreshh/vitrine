@@ -1,3 +1,4 @@
+#import "Core/SGLocalization.h"
 // AutoEq's headphone corrections, read straight from its public repository: github.com/jaakkopasanen/AutoEq,
 // MIT License, Copyright (c) 2018-2022 Jaakko Pasanen. Nothing of it ships in the mod; results/INDEX.md and
 // the chosen headphone's GraphicEQ file are downloaded when asked for.
@@ -77,7 +78,7 @@ static void fetchText(NSURL *url, void (^done)(NSString *text, NSString *error))
     [[NSURLSession.sharedSession dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
         NSInteger status = [response isKindOfClass:NSHTTPURLResponse.class] ? ((NSHTTPURLResponse *)response).statusCode : 0;
         NSString *text = status == 200 && data ? [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] : nil;
-        NSString *why = text ? nil : error ? error.localizedDescription : [NSString stringWithFormat:@"GitHub answered %ld", (long)status];
+        NSString *why = text ? nil : error ? SGLocalizedError(error) : [NSString stringWithFormat:SGLocalized(@"GitHub answered %ld"), (long)status];
         if (why) SGLog(@"autoeq: %@ failed (%@)", url.path, why);
         done(text, why);
     }] resume];
@@ -92,7 +93,7 @@ void SGAutoEqLoadIndex(BOOL refresh, void (^done)(NSArray<SGAutoEqHeadphone *> *
             NSArray<SGAutoEqHeadphone *> *headphones = text ? SGAutoEqParseIndex(text) : nil;
             dispatch_async(dispatch_get_main_queue(), ^{
                 // A failed refresh still says so over the saved list.
-                done(headphones.count ? headphones : nil, why ?: (headphones.count ? nil : @"The saved list could not be read"));
+                done(headphones.count ? headphones : nil, why ?: (headphones.count ? nil : SGLocalized(@"The saved list could not be read")));
             });
         });
     };
@@ -105,7 +106,7 @@ void SGAutoEqLoadIndex(BOOL refresh, void (^done)(NSArray<SGAutoEqHeadphone *> *
         // A page that answers but holds no headphones is not kept over a good copy.
         NSArray<SGAutoEqHeadphone *> *headphones = text ? SGAutoEqParseIndex(text) : nil;
         if (!headphones.count) {
-            fromCache(error ?: @"AutoEq's list has no headphones in it");
+            fromCache(error ?: SGLocalized(@"AutoEq's list has no headphones in it"));
             return;
         }
         [text writeToURL:cache atomically:YES encoding:NSUTF8StringEncoding error:nil];
@@ -194,7 +195,7 @@ void SGAutoEqOutputChanged(NSString *uid, NSString *name) {
             SGDSPSetString(SGKeyDSPGraphicEqNodes, nodes);
             SGDSPSetString(SGKeyDSPGraphicEqHeadphone, path);
             SGDSPSetSwitch(SGKeyDSPGraphicEq, YES);
-            SGLog(@"autoeq: %@ connected, its correction %@ on%@", sg_outputName, SGAutoEqNameOf(path), SGDSPSwitch(SGKeyDSP) ? @"" : @" (Audio effects are off)");
+            SGLog(@"autoeq: %@ connected, its correction %@ on%@", sg_outputName, SGAutoEqNameOf(path), SGDSPSwitch(SGKeyDSP) ? @"" : SGLocalized(@" (Audio effects are off)"));
         } else {
             takeOff();
             SGLog(@"autoeq: %@ connected, None remembered for it", sg_outputName);
@@ -254,13 +255,13 @@ NSArray<NSDictionary<NSString *, NSString *> *> *SGAutoEqRememberedOutputs(void)
 void SGAutoEqApply(SGAutoEqHeadphone *headphone, void (^done)(NSString *)) {
     NSURL *url = SGAutoEqGraphicEqURL(headphone.path);
     if (!url) {
-        done(@"Its address could not be made");
+        done(SGLocalized(@"Its address could not be made"));
         return;
     }
     fetchText(url, ^(NSString *text, NSString *error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (error) done(error);
-            else done(SGAutoEqApplyText(headphone.path, text) ? nil : @"The file is not a GraphicEQ line");
+            else done(SGAutoEqApplyText(headphone.path, text) ? nil : SGLocalized(@"The file is not a GraphicEQ line"));
         });
     });
 }

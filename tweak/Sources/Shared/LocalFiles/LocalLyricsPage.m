@@ -17,7 +17,7 @@ typedef NS_ENUM(NSInteger, SGLRCImportRow) {
 
 static void showAlert(UIViewController *owner, NSString *title, NSString *message) {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"OK") style:UIAlertActionStyleCancel handler:nil]];
     [owner presentViewController:alert animated:YES completion:nil];
 }
 
@@ -39,15 +39,15 @@ static NSString *playingLocalFile(void) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Imported LRC files";
+    self.title = SGLocalized(@"Imported LRC files");
     return self;
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    _footer = SGNote(@"Import for current track links the file to the local file playing, whatever its tags say. "
+    _footer = SGNote(SGLocalized(@"Import for current track links the file to the local file playing, whatever its tags say. "
                       "Import LRC… keeps a file for any track whose title and artist match its [ti:] and [ar:] tags, "
-                      "or its name as \"Artist - Title\". Swipe left on a file to delete it.");
+                      "or its name as \"Artist - Title\". Swipe left on a file to delete it."));
     self.tableView.tableFooterView = _footer;
 }
 
@@ -76,7 +76,7 @@ static NSString *playingLocalFile(void) {
 }
 
 - (UIView *)tableView:(UITableView *)table viewForHeaderInSection:(NSInteger)section {
-    return section == 0 ? SGSectionHeader(table, @"Files") : nil;
+    return section == 0 ? SGSectionHeader(table, SGLocalized(@"Files")) : nil;
 }
 
 - (CGFloat)tableView:(UITableView *)table heightForHeaderInSection:(NSInteger)section {
@@ -95,11 +95,11 @@ static NSString *playingLocalFile(void) {
     if (path.section == 1) {
         UITableViewCell *cell = SGDequeueCell(table, @"import");
         if (path.row == SGLRCImportByName) {
-            SGFillCell(cell, @"Import LRC…", @"Matched by title and artist", nil, @"square.and.arrow.down");
+            SGFillCell(cell, SGLocalized(@"Import LRC…"), SGLocalized(@"Matched by title and artist"), nil, @"square.and.arrow.down");
         } else {
             NSString *uri = playingLocalFile();
-            NSString *title = SGLocalFileInfo(uri)[@"title"] ?: @"The local file playing";
-            SGFillCell(cell, @"Import for current track…", uri ? title : @"Start playing a local track first",
+            NSString *title = SGLocalFileInfo(uri)[@"title"] ?: SGLocalized(@"The local file playing");
+            SGFillCell(cell, SGLocalized(@"Import for current track…"), uri ? title : SGLocalized(@"Start playing a local track first"),
                        uri ? nil : SGGrey(), @"music.note");
         }
         BOOL enabled = path.row == SGLRCImportByName || playingLocalFile();
@@ -109,7 +109,7 @@ static NSString *playingLocalFile(void) {
     }
     UITableViewCell *cell = SGDequeueCell(table, @"file");
     if (!_files.count) {
-        SGFillCell(cell, @"No imported files", nil, SGGrey(), nil);
+        SGFillCell(cell, SGLocalized(@"No imported files"), nil, SGGrey(), nil);
         return cell;
     }
     SGFillCell(cell, _files[(NSUInteger)path.row], nil, nil, nil);
@@ -134,11 +134,11 @@ static NSString *playingLocalFile(void) {
 - (UISwipeActionsConfiguration *)tableView:(UITableView *)table trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)path {
     if (path.section != 0 || !_files.count) return nil;
     NSString *name = _files[(NSUInteger)path.row];
-    UIContextualAction *delete = [UIContextualAction contextualActionWithStyle:UIContextualActionStyleDestructive title:@"Delete"
+    UIContextualAction *delete = [UIContextualAction contextualActionWithStyle:UIContextualActionStyleDestructive title:SGLocalized(@"Delete")
         handler:^(UIContextualAction *action, UIView *view, void (^done)(BOOL)) {
             BOOL deleted = SGDeleteImportedLRC(name);
             if (deleted) [self reloadFiles];
-            else showAlert(self, @"Could not delete the file", nil);
+            else showAlert(self, SGLocalized(@"Could not delete the file"), nil);
             done(deleted);
         }];
     delete.image = [UIImage systemImageNamed:@"trash"];
@@ -154,20 +154,20 @@ static NSString *playingLocalFile(void) {
     NSURL *url = urls.firstObject;
     if (!url) return;
     if (![url.pathExtension.lowercaseString isEqualToString:@"lrc"]) {
-        showAlert(self, @"Not an LRC file", @"Pick a file whose name ends in .lrc.");
+        showAlert(self, SGLocalized(@"Not an LRC file"), SGLocalized(@"Pick a file whose name ends in .lrc."));
         return;
     }
     NSError *error = nil;
     NSString *name = SGImportLRC(url, _linkTo, &error);
     if (!name) {
-        showAlert(self, @"Could not import the file", error.localizedDescription);
+        showAlert(self, SGLocalized(@"Could not import the file"), SGLocalizedError(error));
         return;
     }
     [self reloadFiles];
     if (_linkTo) {
         NSString *title = SGLocalFileInfo(_linkTo)[@"title"];
-        showAlert(self, @"Lyrics linked", [NSString stringWithFormat:@"%@ now gives the lyrics for %@.", name,
-                                                                     title ? [NSString stringWithFormat:@"\"%@\"", title] : @"this local file"]);
+        showAlert(self, SGLocalized(@"Lyrics linked"), [NSString stringWithFormat:SGLocalized(@"%@ now gives the lyrics for %@."), name,
+                                                                     title ? [NSString stringWithFormat:@"\"%@\"", title] : SGLocalized(@"this local file")]);
     }
 }
 

@@ -116,13 +116,13 @@ static UIButton *controlButton(NSString *symbol, CGFloat size, NSString *label, 
     [self.view addSubview:_title];
     [self.view addSubview:_artist];
     // Where the Music app keeps a song's ⋯: the way back to the player, for a phone that is not turned back.
-    _close = controlButton(@"arrow.down.right.and.arrow.up.left", 17, @"Exit full screen", @selector(turnBack), self);
+    _close = controlButton(@"arrow.down.right.and.arrow.up.left", 17, SGLocalized(@"Exit full screen"), @selector(turnBack), self);
     [self.view addSubview:_close];
 
-    _play = controlButton(@"pause.fill", 30, @"Pause", @selector(togglePlay), self);
+    _play = controlButton(@"pause.fill", 30, SGLocalized(@"Pause"), @selector(togglePlay), self);
     _controls = [[UIStackView alloc] initWithArrangedSubviews:@[
-        controlButton(@"backward.fill", 24, @"Previous track", @selector(previous), self), _play,
-        controlButton(@"forward.fill", 24, @"Next track", @selector(next), self),
+        controlButton(@"backward.fill", 24, SGLocalized(@"Previous track"), @selector(previous), self), _play,
+        controlButton(@"forward.fill", 24, SGLocalized(@"Next track"), @selector(next), self),
     ]];
     _controls.distribution = UIStackViewDistributionEqualSpacing;
     _controls.alignment = UIStackViewAlignmentCenter;
@@ -257,7 +257,7 @@ static UIButton *controlButton(NSString *symbol, CGFloat size, NSString *label, 
     _artist.text = state.track.artistName;
     [_play setImage:[UIImage systemImageNamed:state.isPaused ? @"play.fill" : @"pause.fill" withConfiguration:
         [UIImageSymbolConfiguration configurationWithPointSize:30 weight:UIImageSymbolWeightBold]] forState:UIControlStateNormal];
-    _play.accessibilityLabel = state.isPaused ? @"Play" : @"Pause";
+    _play.accessibilityLabel = state.isPaused ? SGLocalized(@"Play") : SGLocalized(@"Pause");
     _field.motionHeld = state.isPaused;
     // A pause brings the controls back and keeps them; playing again, from here or anywhere, starts the
     // clock. The tap on the play button cannot: the state saying so arrives a beat after it.
@@ -378,7 +378,7 @@ static void requestOrientations(UIWindowScene *scene, UIInterfaceOrientationMask
     if (@available(iOS 16.0, *)) {
         UIWindowSceneGeometryPreferencesIOS *preferences = [[UIWindowSceneGeometryPreferencesIOS alloc] initWithInterfaceOrientations:mask];
         [scene requestGeometryUpdateWithPreferences:preferences errorHandler:^(NSError *error) {
-            SGLog(@"redesign player: the scene did not turn: %@", error.localizedDescription);
+            SGLog(@"redesign player: the scene did not turn: %@", SGLocalizedError(error));
             dispatch_async(dispatch_get_main_queue(), ^{ reveal(window); });
         }];
     }

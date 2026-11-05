@@ -19,7 +19,7 @@ static NSString *bandName(double hz) {
 }
 
 static NSString *spokenBand(double hz) {
-    return hz < 1000 ? [NSString stringWithFormat:@"%g hertz", hz] : [NSString stringWithFormat:@"%g kilohertz", hz / 1000];
+    return hz < 1000 ? [NSString stringWithFormat:SGLocalized(@"%g hertz"), hz] : [NSString stringWithFormat:SGLocalized(@"%g kilohertz"), hz / 1000];
 }
 
 // A real minus, and no sign on zero.
@@ -151,7 +151,7 @@ static NSString *signedNumber(double value, int decimals) {
         element.band = i;
         element.accessibilityLabel = spokenBand(_bands[i]);
         element.accessibilityTraits = UIAccessibilityTraitAdjustable;
-        element.accessibilityHint = @"Double tap and hold, then drag up or down, or swipe up or down to adjust.";
+        element.accessibilityHint = SGLocalized(@"Double tap and hold, then drag up or down, or swipe up or down to adjust.");
         [_elements addObject:element];
     }
 
@@ -167,21 +167,21 @@ static NSString *signedNumber(double value, int decimals) {
     _bubble.isAccessibilityElement = NO;
     [self addSubview:_bubble];
 
-    _reset = [self barButton:@"Reset" color:SGGrey()];
+    _reset = [self barButton:SGLocalized(@"Reset") color:SGGrey()];
     [_reset addTarget:self action:@selector(resetTapped) forControlEvents:UIControlEventTouchUpInside];
-    _reset.accessibilityHint = _equalizer ? @"Every band back to zero." : @"Every point back to zero.";
+    _reset.accessibilityHint = _equalizer ? SGLocalized(@"Every band back to zero.") : SGLocalized(@"Every point back to zero.");
     if (_equalizer) {
-        _presets = [self barButton:@"Custom" color:UIColor.whiteColor];
+        _presets = [self barButton:SGLocalized(@"Custom") color:UIColor.whiteColor];
         UIButtonConfiguration *config = _presets.configuration;
         config.image = [UIImage systemImageNamed:@"chevron.up.chevron.down" withConfiguration:[UIImageSymbolConfiguration configurationWithPointSize:10 weight:UIImageSymbolWeightSemibold]];
         config.imagePlacement = NSDirectionalRectEdgeTrailing;
         config.imagePadding = 5;
         _presets.configuration = config;
         _presets.showsMenuAsPrimaryAction = YES;
-        _presets.accessibilityLabel = @"Preset";
+        _presets.accessibilityLabel = SGLocalized(@"Preset");
     } else {
         _name = [UILabel new];
-        _name.text = @"Amount";
+        _name.text = SGLocalized(@"Amount");
         _name.textColor = UIColor.whiteColor;
         _name.accessibilityTraits = UIAccessibilityTraitHeader;
         [self addSubview:_name];
@@ -404,7 +404,7 @@ static NSString *signedNumber(double value, int decimals) {
     NSArray<NSString *> *names = SGDSPEqualizerPresetNames();
     NSInteger match = [self matchingPreset];
     UIButtonConfiguration *config = _presets.configuration;
-    config.title = match >= 0 ? names[(NSUInteger)match] : @"Custom";
+    config.title = match >= 0 ? names[(NSUInteger)match] : SGLocalized(@"Custom");
     _presets.configuration = config;
     _presets.accessibilityValue = config.title;
     NSMutableArray<UIAction *> *actions = [NSMutableArray array];
@@ -416,7 +416,7 @@ static NSString *signedNumber(double value, int decimals) {
         action.state = (NSInteger)i == match ? UIMenuElementStateOn : UIMenuElementStateOff;
         [actions addObject:action];
     }];
-    _presets.menu = [UIMenu menuWithTitle:@"Presets" children:actions];
+    _presets.menu = [UIMenu menuWithTitle:SGLocalized(@"Presets") children:actions];
     [self setNeedsLayout];
 }
 
@@ -455,7 +455,7 @@ static NSString *signedNumber(double value, int decimals) {
 - (NSString *)spokenGainOf:(NSInteger)band {
     double gain = _gains[(NSUInteger)band].doubleValue;
     NSString *number = [NSString stringWithFormat:@"%.*f", _decimals, gain];
-    return _equalizer ? [number stringByAppendingString:@" decibels"] : number;
+    return _equalizer ? [number stringByAppendingString:SGLocalized(@" decibels")] : number;
 }
 
 // The band whose handle is under `point`: the nearest by frequency, if the finger is close enough to its

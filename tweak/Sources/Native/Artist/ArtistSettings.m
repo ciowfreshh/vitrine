@@ -4,39 +4,39 @@
 
 UIViewController *SGArtistSettingsPage(void) {
     NSArray<SGModSection *> *sections = @[
-        SGSection(@"Photo", @[
-            SGOptionRow(@"Fade into a blur", nil, SGKeyArtistPhotoFade),
+        SGSection(SGLocalized(@"Photo"), @[
+            SGOptionRow(SGLocalized(@"Fade into a blur"), nil, SGKeyArtistPhotoFade),
         ]),
-        SGSection(@"Hide in the header", @[
-            SGHideRow(@"Explore (video deck)", nil, SGHideArtistExplore),
-            SGHideRow(@"Follow", nil, SGHideArtistFollow),
-            SGHideRow(@"More options", nil, SGHideArtistMore),
-            SGHideRow(@"Shuffle", nil, SGHideArtistShuffle),
-            SGHideRow(@"Verified badge", nil, SGHideArtistVerified),
-            SGHideRow(@"Monthly listeners", nil, SGHideArtistListeners),
+        SGSection(SGLocalized(@"Hide in the header"), @[
+            SGHideRow(SGLocalized(@"Explore (video deck)"), nil, SGHideArtistExplore),
+            SGHideRow(SGLocalized(@"Follow"), nil, SGHideArtistFollow),
+            SGHideRow(SGLocalized(@"More options"), nil, SGHideArtistMore),
+            SGHideRow(SGLocalized(@"Shuffle"), nil, SGHideArtistShuffle),
+            SGHideRow(SGLocalized(@"Verified badge"), nil, SGHideArtistVerified),
+            SGHideRow(SGLocalized(@"Monthly listeners"), nil, SGHideArtistListeners),
         ]),
-        SGSection(@"Tabs", @[
-            SGHideRow(@"Hide the tab bar", nil, SGHideArtistTabBar),
+        SGSection(SGLocalized(@"Tabs"), @[
+            SGHideRow(SGLocalized(@"Hide the tab bar"), nil, SGHideArtistTabBar),
         ]),
-        SGNotedSection(@"Hide on the page", @[
-            SGHideRow(@"Songs you liked", nil, SGHideArtistLikedSongs),
-            SGHideRow(@"Popular", nil, SGHideArtistPopular),
-            SGHideRow(@"Artist pick", nil, SGHideArtistPick),
-            SGHideRow(@"Popular releases", nil, SGHideArtistReleases),
-            SGHideRow(@"Featuring", nil, SGHideArtistFeaturing),
-            SGHideRow(@"Music videos", nil, SGHideArtistVideos),
-            SGHideRow(@"About", nil, SGHideArtistAbout),
-            SGHideRow(@"Artist playlists", nil, SGHideArtistPlaylists),
-            SGHideRow(@"Fans also like", nil, SGHideArtistFansAlsoLike),
-            SGHideRow(@"Appears on", nil, SGHideArtistAppearsOn),
-            SGHideRow(@"Discovered on", nil, SGHideArtistDiscoveredOn),
-        ], @"Works only with Spotify in English."),
-        SGSection(@"Spotify's own", @[
-            SGFlagRow(@"Share button in the header", @"ios-creator-impl.share_in_action_row_enabled_artist"),
-            SGFlagRow(@"More options in the navigation bar", @"ios-creator-impl.context_menu_in_navigation_bar_enabled_artist"),
-            SGFlagRow(@"Top collaborators", @"ios-creator-impl.is_top_collaborators_enabled"),
-            SGFlagRow(@"Artist facts", @"ios-creator-impl.is_artist_facts_enabled"),
+        SGNotedSection(SGLocalized(@"Hide on the page"), @[
+            SGHideRow(SGLocalized(@"Songs you liked"), nil, SGHideArtistLikedSongs),
+            SGHideRow(SGLocalized(@"Popular"), nil, SGHideArtistPopular),
+            SGHideRow(SGLocalized(@"Artist pick"), nil, SGHideArtistPick),
+            SGHideRow(SGLocalized(@"Popular releases"), nil, SGHideArtistReleases),
+            SGHideRow(SGLocalized(@"Featuring"), nil, SGHideArtistFeaturing),
+            SGHideRow(SGLocalized(@"Music videos"), nil, SGHideArtistVideos),
+            SGHideRow(SGLocalized(@"About"), nil, SGHideArtistAbout),
+            SGHideRow(SGLocalized(@"Artist playlists"), nil, SGHideArtistPlaylists),
+            SGHideRow(SGLocalized(@"Fans also like"), nil, SGHideArtistFansAlsoLike),
+            SGHideRow(SGLocalized(@"Appears on"), nil, SGHideArtistAppearsOn),
+            SGHideRow(SGLocalized(@"Discovered on"), nil, SGHideArtistDiscoveredOn),
+        ], SGLocalized(@"Works only with Spotify in English.")),
+        SGSection(SGLocalized(@"Spotify's own"), @[
+            SGFlagRow(SGLocalized(@"Share button in the header"), @"ios-creator-impl.share_in_action_row_enabled_artist"),
+            SGFlagRow(SGLocalized(@"More options in the navigation bar"), @"ios-creator-impl.context_menu_in_navigation_bar_enabled_artist"),
+            SGFlagRow(SGLocalized(@"Top collaborators"), @"ios-creator-impl.is_top_collaborators_enabled"),
+            SGFlagRow(SGLocalized(@"Artist facts"), @"ios-creator-impl.is_artist_facts_enabled"),
         ]),
     ];
-    return [[SGModPage alloc] initWithTitle:@"Artist" intro:nil sections:sections footer:nil];
+    return [[SGModPage alloc] initWithTitle:SGLocalized(@"Artist") intro:nil sections:sections footer:nil];
 }

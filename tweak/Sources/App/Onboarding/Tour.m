@@ -372,7 +372,7 @@ static BOOL adFree(void) {
     UIButtonConfiguration *config = [UIButtonConfiguration plainButtonConfiguration];
     config.contentInsets = NSDirectionalEdgeInsetsMake(4, 32, 4, 0);
     config.baseForegroundColor = SGGreen();
-    config.attributedTitle = [[NSAttributedString alloc] initWithString:@"Report a bug" attributes:@{NSFontAttributeName: [UIFont systemFontOfSize:13 weight:UIFontWeightSemibold]}];
+    config.attributedTitle = [[NSAttributedString alloc] initWithString:SGLocalized(@"Report a bug") attributes:@{NSFontAttributeName: [UIFont systemFontOfSize:13 weight:UIFontWeightSemibold]}];
     _report = [UIButton buttonWithConfiguration:config primaryAction:[UIAction actionWithHandler:^(UIAction *action) {
         SGOpenURL([SGRepoURL stringByAppendingString:@"/issues"]);
     }]];
@@ -398,7 +398,7 @@ static BOOL adFree(void) {
     } else {
         _noteIcon.image = [UIImage systemImageNamed:@"info.circle.fill"];
         _noteIcon.tintColor = SGGrey();
-        _noteText.text = @"Apple Music style lyrics, the redesigned player and the glass tab bar come with the redesign only.";
+        _noteText.text = SGLocalized(@"Apple Music style lyrics, the redesigned player and the glass tab bar come with the redesign only.");
     }
     _report.hidden = !untested || !SGRepoURL;
     _note.hidden = _redesigned.selected && !untested;
@@ -406,26 +406,26 @@ static BOOL adFree(void) {
     [_column setCustomSpacing:_note.hidden ? 32 : 12 afterView:_legacy];
     // The tips of the picked look: Split Tabs is the redesign's bar's, and the lyrics preview the redesign's page's.
     _splitTip.hidden = !_redesigned.selected;
-    _lyricsTip.text = [(_redesigned.selected ? @"A live preview of the look, the sources in order, and lyrics even where Spotify has none."
-                                             : @"The sources in order, and lyrics even where Spotify has none.")
-                       stringByAppendingString:@"\nMod Settings > Lyrics"];
+    _lyricsTip.text = [(_redesigned.selected ? SGLocalized(@"A live preview of the look, the sources in order, and lyrics even where Spotify has none.")
+                                             : SGLocalized(@"The sources in order, and lyrics even where Spotify has none."))
+                       stringByAppendingString:SGLocalized(@"\nMod Settings > Lyrics")];
 }
 
 // What people miss in Mod Settings, as pointers only: the tour has no way into a page but holding Home.
 - (UIView *)tipsView {
-    UIStackView *split = cardRow(@"rectangle.split.2x1", @"Split Tabs",
-                                 @"Any tab, Queue for one, on a bar of its own at the trailing end.\nMod Settings > Tab bar > Split Tabs", nil);
+    UIStackView *split = cardRow(@"rectangle.split.2x1", SGLocalized(@"Split Tabs"),
+                                 SGLocalized(@"Any tab, Queue for one, on a bar of its own at the trailing end.\nMod Settings > Tab bar > Split Tabs"), nil);
     _splitTip = split;
-    UIStackView *lyrics = cardRow(@"quote.bubble", @"Lyrics", @"", nil);
+    UIStackView *lyrics = cardRow(@"quote.bubble", SGLocalized(@"Lyrics"), @"", nil);
     // The row's text stack is its last arranged view, the gray line that stack's; updateNote writes the look's.
     _lyricsTip = (UILabel *)((UIStackView *)lyrics.arrangedSubviews.lastObject).arrangedSubviews.lastObject;
     BOOL liveActivity = NO;
     if (@available(iOS 17.0, *)) liveActivity = YES;
-    UIStackView *airPods = cardRow(@"airpods.pro", liveActivity ? @"AirPods gestures, Live Activity" : @"AirPods gestures",
-                                   liveActivity ? @"Nod twice or shake your head to control the music, with a chime; and the track on the "
-                                                  @"lock screen. Either look.\nMod Settings > AirPods gestures, Live Activity"
-                                                : @"Nod twice or shake your head to control the music, with a chime. Either look."
-                                                  @"\nMod Settings > AirPods gestures", nil);
+    UIStackView *airPods = cardRow(@"airpods.pro", liveActivity ? SGLocalized(@"AirPods gestures, Live Activity") : SGLocalized(@"AirPods gestures"),
+                                   liveActivity ? SGLocalized(@"Nod twice or shake your head to control the music, with a chime; and the track on the "
+                                                  @"lock screen. Either look.\nMod Settings > AirPods gestures, Live Activity")
+                                                : SGLocalized(@"Nod twice or shake your head to control the music, with a chime. Either look."
+                                                  @"\nMod Settings > AirPods gestures"), nil);
     return tipsCard(@[split, lyrics, airPods]);
 }
 
@@ -441,15 +441,15 @@ static BOOL adFree(void) {
 
     BOOL glass = SGRedesignAvailable();
     UILabel *heading = [UILabel new];
-    heading.text = @"Pick your look.";
+    heading.text = SGLocalized(@"Pick your look.");
     heading.font = [UIFont systemFontOfSize:30 weight:UIFontWeightBold];
     heading.textColor = UIColor.whiteColor;
     heading.numberOfLines = 0;
 
-    NSString *redesign = glass ? @"Looks like Apple Music. Better lyrics, Live Activity."
-                               : [NSString stringWithFormat:@"Looks like Apple Music. Untested on iOS %@.", UIDevice.currentDevice.systemVersion];
-    _redesigned = [[SGLookCard alloc] initWithSymbol:@"sparkles" title:@"Redesigned" subtitle:redesign];
-    _legacy = [[SGLookCard alloc] initWithSymbol:@"slider.horizontal.3" title:@"Legacy" subtitle:@"More options, still looks like Spotify."];
+    NSString *redesign = glass ? SGLocalized(@"Looks like Apple Music. Better lyrics, Live Activity.")
+                               : [NSString stringWithFormat:SGLocalized(@"Looks like Apple Music. Untested on iOS %@."), UIDevice.currentDevice.systemVersion];
+    _redesigned = [[SGLookCard alloc] initWithSymbol:@"sparkles" title:SGLocalized(@"Redesigned") subtitle:redesign];
+    _legacy = [[SGLookCard alloc] initWithSymbol:@"slider.horizontal.3" title:SGLocalized(@"Legacy") subtitle:SGLocalized(@"More options, still looks like Spotify.")];
     for (SGLookCard *card in @[_redesigned, _legacy]) [card addTarget:self action:@selector(picked:) forControlEvents:UIControlEventTouchUpInside];
     // The first launch offers the redesign where it is at home; below iOS 26 it waits to be asked for.
     // The tour again from the Mod page shows the stored look.
@@ -463,26 +463,26 @@ static BOOL adFree(void) {
     _ads = [UISwitch new];
     _ads.onTintColor = SGGreen();
     _ads.on = adFree();
-    _adsCard = [[SGLookCard alloc] initWithSymbol:@"speaker.slash" title:@"No ads"
-                                         subtitle:@"No ads, no Premium upsells, and Premium spoofed." accessory:_ads];
+    _adsCard = [[SGLookCard alloc] initWithSymbol:@"speaker.slash" title:SGLocalized(@"No ads")
+                                         subtitle:SGLocalized(@"No ads, no Premium upsells, and Premium spoofed.") accessory:_ads];
     [_adsCard addTarget:self action:@selector(toggleAds) forControlEvents:UIControlEventTouchUpInside];
     _adsCard.isAccessibilityElement = YES;
-    _adsCard.accessibilityLabel = @"No ads";
-    _adsCard.accessibilityHint = @"No ads, no Premium upsells, and Premium spoofed.";
-    _adsCard.accessibilityValue = _ads.on ? @"On" : @"Off";
+    _adsCard.accessibilityLabel = SGLocalized(@"No ads");
+    _adsCard.accessibilityHint = SGLocalized(@"No ads, no Premium upsells, and Premium spoofed.");
+    _adsCard.accessibilityValue = _ads.on ? SGLocalized(@"On") : SGLocalized(@"Off");
     if (@available(iOS 17.0, *)) _adsCard.accessibilityTraits = UIAccessibilityTraitToggleButton;
     else _adsCard.accessibilityTraits = UIAccessibilityTraitButton;
     UILabel *adsText = [UILabel new];
-    adsText.text = @"Three switches of Premium, ads & privacy, applied at the restart; off leaves each as it is. Spoof Premium is "
+    adsText.text = SGLocalized(@"Three switches of Premium, ads & privacy, applied at the restart; off leaves each as it is. Spoof Premium is "
                    @"untested and can end in a forced logout; a Premium account gains nothing from it. Offline, audio quality and "
-                   @"sessions stay the server's.";
+                   @"sessions stay the server's.");
     UIStackView *adsNote = noteLine(SGSymbolView(@"info.circle.fill", 15, UIImageSymbolWeightSemibold, 22), adsText);
     adsNote.arrangedSubviews.firstObject.tintColor = SGGrey();
     adsNote.layoutMargins = UIEdgeInsetsMake(4, 4, 0, 4);
     adsNote.layoutMarginsRelativeArrangement = YES;
 
     UILabel *tipsHeading = [UILabel new];
-    tipsHeading.text = @"Easy to miss";
+    tipsHeading.text = SGLocalized(@"Easy to miss");
     tipsHeading.font = [UIFont systemFontOfSize:17 weight:UIFontWeightSemibold];
     tipsHeading.textColor = UIColor.whiteColor;
     UIView *tips = [self tipsView];
@@ -505,10 +505,10 @@ static BOOL adFree(void) {
     [scroll addSubview:column];
     [self.view addSubview:scroll];
 
-    _primary = SGOnboardingButton(@"Start listening");
+    _primary = SGOnboardingButton(SGLocalized(@"Start listening"));
     [_primary addTarget:self action:@selector(finish) forControlEvents:UIControlEventTouchUpInside];
     UILabel *footer = [UILabel new];
-    footer.text = @"Hold Home to open settings.";
+    footer.text = SGLocalized(@"Hold Home to open settings.");
     footer.font = [UIFont systemFontOfSize:13];
     footer.textColor = SGGrey();
     footer.textAlignment = NSTextAlignmentCenter;
@@ -583,7 +583,7 @@ static BOOL adFree(void) {
 
 - (void)toggleAds {
     [_ads setOn:!_ads.on animated:YES];
-    _adsCard.accessibilityValue = _ads.on ? @"On" : @"Off";
+    _adsCard.accessibilityValue = _ads.on ? SGLocalized(@"On") : SGLocalized(@"Off");
     [self refresh];
 }
 
@@ -595,7 +595,7 @@ static BOOL adFree(void) {
 
 - (void)refresh {
     UIButtonConfiguration *config = _primary.configuration;
-    NSString *title = self.needsRestart ? @"Restart Spotify" : @"Start listening";
+    NSString *title = self.needsRestart ? SGLocalized(@"Restart Spotify") : SGLocalized(@"Start listening");
     config.attributedTitle = [[NSAttributedString alloc] initWithString:title attributes:@{NSFontAttributeName: [UIFont systemFontOfSize:17 weight:UIFontWeightSemibold]}];
     _primary.configuration = config;
 }

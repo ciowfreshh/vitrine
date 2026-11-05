@@ -42,10 +42,10 @@ static Feature featureNow(void) {
 
 static NSString *captionFor(Feature feature) {
     switch (feature) {
-        case FeatureControls: return @"Tap to feel Controls";
-        case FeatureMusic: return @"Tap to feel Music Haptics";
-        case FeatureNative: return @"In the Background is played by iOS. Turn on Controls or Music Haptics to feel a tap";
-        case FeatureNone: return @"Turn on Controls or Music Haptics to feel a tap";
+        case FeatureControls: return SGLocalized(@"Tap to feel Controls");
+        case FeatureMusic: return SGLocalized(@"Tap to feel Music Haptics");
+        case FeatureNative: return SGLocalized(@"In the Background is played by iOS. Turn on Controls or Music Haptics to feel a tap");
+        case FeatureNone: return SGLocalized(@"Turn on Controls or Music Haptics to feel a tap");
     }
     return nil;
 }
@@ -127,7 +127,7 @@ static CAKeyframeAnimation *keyframes(NSString *path, NSArray *values, NSArray<N
     [self addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(play)]];
     self.isAccessibilityElement = YES;
     self.accessibilityTraits = UIAccessibilityTraitButton;
-    self.accessibilityLabel = @"Vibrations preview, rings of dots that ripple out from the middle with each tap";
+    self.accessibilityLabel = SGLocalized(@"Vibrations preview, rings of dots that ripple out from the middle with each tap");
     [self reload];
     return self;
 }

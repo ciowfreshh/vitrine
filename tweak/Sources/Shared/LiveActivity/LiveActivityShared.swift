@@ -69,6 +69,7 @@ struct SGLyricsAttributes: ActivityAttributes {
         var accent: String?
         // The track's progress bar; nil or true shows it.
         var progressBar: Bool?
+        var uiLanguage: String? = nil
     }
 }
 
@@ -87,10 +88,10 @@ let SGLiveActivityActionNotification = Notification.Name("SGLiveActivityAction")
 
 @available(iOS 17.0, *)
 struct SGPlayQueuedTrackIntent: LiveActivityIntent {
-    static let title: LocalizedStringResource = "Play a track up next"
+    static let title: LocalizedStringResource = LocalizedStringResource("Play a track up next", table: "Vitrine", locale: SGUIL10n.locale)
     static let isDiscoverable = false
 
-    @Parameter(title: "Track")
+    @Parameter(title: LocalizedStringResource("Track", table: "Vitrine", locale: SGUIL10n.locale))
     var uri: String
 
     init() {}
@@ -108,10 +109,10 @@ struct SGPlayQueuedTrackIntent: LiveActivityIntent {
 // A control menu action: tab:N, toggle, previous, next, shuffle, repeat, timer:15|30|60|track|album|add|cancel.
 @available(iOS 17.0, *)
 struct SGLiveActivityActionIntent: LiveActivityIntent {
-    static let title: LocalizedStringResource = "Control menu action"
+    static let title: LocalizedStringResource = LocalizedStringResource("Control menu action", table: "Vitrine", locale: SGUIL10n.locale)
     static let isDiscoverable = false
 
-    @Parameter(title: "Action")
+    @Parameter(title: LocalizedStringResource("Action", table: "Vitrine", locale: SGUIL10n.locale))
     var action: String
 
     init() {}
@@ -151,7 +152,7 @@ private func askSpotify(_ action: String) async throws -> String {
         if let said = reply["said"] as? String { return said }
         try await Task.sleep(nanoseconds: 250_000_000)
     }
-    throw SGShortcutError(message: "Spotify isn't ready yet. Open it and try again.")
+    throw SGShortcutError(message: SGUIL10n.string("Spotify isn't ready yet. Open it and try again."))
 }
 
 @available(iOS 16.0, *)
@@ -159,14 +160,14 @@ enum SGSleepTimerLength: String, AppEnum {
     // The raw values are the timer action's, timer:VALUE.
     case fifteen = "15", thirty = "30", hour = "60", endOfTrack = "track", endOfAlbum = "album", off = "cancel"
 
-    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Sleep Timer"
+    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: LocalizedStringResource("Sleep Timer", table: "Vitrine", locale: SGUIL10n.locale))
     static let caseDisplayRepresentations: [SGSleepTimerLength: DisplayRepresentation] = [
-        .fifteen: "15 Minutes",
-        .thirty: "30 Minutes",
-        .hour: "1 Hour",
-        .endOfTrack: "End of Track",
-        .endOfAlbum: "End of Album",
-        .off: "Off",
+        .fifteen: DisplayRepresentation(title: LocalizedStringResource("15 Minutes", table: "Vitrine", locale: SGUIL10n.locale)),
+        .thirty: DisplayRepresentation(title: LocalizedStringResource("30 Minutes", table: "Vitrine", locale: SGUIL10n.locale)),
+        .hour: DisplayRepresentation(title: LocalizedStringResource("1 Hour", table: "Vitrine", locale: SGUIL10n.locale)),
+        .endOfTrack: DisplayRepresentation(title: LocalizedStringResource("End of Track", table: "Vitrine", locale: SGUIL10n.locale)),
+        .endOfAlbum: DisplayRepresentation(title: LocalizedStringResource("End of Album", table: "Vitrine", locale: SGUIL10n.locale)),
+        .off: DisplayRepresentation(title: LocalizedStringResource("Off", table: "Vitrine", locale: SGUIL10n.locale)),
     ]
 }
 
@@ -174,18 +175,18 @@ enum SGSleepTimerLength: String, AppEnum {
 enum SGSingMode: String, AppEnum {
     case toggle, on, off
 
-    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Karaoke"
+    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: LocalizedStringResource("Karaoke", table: "Vitrine", locale: SGUIL10n.locale))
     static let caseDisplayRepresentations: [SGSingMode: DisplayRepresentation] = [
-        .toggle: "Toggle",
-        .on: "Turn On",
-        .off: "Turn Off",
+        .toggle: DisplayRepresentation(title: LocalizedStringResource("Toggle", table: "Vitrine", locale: SGUIL10n.locale)),
+        .on: DisplayRepresentation(title: LocalizedStringResource("Turn On", table: "Vitrine", locale: SGUIL10n.locale)),
+        .off: DisplayRepresentation(title: LocalizedStringResource("Turn Off", table: "Vitrine", locale: SGUIL10n.locale)),
     ]
 }
 
 @available(iOS 17.0, *)
 struct SGLikeIntent: LiveActivityIntent {
-    static let title: LocalizedStringResource = "Like This Song"
-    static let description = IntentDescription("Adds the song playing in Spotify to Liked Songs.")
+    static let title: LocalizedStringResource = LocalizedStringResource("Like This Song", table: "Vitrine", locale: SGUIL10n.locale)
+    static let description = IntentDescription(LocalizedStringResource("Adds the song playing in Spotify to Liked Songs.", table: "Vitrine", locale: SGUIL10n.locale))
 
     init() {}
 
@@ -196,8 +197,8 @@ struct SGLikeIntent: LiveActivityIntent {
 
 @available(iOS 17.0, *)
 struct SGPlayPauseIntent: AudioPlaybackIntent {
-    static let title: LocalizedStringResource = "Play or Pause"
-    static let description = IntentDescription("Pauses Spotify, or plays it when it is paused.")
+    static let title: LocalizedStringResource = LocalizedStringResource("Play or Pause", table: "Vitrine", locale: SGUIL10n.locale)
+    static let description = IntentDescription(LocalizedStringResource("Pauses Spotify, or plays it when it is paused.", table: "Vitrine", locale: SGUIL10n.locale))
 
     init() {}
 
@@ -209,8 +210,8 @@ struct SGPlayPauseIntent: AudioPlaybackIntent {
 
 @available(iOS 17.0, *)
 struct SGNextTrackIntent: AudioPlaybackIntent {
-    static let title: LocalizedStringResource = "Next Track"
-    static let description = IntentDescription("Skips to the next track in Spotify.")
+    static let title: LocalizedStringResource = LocalizedStringResource("Next Track", table: "Vitrine", locale: SGUIL10n.locale)
+    static let description = IntentDescription(LocalizedStringResource("Skips to the next track in Spotify.", table: "Vitrine", locale: SGUIL10n.locale))
 
     init() {}
 
@@ -222,8 +223,8 @@ struct SGNextTrackIntent: AudioPlaybackIntent {
 
 @available(iOS 17.0, *)
 struct SGPreviousTrackIntent: AudioPlaybackIntent {
-    static let title: LocalizedStringResource = "Previous Track"
-    static let description = IntentDescription("Goes back a track in Spotify, or to the start of this one.")
+    static let title: LocalizedStringResource = LocalizedStringResource("Previous Track", table: "Vitrine", locale: SGUIL10n.locale)
+    static let description = IntentDescription(LocalizedStringResource("Goes back a track in Spotify, or to the start of this one.", table: "Vitrine", locale: SGUIL10n.locale))
 
     init() {}
 
@@ -235,10 +236,10 @@ struct SGPreviousTrackIntent: AudioPlaybackIntent {
 
 @available(iOS 17.0, *)
 struct SGSingIntent: LiveActivityIntent {
-    static let title: LocalizedStringResource = "Karaoke"
-    static let description = IntentDescription("Turns the vocals down in Spotify so you can sing along, or brings them back.")
+    static let title: LocalizedStringResource = LocalizedStringResource("Karaoke", table: "Vitrine", locale: SGUIL10n.locale)
+    static let description = IntentDescription(LocalizedStringResource("Turns the vocals down in Spotify so you can sing along, or brings them back.", table: "Vitrine", locale: SGUIL10n.locale))
 
-    @Parameter(title: "Karaoke", default: .toggle)
+    @Parameter(title: LocalizedStringResource("Karaoke", table: "Vitrine", locale: SGUIL10n.locale), default: .toggle)
     var mode: SGSingMode
 
     init() {}
@@ -258,10 +259,10 @@ struct SGSingIntent: LiveActivityIntent {
 
 @available(iOS 17.0, *)
 struct SGSleepTimerIntent: LiveActivityIntent {
-    static let title: LocalizedStringResource = "Sleep Timer"
-    static let description = IntentDescription("Pauses Spotify after a while or at the end of the track or the album, or turns the timer off.")
+    static let title: LocalizedStringResource = LocalizedStringResource("Sleep Timer", table: "Vitrine", locale: SGUIL10n.locale)
+    static let description = IntentDescription(LocalizedStringResource("Pauses Spotify after a while or at the end of the track or the album, or turns the timer off.", table: "Vitrine", locale: SGUIL10n.locale))
 
-    @Parameter(title: "Length")
+    @Parameter(title: LocalizedStringResource("Length", table: "Vitrine", locale: SGUIL10n.locale))
     var length: SGSleepTimerLength
 
     init() {}

@@ -147,20 +147,20 @@ void SGDSPResetAll(void) {
 #pragma mark - lists
 
 NSArray<NSString *> *SGDSPConvolverModeNames(void) {
-    return @[@"Original", @"Trimmed", @"Minimum phase"];
+    return @[SGLocalized(@"Original"), SGLocalized(@"Trimmed"), SGLocalized(@"Minimum phase")];
 }
 
 NSArray<NSString *> *SGDSPCrossfeedModeNames(void) {
-    return @[@"Jan Meier (650 Hz, 9.5 dB)", @"Chu Moy (700 Hz, 6 dB)", @"Default (700 Hz, 4.5 dB)"];
+    return @[@"Jan Meier (650 Hz, 9.5 dB)", @"Chu Moy (700 Hz, 6 dB)", SGLocalized(@"Default (700 Hz, 4.5 dB)")];
 }
 
 NSArray<NSString *> *SGDSPReverbPresetNames(void) {
-    return @[@"Ambience", @"Small room", @"Medium room", @"Large room", @"Chamber", @"Plate", @"Small hall", @"Large hall", @"Cathedral"];
+    return @[SGLocalized(@"Ambience"), SGLocalized(@"Small room"), SGLocalized(@"Medium room"), SGLocalized(@"Large room"), SGLocalized(@"Chamber"), SGLocalized(@"Plate"), SGLocalized(@"Small hall"), SGLocalized(@"Large hall"), SGLocalized(@"Cathedral")];
 }
 
 NSArray<NSString *> *SGDSPEqualizerPresetNames(void) {
-    return @[@"Flat", @"Bass", @"Loudness", @"Treble", @"Vocal", @"Warm", @"Bright", @"Rock", @"Electronic", @"Acoustic",
-             @"Classical", @"Podcast"];
+    return @[SGLocalized(@"Flat"), SGLocalized(@"Bass"), SGLocalized(@"Loudness"), SGLocalized(@"Treble"), SGLocalized(@"Vocal"), SGLocalized(@"Warm"), SGLocalized(@"Bright"), @"Rock", SGLocalized(@"Electronic"), SGLocalized(@"Acoustic"),
+             SGLocalized(@"Classical"), @"Podcast"];
 }
 
 NSArray<NSNumber *> *SGDSPEqualizerPreset(NSInteger index) {

@@ -1,0 +1,22 @@
+{
+  "upstream": "My-Name-Is-Jeff/vitrine",
+  "tag": "v1.0.0-beta.16",
+  "commit": "36d3b38ec39c0b8b696f1d2db026ca9e9939bf14",
+  "unchanged_files": {
+    "tweak/Sources/Shared/AudioEffects/SGDSPEngine.m": "c22ed0924e7e83c0ba1eec88e9ac2509f841c71b4b959a5a4b6d338ac79ffeff",
+    "tweak/Sources/Shared/AudioEffects/SGDSPReverb.m": "584d6773a0dcbf074c048b096216df815aba804a184c1b07ccd9ad7045359988",
+    "tweak/Sources/Shared/AudioEffects/SGDSPTone.m": "725f00fcc2f2167ef594964cf8bfb209011820cb24049ce7d4f84e6ca041af3c",
+    "tweak/Sources/Shared/AudioEffects/SGDSPDynamics.m": "d180393276cd2aec91bdbb4c8dd2323e70cfe3c679d95452bb77ced3931b9af9",
+    "tweak/Sources/Shared/Player/SGTimePitch.m": "e118934031d094eea10d90444ee7947e31f4e9f8e343b168520693297949f430",
+    "tweak/Sources/Shared/AppIcon/AppIcon.h": "0ff19bf60efeb156c79434d2cd8ec6a4f59ffcd51b85dff7b51da87e2f69f207",
+    "tweak/Sources/Shared/LiveActivity/LiveActivity.h": "db315e0763f49745ce3ba001710e158f82a191a5d0fc6d1a098139ab71d1cc80",
+    "tweak/Sources/Native/Album/Album.x": "dc9280dece59813bea9a0997509d28fd995cd8a12c84bf511dacce291d9ac037",
+    "tweak/Sources/Native/Artist/Artist.x": "e81ce31c1659d453c19ab781602a890a29de5db1361d937499e77bda10ae1c2b",
+    "tweak/Sources/Redesigned/Album/AlbumSections.x": "e7a0e1f493732b124a12b3cb077708018f70718a6b240da864060156152766d1"
+  },
+  "translation_instructions": [
+    "static NSString *const kDefaultPrompt =\n    @\"Translate the lines of this song into {language}: exactly {count} translations, one per input line and in \"\n    @\"the same order. Translate the meaning naturally, keep each line short like a lyric, and keep an empty line \"\n    @\"empty. A line already in {language} stays as it is.\";",
+    "static NSString *const kDefaultBatchPrompt =\n    @\"Translate the lyrics of these {count} songs into {language}. Translate the meaning naturally as sung, \"\n    @\"keep each line short like a lyric, and keep empty lines empty. Lines already in {language} stay as they are. \"\n    @\"Return a JSON object with the exact same track IDs as keys, mapping each to an array of translated lines in the exact same order.\";",
+    "static const SGAIProvider kProviders[] = {\n    {@\"gemini\", @\"Gemini\", @\"Google\", @\"Vitrine.Gemini\",\n     @\"Translate with Gemini sends the song's lyrics to Google, on your own key from Google AI Studio. The key stays on this iPhone.\",\n     @\"Answer with a JSON array of the {count} translations as strings.\",\n     // A pinned id first, the one users report working. gemini-flash-latest follows each Flash release, preview\n     // ones included, with notice only by email to the key's owner, so it is offered but not the default.\n     {@\"gemini-3.8-flash\", @\"gemini-3.5-flash-lite\", @\"gemini-flash-latest\"}, {@\"3.8 Flash\", @\"3.5 Flash-Lite\", @\"Flash (latest)\"},\n     YES, {@\"thinking\"}, geminiRequest, geminiAnswer},\n    {@\"openai\", @\"OpenAI-compatible\", nil, @\"Vitrine.OpenAI\",\n     @\"Sends the song's lyrics to the server below: OpenAI's own unless you name another, such as OpenRouter, or an \"\n     @\"Ollama on your network (http works for local addresses). The key stays on this iPhone; for a server without \"\n     @\"keys, copy any word and paste that.\",\n     kLinesFormat,\n     {nil}, {nil}, NO, {@\"response_format\", @\"json_schema\", @\"reasoning\"}, openAIRequest, openAIAnswer},\n    {@\"anthropic\", @\"Anthropic\", @\"Anthropic\", @\"Vitrine.Anthropic\",\n     @\"Translate with Anthropic sends the song's lyrics to Anthropic, on your own key from the Claude Console. The key stays on this iPhone.\",\n     kLinesFormat,\n     // The cheapest first: the reason a model is picked at all is what translating costs. Not the 5.5 models,\n     // whose safety classifiers stop at lyrics with a refusal; Other… still names any model. Haiku 4.5 has no\n     // effort, so its first request comes back once and is sent plain.\n     {@\"claude-haiku-4-5\", @\"claude-sonnet-4-6\"}, {@\"Haiku 4.5\", @\"Sonnet 4.6\"},\n     NO, {@\"output_config\", @\"effort\", @\"json_schema\"}, anthropicRequest, anthropicAnswer},\n};\n"
+  ]
+}

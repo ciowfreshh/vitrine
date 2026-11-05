@@ -6,22 +6,22 @@
 #import "Album.h"
 
 UIViewController *SGRAlbumSettingsPage(void) {
-    return [[SGModPage alloc] initWithTitle:@"Albums" intro:SGRestartNote sections:@[
+    return [[SGModPage alloc] initWithTitle:SGLocalized(@"Albums") intro:SGLocalized(SGRestartNote) sections:@[
         SGNotedSection(@"Apple Music", @[
-            SGSwitchRow(@"Animated covers", @"At the top of an album that has one, about 5 MB each", SGRKeyAlbumMotion),
-            SGOptionRow(@"Download in Low Data Mode", nil, SGKeyMotionLowData),
-        ], @"Only the album's name is sent to Apple Music. A cover stays still in Low Power Mode."),
-        SGSection(@"Hide on an album's page", @[
-            SGSwitchRow(@"Repeated track artists", @"The artist under a track when it is the album's own", SGRKeyAlbumHideTrackArtists),
+            SGSwitchRow(SGLocalized(@"Animated covers"), SGLocalized(@"At the top of an album that has one, about 5 MB each"), SGRKeyAlbumMotion),
+            SGOptionRow(SGLocalized(@"Download in Low Data Mode"), nil, SGKeyMotionLowData),
+        ], SGLocalized(@"Only the album's name is sent to Apple Music. A cover stays still in Low Power Mode.")),
+        SGSection(SGLocalized(@"Hide on an album's page"), @[
+            SGSwitchRow(SGLocalized(@"Repeated track artists"), SGLocalized(@"The artist under a track when it is the album's own"), SGRKeyAlbumHideTrackArtists),
         ]),
-        SGNotedSection(@"Hide under an album's tracks", @[
-            SGSwitchRow(@"More by the artist", nil, SGRKeyAlbumHideMoreBy),
-            SGSwitchRow(@"Related music videos", nil, SGRKeyAlbumHideVideos),
-            SGSwitchRow(@"Concerts", nil, SGRKeyAlbumHideConcerts),
-            SGSwitchRow(@"Merch", nil, SGRKeyAlbumHideMerch),
-            SGSwitchRow(@"You might also like", nil, SGRKeyAlbumHideYouMightLike),
-            SGSwitchRow(@"Everything else", @"Any other section Spotify sends", SGRKeyAlbumHideOther),
-        ], @"Sections are told apart by their English names. With Spotify in another language, Everything else "
-           @"covers them all."),
+        SGNotedSection(SGLocalized(@"Hide under an album's tracks"), @[
+            SGSwitchRow(SGLocalized(@"More by the artist"), nil, SGRKeyAlbumHideMoreBy),
+            SGSwitchRow(SGLocalized(@"Related music videos"), nil, SGRKeyAlbumHideVideos),
+            SGSwitchRow(SGLocalized(@"Concerts"), nil, SGRKeyAlbumHideConcerts),
+            SGSwitchRow(SGLocalized(@"Merch"), nil, SGRKeyAlbumHideMerch),
+            SGSwitchRow(SGLocalized(@"You might also like"), nil, SGRKeyAlbumHideYouMightLike),
+            SGSwitchRow(SGLocalized(@"Everything else"), SGLocalized(@"Any other section Spotify sends"), SGRKeyAlbumHideOther),
+        ], SGLocalized(@"Sections are told apart by their English names. With Spotify in another language, Everything else "
+           @"covers them all.")),
     ] footer:nil];
 }

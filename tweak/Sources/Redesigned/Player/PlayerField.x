@@ -48,7 +48,7 @@ SGRPlayerBackgroundKind SGRPlayerBackground(void) {
 }
 
 NSArray<NSString *> *SGRPlayerBackgroundNames(void) {
-    return @[@"Still", @"Colors", @"Fluid", @"Animated", @"Visualizer"];
+    return @[SGLocalized(@"Still"), SGLocalized(@"Colors"), SGLocalized(@"Fluid"), SGLocalized(@"Animated"), SGLocalized(@"Visualizer")];
 }
 
 // A paused song holds the colors still, the way it rests the cover (PlayerArtwork.x), and so does what lies over

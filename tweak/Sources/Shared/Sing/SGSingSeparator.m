@@ -1,3 +1,4 @@
+#import "Core/SGLocalization.h"
 #import <Accelerate/Accelerate.h>
 #import <CoreML/CoreML.h>
 #import <mach/mach.h>
@@ -206,7 +207,7 @@ static BOOL predict(MLModel *model, MLDictionaryFeatureProvider *features, float
     id<MLFeatureProvider> result = [model predictionFromFeatures:features error:error];
     MLMultiArray *output = [result featureValueForName:kOutput].multiArrayValue;
     if (output && readOutput(output, into)) return YES;
-    if (error && !*error) *error = [NSError errorWithDomain:@"SGSing" code:1 userInfo:@{NSLocalizedDescriptionKey: @"The model answered in a shape Karaoke does not read"}];
+    if (error && !*error) *error = [NSError errorWithDomain:@"SGSing" code:1 userInfo:@{NSLocalizedDescriptionKey: SGLocalized(@"The model answered in a shape Karaoke does not read")}];
     return NO;
 }
 
@@ -227,7 +228,7 @@ static BOOL predict(MLModel *model, MLDictionaryFeatureProvider *features, float
         for (int i = 0; took >= 0 && i < kSGSingSpectrumFloats; i++) {
             if (!isfinite(out[i])) {
                 took = -1;
-                if (error) *error = [NSError errorWithDomain:@"SGSing" code:2 userInfo:@{NSLocalizedDescriptionKey: @"The model turned silence into numbers that are not finite"}];
+                if (error) *error = [NSError errorWithDomain:@"SGSing" code:2 userInfo:@{NSLocalizedDescriptionKey: SGLocalized(@"The model turned silence into numbers that are not finite")}];
             }
         }
     }

@@ -14,18 +14,18 @@ static NSDictionary *choiceDef(SGHomeChoice choice) {
             @(SGHomeChoiceTint): @{
                 @"key": @"spotifyglass.homeGradientTint",
                 @"default": @0,
-                @"names": @[@"Spotify green", @"Teal", @"Blue", @"Indigo", @"Purple", @"Pink",
-                            @"Red", @"Amber"],
+                @"names": @[SGLocalized(@"Spotify green"), SGLocalized(@"Teal"), SGLocalized(@"Blue"), SGLocalized(@"Indigo"), SGLocalized(@"Purple"), SGLocalized(@"Pink"),
+                            SGLocalized(@"Red"), SGLocalized(@"Amber")],
             },
             @(SGHomeChoiceStrength): @{
                 @"key": @"spotifyglass.homeGradientStrength",
                 @"default": @1,
-                @"names": @[@"Subtle", @"Medium", @"Bold"],
+                @"names": @[SGLocalized(@"Subtle"), SGLocalized(@"Medium"), SGLocalized(@"Bold")],
             },
             @(SGHomeChoiceHeight): @{
                 @"key": @"spotifyglass.homeGradientHeight",
                 @"default": @1,
-                @"names": @[@"Short", @"Medium", @"Tall", @"The whole screen"],
+                @"names": @[SGLocalized(@"Short"), SGLocalized(@"Medium"), SGLocalized(@"Tall"), SGLocalized(@"The whole screen")],
             },
         };
     });

@@ -342,12 +342,12 @@ static NSString *libraryFile(SGDSPFileKind kind, NSString *nameKey, NSString *ef
     NSString *name = SGDSPString(nameKey);
     if (!on) return nil;
     if (!name.length) {
-        setError(effect, @"No file is chosen");
+        setError(effect, SGLocalized(@"No file is chosen"));
         return nil;
     }
     NSString *path = [SGDSPLibraryDirectory(kind) stringByAppendingPathComponent:name.lastPathComponent];
     if (![NSFileManager.defaultManager fileExistsAtPath:path]) {
-        setError(effect, [NSString stringWithFormat:@"%@ is not in the library any more", name]);
+        setError(effect, [NSString stringWithFormat:SGLocalized(@"%@ is not in the library any more"), name]);
         return nil;
     }
     return path;
@@ -396,7 +396,7 @@ static void applyEffect(SGDSPEngine *engine, NSString *effect) {
         NSString *nodes = SGDSPString(SGKeyDSPGraphicEqNodes);
         ok = SGDSPEngineSetGraphicEq(engine, on, nodes.UTF8String, error, sizeof error);
         NSUInteger count = [nodes componentsSeparatedByString:@";"].count;
-        what = [NSString stringWithFormat:@"Graphic EQ %@, about %lu points", onOff(on), (unsigned long)(count > 1 ? count - 1 : count)];
+        what = [NSString stringWithFormat:SGLocalized(@"Graphic EQ %@, about %lu points"), onOff(on), (unsigned long)(count > 1 ? count - 1 : count)];
     } else if ([effect isEqualToString:SGKeyDSPConvolver]) {
         NSString *path = libraryFile(SGDSPFileImpulseResponse, SGKeyDSPConvolverFile, effect, on);
         if (on && !path) {
@@ -589,14 +589,14 @@ void SGDSPApply(NSString *effect) {
 #pragma mark - what the page shows
 
 NSString *SGDSPStatus(void) {
-    if (!SGDSPSwitch(SGKeyDSP)) return @"Off";
+    if (!SGDSPSwitch(SGKeyDSP)) return SGLocalized(@"Off");
     if (atomic_load(&sg_outputState) == SGOutputUnsupported) return @"Spotify's output is in a format the engine does not take";
     SGDSPEngine *engine = atomic_load(&sg_engine);
-    if (!sg_reachable) return @"Unavailable: Spotify's output could not be reached";
-    if (!engine || !atomic_load(&sg_running)) return @"Waiting for Spotify to play";
+    if (!sg_reachable) return SGLocalized(@"Unavailable: Spotify's output could not be reached");
+    if (!engine || !atomic_load(&sg_running)) return SGLocalized(@"Waiting for Spotify to play");
     double rate = SGDSPEngineSampleRate(engine);
     double load = SGDSPEngineReadStats(engine, false).load;
-    return [NSString stringWithFormat:@"Running at %@ kHz, %.1f%% load", [NSString stringWithFormat:@"%g", rate / 1000], load * 100];
+    return [NSString stringWithFormat:SGLocalized(@"Running at %@ kHz, %.1f%% load"), [NSString stringWithFormat:@"%g", rate / 1000], load * 100];
 }
 
 void SGDSPEqualizerResponse(NSArray<NSNumber *> *gains, NSInteger count, double *frequencies, double *decibels) {

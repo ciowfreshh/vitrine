@@ -101,7 +101,7 @@ static BOOL keepsTitle(void) {
     // A tap on the cover beside the lines brings the full player back.
     [_thumb addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(sgr_thumbTapped)]];
     _thumb.isAccessibilityElement = YES;
-    _thumb.accessibilityLabel = @"Show the player";
+    _thumb.accessibilityLabel = SGLocalized(@"Show the player");
     _thumb.accessibilityTraits = UIAccessibilityTraitButton;
     _cover = [[UIImageView alloc] initWithFrame:CGRectZero];
     _cover.contentMode = UIViewContentModeScaleAspectFill;
@@ -147,8 +147,8 @@ static BOOL keepsTitle(void) {
     if (!_lyrics) {
         _lyrics = [[SGRKaraokeView alloc] initWithFrame:_stage.bounds];
         _lyrics.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-        // Sing's mic stays while the lines are on their own, moving down with them (setAlone).
-        _lyrics.keepsSing = YES;
+        // The mic follows the same control visibility as the extras, including auto-hide.
+        _lyrics.keepsSing = NO;
     }
     if (_lyrics.superview != _stage) [_stage addSubview:_lyrics];
     _lyrics.frame = _stage.bounds;

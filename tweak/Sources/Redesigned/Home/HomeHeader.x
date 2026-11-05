@@ -70,9 +70,9 @@ static UIView *childNamed(UIView *host, NSString *marker) {
 }
 
 static NSString *tabName(UIWindow *window) {
-    if (sg_tabName || !window) return sg_tabName ?: @"Home";
+    if (sg_tabName || !window) return sg_tabName ?: SGLocalized(@"Home");
     static NSUInteger tries;
-    if (tries >= kTitleTries) return @"Home";
+    if (tries >= kTitleTries) return SGLocalized(@"Home");
     tries++;
     UIView *item = SGRFindByIdentifier(window, @"TabBar.Item.Home", &kTabKey);
     __block NSString *name = nil;
@@ -81,7 +81,7 @@ static NSString *tabName(UIWindow *window) {
     });
     if (!name) {
         if (tries == kTitleTries) SGLog(@"redesign home: the Home tab's name not found, the title stays English");
-        return @"Home";
+        return SGLocalized(@"Home");
     }
     sg_tabName = [name copy];
     SGLog(@"redesign home: title \"%@\" from the tab bar", sg_tabName);
@@ -150,7 +150,7 @@ static NSArray<UIMenuElement *> *menuElements(void) {
     UIControl *connect = connectButton(sg_header.window);
     if (connect) {
         __weak UIControl *weakConnect = connect;
-        [more addObject:[UIAction actionWithTitle:@"Devices" image:[UIImage systemImageNamed:@"hifispeaker"] identifier:nil handler:^(UIAction *a) {
+        [more addObject:[UIAction actionWithTitle:SGLocalized(@"Devices") image:[UIImage systemImageNamed:@"hifispeaker"] identifier:nil handler:^(UIAction *a) {
             if (weakConnect) SGRActivate(weakConnect);
         }]];
     }
@@ -158,7 +158,7 @@ static NSArray<UIMenuElement *> *menuElements(void) {
     UIControl *showAll = SGRHomeTopPicksShowAll(&title);
     if (showAll) {
         __weak UIControl *weakShowAll = showAll;
-        [more addObject:[UIAction actionWithTitle:title.length ? [NSString stringWithFormat:@"Show all · %@", title] : @"Show all"
+        [more addObject:[UIAction actionWithTitle:title.length ? [NSString stringWithFormat:SGLocalized(@"Show all · %@"), title] : SGLocalized(@"Show all")
                                             image:[UIImage systemImageNamed:@"rectangle.stack"] identifier:nil handler:^(UIAction *a) {
             if (weakShowAll) SGRActivate(weakShowAll);
         }]];
@@ -193,7 +193,7 @@ static SGRHomePillButtons *buttonsIn(UIView *header) {
     SGRHomePillButtons *buttons = objc_getAssociatedObject(header, &kButtonsKey);
     if (!buttons) {
         buttons = [SGRHomePillButtons new];
-        buttons.filter = pillButton(@"line.3.horizontal.decrease", @"Filter Home");
+        buttons.filter = pillButton(@"line.3.horizontal.decrease", SGLocalized(@"Filter Home"));
         buttons.filter.menu = [UIMenu menuWithChildren:@[[UIDeferredMenuElement elementWithUncachedProvider:^(void (^completion)(NSArray<UIMenuElement *> *)) {
             completion(menuElements());
         }]]];

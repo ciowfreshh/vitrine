@@ -188,8 +188,8 @@ static NSData *decide(NSString *track, SGLyricsResult *chain, NSData *spotifyBod
     if (!donor && spotifyBody.length && SGKaraokeLinesTiming(viewLines) == SGKaraokeTimingNone) SGKaraokeAskSpotifyForTiming(track);
 
     NSString *provider = chain.provider.length ? chain.provider : kUnnamedProvider;
-    NSString *pageGets = page ? [NSString stringWithFormat:@"%@'s lines", provider] : spotifyBody ? @"Spotify's own" : @"none";
-    NSString *viewGets = viewLines ? [NSString stringWithFormat:@"%@'s lines, %@", viewLines == spotifyLines ? @"Spotify" : provider, timingName(viewLines)] : @"nothing";
+    NSString *pageGets = page ? [NSString stringWithFormat:SGLocalized(@"%@'s lines"), provider] : spotifyBody ? SGLocalized(@"Spotify's own") : @"none";
+    NSString *viewGets = viewLines ? [NSString stringWithFormat:SGLocalized(@"%@'s lines, %@"), viewLines == spotifyLines ? @"Spotify" : provider, timingName(viewLines)] : @"nothing";
     SGLog(@"lyrics: page of %@ gets %@; the lyrics view gets %@", track, pageGets, viewGets);
     return page;
 }
@@ -483,7 +483,7 @@ static void finishDonor(id delegate, NSURLSession *session, NSURLSessionDataTask
     NSData *page = decide(state.track, chain, nil, YES, state.artwork ? coloursIn(body) : nil);
     if (!page) {
         SGLog(@"lyrics: no source has lyrics for %@ any more, its request fails", state.track);
-        NSString *reason = [NSString stringWithFormat:@"No lyrics source has lyrics for %@", state.track];
+        NSString *reason = [NSString stringWithFormat:SGLocalized(@"No lyrics source has lyrics for %@"), state.track];
         forward([NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorResourceUnavailable userInfo:@{NSLocalizedDescriptionKey: reason}]);
         return;
     }
