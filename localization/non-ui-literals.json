@@ -1128,9 +1128,9 @@
     "_TtC28CreativeWorkPlatform_PageKit24CreativeWorkTemplateView": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "_TtC28EncoreConsumerMobile_BaseKit14PlayButtonView": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "add": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "album": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "arrow.down": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "automaticallyPlacesContentView": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "contentOffset": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "contentView": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "download": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "fade": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
@@ -1214,6 +1214,7 @@
     "HeaderContainer": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "HeaderForegroundView": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "_TtC35CreativeWorkPlatform_ImageHeaderKit15ImageHeaderView": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "artist": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "found": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "header-play-button": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "missing": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
@@ -1550,7 +1551,6 @@
     "SGRMirrorButton": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "backgroundColor": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "bounds": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "color": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "contents": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "frame": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "hidden": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
@@ -1562,7 +1562,6 @@
     "position": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "redesign kit: moving field %@": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "redesign kit: page shown whole after %.0f ms, %@": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "spotifyglass.redesign.fieldColorDidChange": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "the artwork took too long": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
   "tweak/Sources/Redesigned/Kit/SGRFlow.m": {
@@ -1636,6 +1635,15 @@
     "setFont:": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "setText:": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "touch up inside": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
+  },
+  "tweak/Sources/Redesigned/Kit/SGRStretchHero.m": {
+    "colors": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "contentOffset": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "cut off by %@": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "hero": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "nothing clips it": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "redesign %@: hero stretched %.0fpt over the pull, %@": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "reveal": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
   "tweak/Sources/Redesigned/Kit/SGRTokens.m": {
     "%@|%g|%@|%@|%d": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
@@ -1969,7 +1977,7 @@
     "now playing bar": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "now playing bar in the tab bar's row at %@, clipped by:%@": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "now playing bar in the tab bar's row in a Jam: strip %@, bar %@, card %@ (in the container's view)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "now playing bar: its edges are not held by its superview's constraints, so it stays above the tab bar": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "now playing bar: its edges are not held by its superview's constraints, so it keeps Spotify's": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "now playing bar: tab bar move ended in a Jam, strip %@, card glass %@ (in the container's view)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "now playing card %@ at %@ (bar %@, container %@)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "now playing card in a Jam: %@ at %@, strip %@ at %@ (bar %@)": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
@@ -2003,7 +2011,9 @@
     "gone": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "list.bullet": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "not found": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "spotify:now-playing:queue": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
+    "queue": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "spotify:now-playing:queue": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "waveform": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
   "tweak/Sources/Redesigned/Player/Player.h": {
     "Endless_DJMusicImpl": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
@@ -2015,6 +2025,7 @@
     "spotifyglass.redesign.player.hideRepeat": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "spotifyglass.redesign.player.hideShuffle": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "spotifyglass.redesign.player.movingBackground": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "spotifyglass.redesign.player.spotifyIcons": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "spotifyglass.redesign.player.volume": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
   "tweak/Sources/Redesigned/Player/PlayerArtwork.x": {
@@ -2061,6 +2072,7 @@
     "redesign player: monospaced times in %@ %.0fpt, features %@": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "redesign player: play glyph over %@ (disc %@ suppressed), spinner %@": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "redesign player: play glyph turned at the tap": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "redesign player: shuffle and repeat hidden, previous and next %.0fpt either side of play": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "redesign player: the played drag did not seek (at %ld ms, not %ld), seeking directly": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "showing": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "the play button's disc": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
@@ -2109,32 +2121,12 @@
     "world_cup_easter_egg": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
   "tweak/Sources/Redesigned/Player/PlayerFooter.x": {
-    "Components.ConnectButtonOutputSwitcher": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "Components.UI.SharedByChip": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "DJMHeadUnitViewController": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "Encore.IconView": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "MarqueeLabel": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "PlaybackControlsElementsUnit": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "QueueButtonNowPlaying": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "SGRVolumeRow": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "SPTEncoreIconView": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "ShareButtonNowPlayingView": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "_TtC20NowPlaying_ModesImpl18FooterElementsUnit": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    ", lyrics.center.x,\n              connectFrom, glyph ? @": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    ", middle, middle + move, height,\n              window.safeAreaInsets.bottom, controls ? @": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "airplayaudio": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "button": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "follow": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "glyph": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "gone": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "list.bullet": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "not found": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "nowplaying-npv-media-trimmer-navigation-button": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "off": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "on": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "quote.bubble": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "quote.bubble.fill": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "redesign player: footer lyrics at %.0f, connect %.0f (%@) to %.0f, queue %.0f to %.0f, share %@": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "redesign player: footer row from %.0f to %.0f of %.0f (safe area %.0f), controls %@ %.0f, volume %@": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "stay": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
+    "quote.bubble.fill": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
   "tweak/Sources/Redesigned/Player/PlayerFree.x": {
     "_TtC32ReinventFree_ReinventFreeNpvImpl26NowPlayingReinventFreeMode": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
@@ -2784,7 +2776,20 @@
     "_TtC31Preferences_CorePreferencesImpl28SPTPreferencesImplementation": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
   "tweak/Sources/Shared/AdBlock/DJ.x": {
-    "_TtC16Endless_AIDJImpl26AIDJEligibilityCheckerImpl": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
+    "DJ: closed \"%@\"": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "DJ: the region dialog's titles in Spotify's strings: %@": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "PopUp.Dialog.Title-internal": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "SPTEndless_DJMusicImpl:sDJMRegionUnavailableDialogTitle": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "SPTStrings": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "_TtC16Endless_AIDJImpl26AIDJEligibilityCheckerImpl": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "_TtC29EncoreConsumerMobile_Wrappers25PopUpPresentableContainer": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "_i18n.": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "_i18n.INDEX": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "_i18n.KEYS": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "bundle": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "en": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "none, so it stays": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "shared": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
   "tweak/Sources/Shared/AdBlock/Feeds.m": {
     "dropped %lu of %lu feed sections": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"

@@ -10,6 +10,14 @@ The upstream releases endpoint contained beta releases only; there was no releas
 Beta.16 was the newest published release at the time of the audit.
 The development branch starts at that tag, not at `syna-spotify-v1`. No main ref is changed.
 
+For PR integration, the branch also merges the existing target `main` at
+`cd7ace640513e02e398f1fa9f8f2e29d07aa8eac`. Its nine commits are upstream fixes
+after beta.16 (lyrics-source null handling, player icons/layout, artwork stretching,
+Karaoke availability, and DJ dialog matching). No SYNA changes occur in that history.
+The main tree was independently reconstructed from its diff and verified against
+GitHub's tree hash `c8d32c486694fbb2e88f6d3adda7b59ac11485ec` before reconciliation.
+Conflicts keep those existing behaviors and translate their new settings copy.
+
 ## Source inventory and integration
 
 Read `AGENTS.md` and `docs/tweaks.md`, enumerated the complete Sources tree, and

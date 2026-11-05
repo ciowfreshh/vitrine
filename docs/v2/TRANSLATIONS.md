@@ -41,7 +41,9 @@ export supports 50,000 songs and less than 4 GiB. These transfer bounds do not c
 ## Checks
 
 - `python3 scripts/localization.py`: catalog generation parity, formatting arguments,
-  placeholders and classified source-string inventory.
+  placeholders and classified Objective-C/Logos/Swift source-string inventory. Existing
+  catalog text must use a localizer or an explicitly reviewed deferred display/protocol
+  statement; adding an English string already present in the catalog still fails the gate.
 - `python3 -m unittest discover -s tests -v`: regression tests, including an injected new
   untranslated warning, preservation contracts and resource isolation.
 - `tests/translation-store/run.sh` on macOS: real Foundation/SQLite/zlib tests with
