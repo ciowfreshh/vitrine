@@ -65,6 +65,8 @@ jobs:
         run: |
           brew install make dpkg ldid
           python3 -m pip install --break-system-packages git+https://github.com/asdfzxcvbn/pyzule-rw.git
+      - name: UIKit simulator lyrics and visibility tests
+        run: bash tests/ui-v21/run.sh
       - name: Compile-only flag table (never used in an IPA)
         run: |
           cat > tweak/Sources/Shared/Flags/SGFlagList.m <<'FLAGS'
@@ -86,8 +88,6 @@ jobs:
               plistlib.dump({'CFBundleIdentifier':'com.spotify.client','CFBundleShortVersionString':'9.1.90','CFBundleVersion':'1'},f)
           PY
           scripts/build-extension.sh out/test-host.plist out/test-extension
-      - name: UIKit simulator lyrics and visibility tests
-        run: bash tests/ui-v21/run.sh
       - name: Download supplied IPA
         if: inputs.ipa_url != ''
         env:

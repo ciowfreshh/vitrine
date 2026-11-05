@@ -3,6 +3,7 @@
 #import "Redesigned/Lyrics/SGRKaraokeView.h"
 #import "Shared/LyricsTranslation/LyricsSelection.h"
 #import "App/SettingsPlacement.h"
+#import "Core/SGPrefs.h"
 static void verify(BOOL ok, NSString *name) { if (!ok) { NSLog(@"V21 FAIL: %@", name); exit(1); } NSLog(@"V21 PASS: %@", name); }
 static void invoke(id target, NSString *selector, id argument) { ((void (*)(id, SEL, id))objc_msgSend)(target, NSSelectorFromString(selector), argument); }
 @interface SGV21Hold : UILongPressGestureRecognizer
@@ -57,7 +58,7 @@ void SGV21UIChecks(SGRKaraokeView *view) {
     UIView *first = shown[indexes[0]], *second = shown[indexes[1]];
     UIScrollView *scroll = [view valueForKey:@"scroll"];
     NSNumber *before = [view valueForKey:@"seekAt"];
-    [NSUserDefaults.standardUserDefaults setBool:YES forKey:SGKeyLyricsShareSelection];
+    SGSetEnabled(SGKeyLyricsShareSelection, YES);
     SGV21Hold *hold = [SGV21Hold new]; hold.point = first.center;
     invoke(view, @"held:", hold);
     NSIndexSet *selected = [view valueForKey:@"selected"];
@@ -73,11 +74,11 @@ void SGV21UIChecks(SGRKaraokeView *view) {
     verify([[mic valueForKey:@"tucked"] boolValue] && ![mic isUserInteractionEnabled], @"auto-hidden microphone cannot intercept taps");
     view.extrasHidden = NO;
     verify(![[mic valueForKey:@"tucked"] boolValue] && [mic isUserInteractionEnabled], @"microphone returns with controls");
-    [NSUserDefaults.standardUserDefaults setBool:NO forKey:SGKeyLyricsShareSelection];
+    SGSetEnabled(SGKeyLyricsShareSelection, NO);
     [NSNotificationCenter.defaultCenter postNotificationName:SGLyricsShareSelectionChangedNotification object:nil];
     verify([view valueForKey:@"selected"] == nil, @"turning switch off immediately cancels selection");
     verify([[view valueForKey:@"tops"] count] > 0 && [[view valueForKey:@"shown"] count] > 0, @"cancellation preserves measured lyrics and restores visible line views");
-    [NSUserDefaults.standardUserDefaults setBool:YES forKey:SGKeyLyricsShareSelection];
+    SGSetEnabled(SGKeyLyricsShareSelection, YES);
     UIView *replacement = ((id (*)(id, SEL, NSInteger))objc_msgSend)(view, NSSelectorFromString(@"viewForLine:"), indexes[0].integerValue);
     invoke(view, @"toggleSelectedView:", replacement);
     verify([[view valueForKey:@"selected"] count] == 1, @"selection re-enters after cancellation");

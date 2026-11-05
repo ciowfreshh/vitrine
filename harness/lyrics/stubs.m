@@ -4,6 +4,8 @@
 #import <UIKit/UIKit.h>
 #import "Shared/Lyrics/Lyrics.h"
 #import "Shared/LyricsTranslation/LyricsTranslation.h"
+#import "Shared/Sing/Sing.h"
+#import "Core/SGPrefs.h"
 
 UIColor *SGRAccentColor(void) { return nil; }
 
@@ -42,6 +44,9 @@ void SGLyricsOpenCreditLinks(NSArray<SGLyricsLink *> *links, UIView *from) { NSL
 NSString *SGLyricsTranslationLanguage(void) { return [NSUserDefaults.standardUserDefaults stringForKey:@"translateTo"]; }
 
 // -gemini 1: a Gemini key is set, and Translate with Gemini answers each line with itself, marked.
+// The harness supplies a foreign-language fixture and a supported Karaoke device; no AI or voice model is run.
+BOOL SGKaraokeInAnotherLanguage(NSArray<SGKaraokeLine *> *lines, NSString *language) { return lines.count > 0; }
+BOOL SGSingButtonShown(void) { return SGFlag(SGKeySingButton, YES); }
 BOOL SGAITranslatorReady(void) { return [NSUserDefaults.standardUserDefaults boolForKey:@"gemini"]; }
 NSString *SGAITranslatorName(void) { return @"Gemini"; }
 NSString *SGAITranslatorRecipient(void) { return @"Google"; }
