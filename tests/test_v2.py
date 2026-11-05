@@ -1,4 +1,4 @@
-import hashlib,importlib.util,json,pathlib,plistlib,re,subprocess,sys,tempfile,unittest,zipfile
+import hashlib,importlib.util,json,pathlib,plistlib,re,struct,subprocess,sys,tempfile,unittest,zipfile
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'scripts'))
 import localization
@@ -94,4 +94,16 @@ class LocalizationTests(unittest.TestCase):
         workflow=(ROOT/'.github/workflows/vitrine-v2.yml').read_text()
         self.assertNotIn('curl -fsSL "${{',workflow)
         self.assertIn('IPA_URL: ${{ inputs.ipa_url }}',workflow)
+    def test_ipa_validator_rejects_changed_input_hash(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path=pathlib.Path(tmp)/'input.ipa'
+            with zipfile.ZipFile(path,'w') as z:
+                z.writestr('Payload/Spotify.app/Info.plist',plistlib.dumps({'CFBundleIdentifier':'com.spotify.client','CFBundleExecutable':'Spotify'}))
+                z.writestr('Payload/Spotify.app/Spotify',struct.pack('<8I',0xfeedfacf,0x100000c,0,2,0,0,0,0))
+            command=[sys.executable,str(ROOT/'scripts/validate-v2-ipa.py'),str(path),'--sha256']
+            good=subprocess.run(command+[hashlib.sha256(path.read_bytes()).hexdigest()],capture_output=True,text=True)
+            self.assertEqual(good.returncode,0,good.stderr)
+            bad=subprocess.run(command+['0'*64],capture_output=True,text=True)
+            self.assertNotEqual(bad.returncode,0)
+            self.assertIn('does not match',bad.stderr)
 if __name__=='__main__':unittest.main()

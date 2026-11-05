@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
-import argparse,pathlib,plistlib,struct,zipfile
-parser=argparse.ArgumentParser();parser.add_argument('ipa');parser.add_argument('--built',action='store_true');parser.add_argument('--original');args=parser.parse_args()
+import argparse,pathlib,plistlib,struct,zipfile,hashlib,re
+parser=argparse.ArgumentParser();parser.add_argument('ipa');parser.add_argument('--built',action='store_true');parser.add_argument('--original');parser.add_argument('--sha256',default='');args=parser.parse_args()
+if args.sha256:
+    if not re.fullmatch('[0-9a-fA-F]{64}',args.sha256):raise ValueError('Invalid expected IPA SHA-256')
+    digest=hashlib.sha256()
+    with open(args.ipa,'rb') as source:
+        for chunk in iter(lambda:source.read(1024*1024),b''):digest.update(chunk)
+    if digest.hexdigest()!=args.sha256.lower():raise ValueError('IPA SHA-256 does not match the expected input')
 def app_info(ipa):
     names=ipa.namelist();apps=[n for n in names if n.startswith('Payload/') and n.endswith('.app/Info.plist') and n.count('/')==2]
     if len(apps)!=1:raise ValueError('Expected one main app')

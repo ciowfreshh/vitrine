@@ -1,0 +1,15 @@
+name: Build Vitrine V2 test IPA
+on:
+  push:
+    branches: [vitrine-i18n-translation-v2]
+    paths: [.github/workflows/vitrine-v2-test-ipa.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    uses: ./.github/workflows/vitrine-v2.yml
+    with:
+      # Recovered from the previously successful IPA build, not from its modified output.
+      ipa_url: https://github.com/codeboy2012/PwEevee/releases/download/v3.1.6.1/com.spotify.client_9.1.90_und3fined.ipa
+      ipa_sha256: 409601a58953818eea17edb92963d10256ae6fcf00c69954105e5becc08ec296
