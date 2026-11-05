@@ -1644,11 +1644,13 @@ typedef struct {
     if (!_selected) return;
     _selected = nil; [_selectionBar removeFromSuperview]; _selectionBar = nil;
     _selectionCancel = _selectionContinue = nil;
-    // Rebuild the same lines so normal word timing, glow and accessibility are restored.
-    [self dropLineViews]; _browsing = _wasBrowsing;
+    // Recreate line views while keeping their measured geometry and timing state.
+    _browsing = _wasBrowsing;
     if (_wasBrowsing) _scroll.contentOffset = _selectionOffset;
     else _scroll.contentOffset = CGPointZero;
-    [self placeLinesAnimated:NO]; [self showLinesInSight]; [self stir];
+    if (_tops) [self showStyle:_style tops:[_tops arrayByAddingObject:@(_stackEnd)]];
+    else { _builtWidth = 0; [self setNeedsLayout]; }
+    [self stir];
     if (_wasBrowsing && !_plain) [self performSelector:@selector(followSong) withObject:nil afterDelay:kBrowseHold];
 }
 - (void)continueSelection {

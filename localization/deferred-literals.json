@@ -39,6 +39,7 @@
     "About\nNSArray *titles = drawer ? @[@\"Settings and privacy\", @\"Settings & privacy\", @\"C\u00e0i \u0111\u1eb7t v\u00e0 quy\u1ec1n ri\u00eang t\u01b0\"] : @[@\"About\", @\"Gi\u1edbi thi\u1ec7u\"];": 1
   },
   "tweak/Sources/Core/BatchQueue/SGTranslationQueue.m": {
+    "Could not save queue progress. Check available storage.\n_notice = @\"Could not save queue progress. Check available storage.\"; return NO;": 1,
     "Could not save queue progress. Check available storage.\nif (!ok) { _paused = YES; _notice = @\"Could not save queue progress. Check available storage.\"; }": 1,
     "Interrupted request reached the retry limit. Use Retry failed songs.\nif ([item[@\"state\"] isEqual:@\"failed\"]) item[@\"error\"] = @\"Interrupted request reached the retry limit. Use Retry failed songs.\";": 1,
     "Queue recovery failed. The saved file was preserved.\n} else { _unreadable = YES; _notice = @\"Queue recovery failed. The saved file was preserved.\"; }": 1,

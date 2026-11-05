@@ -80,13 +80,25 @@ SGTranslationFailure SGTranslationHTTPFailure(NSInteger status, NSError *network
 - (NSMutableDictionary *)context { return _context; }
 - (BOOL)paused { return _paused; }
 - (NSUInteger)effectiveConcurrency { return _effectiveConcurrency; }
-- (void)setConcurrency:(NSUInteger)value { _concurrency = MIN(3, MAX(1, value)); _effectiveConcurrency = MIN(_effectiveConcurrency, _concurrency); }
+- (void)setConcurrency:(NSUInteger)value {
+    _concurrency = MIN(3, MAX(1, value));
+    _effectiveConcurrency = _limited >= 2 ? MIN(_effectiveConcurrency, _concurrency) : _concurrency;
+    if (!_paused) [self pump];
+}
 - (BOOL)prepareLanguage:(NSString *)language {
     if (_active || !_paused || _unreadable) return NO;
-    if (_language && ![_language isEqual:language]) {
-        // A language change starts a new job only after every previous item is terminal.
-        for (NSDictionary *item in _work) if ([@[@"pending", @"retry"] containsObject:item[@"state"]]) return NO;
-        [_work removeAllObjects]; [_context removeAllObjects];
+    BOOL unfinished = NO;
+    for (NSDictionary *item in _work) if ([@[@"pending", @"retry"] containsObject:item[@"state"]]) unfinished = YES;
+    if (_language && ![_language isEqual:language] && unfinished) return NO;
+    if (_work.count && !unfinished) {
+        // A newly requested scan is a new job. Archive the previous report first; the translation
+        // store remains untouched and is rechecked by the adapter before any AI request.
+        NSURL *report = [[_url URLByDeletingLastPathComponent] URLByAppendingPathComponent:[NSString stringWithFormat:@"queue-report-%@.json", NSUUID.UUID.UUIDString]];
+        NSError *error = nil;
+        if (![NSFileManager.defaultManager copyItemAtURL:_url toURL:report error:&error]) {
+            _notice = @"Could not save queue progress. Check available storage."; return NO;
+        }
+        [_work removeAllObjects]; [_context removeAllObjects]; _cooldown = 0;
     }
     _language = [language copy];
     return [self checkpoint];

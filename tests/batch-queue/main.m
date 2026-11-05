@@ -49,9 +49,11 @@ int main(void) { @autoreleasepool {
     check(!SGTranslationPageURL(@"https://example.com/steal", base) && !SGTranslationPageURL(@"https://api.spotify.com@evil.test/", base), @"pagination never sends credentials to external hosts");
     NSString *next; NSUInteger count;
     check(SGTranslationTracksPage(@{@"pages":@[@{@"tracks":@[@{@"uri":@"spotify:track:0000000000000000000001"}], @"next_page_url":@"/context-resolve/v1/page2"}]}, [NSURL URLWithString:@"https://spclient.wg.spotify.com/context-resolve/v1/test"], &next, &count).count == 1 && next.length, @"album/playlist context pagination and relative URL");
+    check([SGTranslationTracksPage(@{@"pages":@[@{@"tracks":@[@{@"gid":@"AAAAAAAAAAAAAAAAAAAAAQ=="}]}]}, [NSURL URLWithString:@"https://spclient.wg.spotify.com/"], &next, &count).firstObject[@"id"] isEqual:@"0000000000000000000001"], @"context GID-only tracks convert to Spotify base62 IDs");
     SGTranslationQueue *single = job(root, @"single.json", 1);
     single.execute = ^(NSDictionary *item, NSString *language, void (^done)(NSString *, NSError *)) { done(@"succeeded", nil); };
     [single resume]; check([single.statistics[@"succeeded"] integerValue] == 1, @"one song succeeds and commits");
+    check([single prepareLanguage:@"vi"] && single.items.count == 0, @"new source scan archives the completed report without carrying terminal IDs forward");
     SGTranslationQueue *bulk = job(root, @"bulk.json", 1000); bulk.concurrency = 3;
     __block NSUInteger active = 0, peak = 0, calls = 0;
     NSMutableSet *seen = [NSMutableSet set];

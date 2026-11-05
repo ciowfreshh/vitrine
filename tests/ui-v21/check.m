@@ -51,8 +51,8 @@ static void checkSettings(void) {
 }
 void SGV21UIChecks(SGRKaraokeView *view) {
     checkSettings();
-    NSDictionary *shown = [view valueForKey:@"shown"];
-    NSArray *indexes = [shown.allKeys sortedArrayUsingSelector:@selector(compare:)];
+    NSDictionary<NSNumber *, UIView *> *shown = [view valueForKey:@"shown"];
+    NSArray<NSNumber *> *indexes = [shown.allKeys sortedArrayUsingSelector:@selector(compare:)];
     verify(indexes.count >= 2, @"real lyric renderer has multiple visible lines");
     UIView *first = shown[indexes[0]], *second = shown[indexes[1]];
     UIScrollView *scroll = [view valueForKey:@"scroll"];
@@ -76,6 +76,7 @@ void SGV21UIChecks(SGRKaraokeView *view) {
     [NSUserDefaults.standardUserDefaults setBool:NO forKey:SGKeyLyricsShareSelection];
     [NSNotificationCenter.defaultCenter postNotificationName:SGLyricsShareSelectionChangedNotification object:nil];
     verify([view valueForKey:@"selected"] == nil, @"turning switch off immediately cancels selection");
+    verify([[view valueForKey:@"tops"] count] > 0 && [[view valueForKey:@"shown"] count] > 0, @"cancellation preserves measured lyrics and restores visible line views");
     [NSUserDefaults.standardUserDefaults setBool:YES forKey:SGKeyLyricsShareSelection];
     UIView *replacement = ((id (*)(id, SEL, NSInteger))objc_msgSend)(view, NSSelectorFromString(@"viewForLine:"), indexes[0].integerValue);
     invoke(view, @"toggleSelectedView:", replacement);

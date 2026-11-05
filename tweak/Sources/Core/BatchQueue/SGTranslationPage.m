@@ -7,6 +7,20 @@ NSURL *SGTranslationPageURL(NSString *address, NSURL *base) {
         (base && ![url.host.lowercaseString isEqual:base.host.lowercaseString])) return nil;
     return url;
 }
+static NSString *trackIDFromGID(id value) {
+    if (![value isKindOfClass:NSString.class]) return nil;
+    NSData *data = [[NSData alloc] initWithBase64EncodedString:value options:0];
+    if (data.length != 16) return nil;
+    unsigned char number[16]; [data getBytes:number length:16];
+    const char *digits = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    char result[23]; result[22] = 0;
+    for (NSInteger position = 21; position >= 0; --position) {
+        unsigned remainder = 0;
+        for (NSUInteger i = 0; i < 16; ++i) { unsigned n = remainder * 256 + number[i]; number[i] = n / 62; remainder = n % 62; }
+        result[position] = digits[remainder];
+    }
+    return [NSString stringWithUTF8String:result];
+}
 NSArray<NSDictionary *> *SGTranslationTracksPage(id root, NSURL *base, NSString **next, NSUInteger *scanned) {
     if (![root isKindOfClass:NSDictionary.class]) return nil;
     NSArray *pages;
@@ -31,6 +45,7 @@ NSArray<NSDictionary *> *SGTranslationTracksPage(id root, NSURL *base, NSString 
             if (![track isKindOfClass:NSDictionary.class]) continue;
             NSString *uri = track[@"uri"], *identifier = track[@"id"];
             if ([uri isKindOfClass:NSString.class] && [uri hasPrefix:@"spotify:track:"]) identifier = [uri substringFromIndex:14];
+            if (![identifier isKindOfClass:NSString.class]) identifier = trackIDFromGID(track[@"gid"]);
             if (![identifier isKindOfClass:NSString.class] || identifier.length != 22 ||
                 [identifier rangeOfCharacterFromSet:[NSCharacterSet characterSetWithCharactersInString:@"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"].invertedSet].location != NSNotFound) continue;
             id metadata = track[@"metadata"];

@@ -77,6 +77,7 @@ void SGLyricsTranslateWithAI(NSString *trackID, NSArray<SGKaraokeLine *> *lines,
 + (void)answer:(NSArray<NSString *> *)lines as:(NSString *)mark done:(void (^)(NSArray<NSString *> *, NSString *))done;
 @end
 @implementation SGOnDeviceTranslation
++ (void)openTranslateSettings {}
 + (BOOL)translationAvailable { return [NSUserDefaults.standardUserDefaults boolForKey:@"onDevice"]; }
 + (BOOL)appleIntelligenceAvailable:(NSString *)languageTag { return [NSUserDefaults.standardUserDefaults boolForKey:@"intelligence"]; }
 + (void)answer:(NSArray<NSString *> *)lines as:(NSString *)mark done:(void (^)(NSArray<NSString *> *, NSString *))done {
@@ -84,7 +85,7 @@ void SGLyricsTranslateWithAI(NSString *trackID, NSArray<SGKaraokeLine *> *lines,
     for (NSString *line in lines) [out addObject:line.length ? [mark stringByAppendingString:line] : @""];
     dispatch_async(dispatch_get_main_queue(), ^{ done(out, nil); });
 }
-+ (void)translate:(NSArray<NSString *> *)lines to:(NSString *)languageTag done:(void (^)(NSArray<NSString *> *, NSString *))done {
++ (void)translate:(NSArray<NSString *> *)lines to:(NSString *)languageTag from:(UIView *)view done:(void (^)(NSArray<NSString *> *, NSString *))done {
     [self answer:lines as:@"iPhone: " done:done];
 }
 // A batch at a time, as the model works: the first half shows a second before the rest.
@@ -119,7 +120,7 @@ id SGKaraokeTrackFor(NSString *trackID) {
     SGHarnessTrack *track = [SGHarnessTrack new];
     track.trackTitle = [NSUserDefaults.standardUserDefaults stringForKey:@"title"];
     track.artistName = [NSUserDefaults.standardUserDefaults stringForKey:@"artist"];
-    return track;
+    return (id)track;
 }
 // lyrics-page links the real Settings/ framework, which has both.
 #ifndef SG_HARNESS_SETTINGS
