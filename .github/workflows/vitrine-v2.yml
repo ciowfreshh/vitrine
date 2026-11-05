@@ -114,7 +114,7 @@ jobs:
           mv out/vitrine-$(cat version.txt).ipa out/Vitrine-V2.1-Enhanced-Spotify-9.1.90.ipa
           python3 scripts/audit-v21-ipa.py out/Vitrine-V2.1-Enhanced-Spotify-9.1.90.ipa out/IPA_REPORT.json
           cp docs/v2/V2.1-AUDIT.md out/RELEASE_NOTES.md
-          shasum -a 256 out/*.ipa > out/SHA256SUMS.txt
+          (cd out && shasum -a 256 *.ipa > SHA256SUMS.txt)
           git rev-parse HEAD > out/SOURCE_COMMIT.txt
       - uses: actions/upload-artifact@v5
         if: inputs.ipa_url != ''

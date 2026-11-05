@@ -7,15 +7,18 @@ device=$(xcrun simctl list devices available -j | python3 -c 'import sys,json; d
 xcrun simctl boot "$device" || true
 xcrun simctl bootstatus "$device" -b
 xcrun simctl install "$device" harness/lyrics/build/new/LyricsHarness.app
-xcrun simctl launch --console "$device" com.vojta.lyricsharness.new -song duet -v21 1 -at 25 -rate 0 >out/tests/ui-v21.log 2>&1 &
-runner=$!
-for attempt in $(seq 1 45); do
-  if rg -q 'V21 UI COMPLETE|V21 FAIL' out/tests/ui-v21.log; then break; fi
-  sleep 1
+for language in en vi; do
+  log="out/tests/ui-v21-$language.log"
+  xcrun simctl launch --console "$device" com.vojta.lyricsharness.new -song duet -v21 1 -at 25 -rate 0 -spotifyglass.interfaceLanguage "$language" >"$log" 2>&1 &
+  runner=$!
+  for attempt in $(seq 1 60); do
+    if grep -Eq 'V21 UI COMPLETE|V21 FAIL' "$log"; then break; fi
+    sleep 1
+  done
+  xcrun simctl io "$device" screenshot "out/tests/ui-v21-$language.png"
+  xcrun simctl terminate "$device" com.vojta.lyricsharness.new || true
+  wait "$runner" || true
+  cat "$log"
+  grep -Fq 'V21 UI COMPLETE' "$log"
+  if grep -Fq 'V21 FAIL' "$log"; then exit 1; fi
 done
-xcrun simctl io "$device" screenshot out/tests/ui-v21.png
-xcrun simctl terminate "$device" com.vojta.lyricsharness.new || true
-wait "$runner" || true
-cat out/tests/ui-v21.log
-rg -q 'V21 UI COMPLETE' out/tests/ui-v21.log
-if rg -q 'V21 FAIL' out/tests/ui-v21.log; then exit 1; fi

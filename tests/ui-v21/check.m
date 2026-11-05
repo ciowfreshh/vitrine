@@ -85,6 +85,10 @@ void SGV21UIChecks(SGRKaraokeView *view) {
     ((void (*)(id, SEL))objc_msgSend)(view, NSSelectorFromString(@"dropLines"));
     verify([view valueForKey:@"selected"] == nil, @"track replacement clears old selection");
     ((void (*)(id, SEL))objc_msgSend)(view, NSSelectorFromString(@"tick")); [view layoutIfNeeded];
-    UIView *preview = ((id (*)(id, SEL, NSInteger))objc_msgSend)(view, NSSelectorFromString(@"viewForLine:"), indexes[0].integerValue); invoke(view, @"toggleSelectedView:", preview);
-    NSLog(@"V21 UI COMPLETE: UIKit simulator, mocked song/player; native Spotify and real iPhone untested");
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        UIView *preview = ((id (*)(id, SEL, NSInteger))objc_msgSend)(view, NSSelectorFromString(@"viewForLine:"), indexes[0].integerValue);
+        verify(preview != nil, @"track replacement rebuilds real line views before preview");
+        invoke(view, @"toggleSelectedView:", preview); [view layoutIfNeeded];
+        NSLog(@"V21 UI COMPLETE: UIKit simulator, mocked song/player; native Spotify and real iPhone untested");
+    });
 }
