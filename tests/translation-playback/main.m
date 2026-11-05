@@ -51,6 +51,24 @@ int main(void) { @autoreleasepool {
     check(SGTranslationUnchangedForeignLines(@[@"I will always remember the beautiful moments we shared together"], @[@"I will always remember the beautiful moments we shared together"], @"vi").count == 1, @"unchanged confidently foreign verse is not a finished translation");
     check(SGTranslationUnchangedForeignLines(@[@"Tôi sẽ luôn ghi nhớ những ngày tháng đẹp đẽ bên nhau", @"Yeah", @"Rose"], @[@"Tôi sẽ luôn ghi nhớ những ngày tháng đẹp đẽ bên nhau", @"Yeah", @"Rose"], @"vi").count == 0, @"target-language verses, short ad-libs and names stay valid");
     check([SGTranslationResolveLines(@{@"one two":@"x"}, @[@"one", @"two"])[0] isEqual:@""], @"a saved sentence is never arbitrarily split by character count");
+    NSString *regional = [track stringByAppendingString:@"-regional"];
+    NSDictionary *legacy = @{@"type":@"vitrine.translation", @"schemaVersion":@1, @"track":regional, @"language":@"vi-VN", @"by":@"openai", @"model":@"test-no-network", @"made":@123,
+        @"lines":@{@"Hold the lantern":@"Giữ ngọn đèn", @"Walk across the bridge":@"Đi qua cây cầu"}};
+    check([SGSavedTranslationStore() putRecord:legacy replace:YES didWrite:NULL error:nil], @"create legacy regional record without original row metadata");
+    NSArray *regionalShown = @[line(@"Hold the lantern, walk across the bridge!", @"community text")];
+    ((SGKaraokeLine *)regionalShown[0]).translationMade = NO;
+    check(SGLyricsSyncSavedTranslation(regional, @"vi", regionalShown) != nil && [((SGKaraokeLine *)regionalShown[0]).translation isEqual:@"Giữ ngọn đèn Đi qua cây cầu"], @"legacy vi-VN record displays in vi with joined source rows");
+    check(SGLyricsHasSavedTranslation(regional, @"vi") && SGLyricsSavedTranslationMissing(regional, @"vi", regionalShown)==0, @"queue detects regional saved coverage instead of spending another AI request");
+    check([[SGSavedTranslationStore() recordForTrack:regional language:@"vi-VN" error:nil] isEqual:legacy] && ![SGSavedTranslationStore() recordForTrack:regional language:@"vi" error:nil], @"playback compatibility does not rewrite or duplicate a legacy record");
+    check(SGLyricsSaveTranslation(regional, @"vi", @[line(@"New words", @"Lời mới")], ai) != nil, @"incremental save through vi can supplement vi-VN");
+    check([[[SGSavedTranslationStore() recordForTrack:regional language:@"vi-VN" error:nil] objectForKey:@"lines"] count]==3 && ![SGSavedTranslationStore() recordForTrack:regional language:@"vi" error:nil], @"incremental save keeps the original language identity and all older pairs");
+    NSString *base = [track stringByAppendingString:@"-base"];
+    check(SGLyricsSaveTranslation(base, @"vi", original, ai) != nil && SGLyricsSavedTranslationMissing(base, @"vi-VN", original)==0, @"base-language saves remain available after switching to device locale");
+    check(SGLyricsSavedTranslationMissing(regional, @"en", regionalShown)==1, @"regional fallback never crosses translation languages");
+    SGLyricsDeleteSavedTranslation(regional, @"vi");
+    check(!SGLyricsHasSavedTranslation(regional, @"vi-VN"), @"explicit delete removes the matching regional translation");
+    SGLyricsDeleteSavedTranslation(base, @"vi-VN");
+    check(!SGLyricsHasSavedTranslation(base, @"vi"), @"explicit regional delete cannot resurrect a base-language saved record");
     SGLyricsDeleteSavedTranslation(track, @"vi");
     SGLyricsSyncSavedTranslation(track, @"vi", shown);
     check(!((SGKaraokeLine *)shown[0]).translationMade && !((SGKaraokeLine *)shown[0]).translation.length, @"deletion still removes made translations from playback");

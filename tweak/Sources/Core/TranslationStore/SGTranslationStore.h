@@ -6,6 +6,9 @@ extern NSString *const SGTranslationStoreErrorDomain;
 @interface SGTranslationStore : NSObject
 - (instancetype)initWithURL:(NSURL *)url legacyDirectory:(nullable NSURL *)legacy;
 - (nullable NSDictionary *)recordForTrack:(NSString *)track language:(NSString *)language error:(NSError **)error;
+// Playback/queue compatibility only. Exact reads above remain unchanged for JSON/ZIP export.
+- (NSArray<NSDictionary *> *)recordsForTrack:(NSString *)track compatibleLanguage:(NSString *)language error:(NSError **)error;
+- (nullable NSDictionary *)compatibleRecordForTrack:(NSString *)track language:(NSString *)language error:(NSError **)error;
 - (BOOL)putRecord:(NSDictionary *)record replace:(BOOL)replace didWrite:(nullable BOOL *)didWrite error:(NSError **)error;
 - (NSArray<NSDictionary *> *)summaries:(NSError **)error;
 - (BOOL)removeTrack:(nullable NSString *)track language:(nullable NSString *)language error:(NSError **)error;

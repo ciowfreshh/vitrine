@@ -49,7 +49,7 @@ NSDictionary<NSString *, NSString *> *SGSavedTranslationLines(id json, SGTransla
 SGTranslationSource *SGLyricsSyncSavedTranslation(NSString *track, NSString *language, NSArray<SGKaraokeLine *> *lines) {
     if (!track.length || !language.length || !lines.count) return nil;
     NSError *error = nil;
-    NSDictionary *record = [SGSavedTranslationStore() recordForTrack:track language:language error:&error];
+    NSDictionary *record = [SGSavedTranslationStore() compatibleRecordForTrack:track language:language error:&error];
     if (error) { SGLog(@"translation: durable read failed"); return nil; }
     SGTranslationSource *source = nil;
     NSDictionary *saved = SGSavedTranslationLines(record, &source);
@@ -81,12 +81,15 @@ SGTranslationSource *SGLyricsSaveTranslation(NSString *track, NSString *language
     }
     if (!saved.count) return nil;
     NSError *error = nil;
-    NSDictionary *previous = [SGSavedTranslationStore() recordForTrack:track language:language error:&error];
+    NSDictionary *previous = [SGSavedTranslationStore() compatibleRecordForTrack:track language:language error:&error];
     if (error) { showFailure(error); return nil; }
     // Partial/on-device progress and a new lyrics source must never erase other saved lines.
     saved = [SGTranslationMergeLines(SGSavedTranslationLines(previous, NULL), saved) mutableCopy];
     NSDate *now = NSDate.date;
-    NSMutableDictionary *record = [@{@"type":@"vitrine.translation", @"schemaVersion":@1, @"track":track, @"language":language,
+    // Keep the original on-disk identity when supplementing a regional alias. Reading an old file
+    // never rewrites or deletes it; an explicit save keeps its data under its existing language tag.
+    NSString *storageLanguage = previous[@"language"] ?: language;
+    NSMutableDictionary *record = [@{@"type":@"vitrine.translation", @"schemaVersion":@1, @"track":track, @"language":storageLanguage,
                                     @"lines":saved, @"originals":originals, @"made":@(floor(now.timeIntervalSince1970))} mutableCopy];
     if (source.by) record[@"by"] = source.by;
     if (source.model) record[@"model"] = source.model;
@@ -98,11 +101,11 @@ SGTranslationSource *SGLyricsSaveTranslation(NSString *track, NSString *language
 }
 
 BOOL SGLyricsHasSavedTranslation(NSString *track, NSString *language) {
-    return track.length && language.length && [SGSavedTranslationStore() recordForTrack:track language:language error:nil] != nil;
+    return track.length && language.length && [SGSavedTranslationStore() compatibleRecordForTrack:track language:language error:nil] != nil;
 }
 
 NSUInteger SGLyricsSavedTranslationMissing(NSString *track, NSString *language, NSArray<SGKaraokeLine *> *lines) {
-    NSDictionary *record = [SGSavedTranslationStore() recordForTrack:track language:language error:nil];
+    NSDictionary *record = [SGSavedTranslationStore() compatibleRecordForTrack:track language:language error:nil];
     NSMutableArray *originals = [NSMutableArray arrayWithCapacity:lines.count];
     for (SGKaraokeLine *line in lines) [originals addObject:SGKaraokeLineText(line) ?: @""];
     NSArray *resolved = SGTranslationResolveLines(SGSavedTranslationLines(record, NULL), originals);
@@ -114,7 +117,12 @@ NSUInteger SGLyricsSavedTranslationMissing(NSString *track, NSString *language, 
 void SGLyricsDeleteSavedTranslation(NSString *track, NSString *language) {
     if (!track.length || !language.length) return;
     NSError *error = nil;
-    if (![SGSavedTranslationStore() removeTrack:track language:language error:&error]) { showFailure(error); return; }
+    NSArray *records = [SGSavedTranslationStore() recordsForTrack:track compatibleLanguage:language error:&error];
+    if (error) { showFailure(error); return; }
+    for (NSDictionary *record in records) {
+        if (![SGSavedTranslationStore() removeTrack:track language:record[@"language"] error:&error]) { showFailure(error); return; }
+        SGLyricsForgetAITranslation(track, record[@"language"]);
+    }
     SGLyricsForgetAITranslation(track, language); notify();
 }
 

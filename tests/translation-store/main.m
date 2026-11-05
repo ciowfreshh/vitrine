@@ -4,6 +4,7 @@
 #import <unistd.h>
 #import "Core/TranslationStore/SGTranslationStore.h"
 #import "Core/TranslationStore/SGTranslationArchive.h"
+#import "Core/TranslationStore/SGTranslationLanguage.h"
 #import "Core/SGLocalization.h"
 #define CHECK(x) do { if(!(x)){fprintf(stderr,"FAIL line %d: %s\n",__LINE__,#x);exit(1);} checks++; } while(0)
 static int checks;
@@ -14,6 +15,24 @@ int main(int argc,const char *argv[]) { @autoreleasepool {
         BOOL ok=[writer putRecord:record(@"terminated") replace:YES didWrite:NULL error:nil];_exit(ok?23:24);
     }
     NSURL *root=[NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:NSUUID.UUID.UUIDString] isDirectory:YES];
+    CHECK(SGTranslationSameLanguage(@"vi", @"vi-VN"));
+    CHECK(SGTranslationSameLanguage(@"VI_vn", @"vi-Latn-VN"));
+    CHECK(!SGTranslationSameLanguage(@"vi", @"en") && !SGTranslationSameLanguage(@"vi", @"vi-Hani"));
+    CHECK(!SGTranslationSameLanguage(@"zh-Hans", @"zh-Hant") && !SGTranslationSameLanguage(@"en-US", @"en-GB"));
+    SGTranslationStore *regional=[[SGTranslationStore alloc] initWithURL:[root URLByAppendingPathComponent:@"regional.sqlite3"] legacyDirectory:nil];
+    NSMutableDictionary *legacyRegion=[record(@"regional-track") mutableCopy]; legacyRegion[@"language"]=@"vi-VN";
+    CHECK([regional putRecord:legacyRegion replace:YES didWrite:NULL error:nil]);
+    CHECK([regional recordForTrack:@"regional-track" language:@"vi" error:nil]==nil);
+    CHECK([[[regional compatibleRecordForTrack:@"regional-track" language:@"vi" error:nil] objectForKey:@"language"] isEqual:@"vi-VN"]);
+    CHECK([[regional recordForTrack:@"regional-track" language:@"vi-VN" error:nil] isEqual:legacyRegion]);
+    CHECK([regional summaries:nil].count==1); // compatible reads must never migrate or duplicate rows
+    NSMutableDictionary *baseRegion=[record(@"regional-track") mutableCopy];
+    baseRegion[@"lines"]=@{@"Original words":@"Bản chọn tay", @"Additional words":@"Dòng bổ sung"};
+    CHECK([regional putRecord:baseRegion replace:YES didWrite:NULL error:nil]);
+    CHECK([[[regional compatibleRecordForTrack:@"regional-track" language:@"vi" error:nil] objectForKey:@"lines"][@"Original words"] isEqual:@"Bản chọn tay"]);
+    CHECK([[[regional compatibleRecordForTrack:@"regional-track" language:@"vi-VN" error:nil] objectForKey:@"lines"][@"Original words"] isEqual:@"Lời đã dịch"]);
+    CHECK([[[regional compatibleRecordForTrack:@"regional-track" language:@"vi-VN" error:nil] objectForKey:@"lines"][@"Additional words"] isEqual:@"Dòng bổ sung"]);
+    CHECK([regional compatibleRecordForTrack:@"regional-track" language:@"en" error:nil]==nil && [regional compatibleRecordForTrack:@"regional-track" language:@"vi-Hani" error:nil]==nil);
     CHECK([NSFileManager.defaultManager createDirectoryAtURL:root withIntermediateDirectories:YES attributes:nil error:nil]);
     NSURL *legacy=[root URLByAppendingPathComponent:@"Caches" isDirectory:YES];
     CHECK([NSFileManager.defaultManager createDirectoryAtURL:legacy withIntermediateDirectories:YES attributes:nil error:nil]);

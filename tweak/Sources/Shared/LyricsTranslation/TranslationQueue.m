@@ -88,7 +88,7 @@ static NSError *requestError(NSHTTPURLResponse *response, NSError *error) {
             for (SGKaraokeLine *line in original) if (SGTranslationLineNeedsText(SGKaraokeLineText(line))) words = YES;
             if (!words) { done(@"skipped:no_lyrics", nil); return; }
             NSError *readError = nil;
-            BOOL saved = [SGSavedTranslationStore() recordForTrack:track language:language error:&readError] != nil;
+            BOOL saved = [SGSavedTranslationStore() compatibleRecordForTrack:track language:language error:&readError] != nil;
             if (readError) { done(nil, SGTranslationQueueError(SGTranslationStorage, SGLocalized(@"Could not read saved translations."), 0)); return; }
             NSUInteger missing = saved ? SGLyricsSavedTranslationMissing(track, language, original) : original.count;
             if (saved && !missing) { done(@"skipped:saved", nil); return; }

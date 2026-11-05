@@ -1,4 +1,5 @@
 #import "SGTranslationQueue.h"
+#import "Core/TranslationStore/SGTranslationLanguage.h"
 #import <fcntl.h>
 #import <float.h>
 #import <math.h>
@@ -91,7 +92,7 @@ SGTranslationFailure SGTranslationHTTPFailure(NSInteger status, NSError *network
     if (_active || !_paused || _unreadable) return NO;
     BOOL unfinished = NO;
     for (NSDictionary *item in _work) if ([@[@"pending", @"retry"] containsObject:item[@"state"]]) unfinished = YES;
-    if (_language && ![_language isEqual:language] && unfinished) return NO;
+    if (_language && !SGTranslationSameLanguage(_language, language) && unfinished) return NO;
     if (_work.count && !unfinished) {
         // A newly requested scan is a new job. Archive the previous report first; the translation
         // store remains untouched and is rechecked by the adapter before any AI request.

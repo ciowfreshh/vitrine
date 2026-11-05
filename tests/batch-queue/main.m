@@ -54,6 +54,8 @@ int main(void) { @autoreleasepool {
     check(SGTranslationTracksPage(@{@"pages":@[@{@"tracks":@[@{@"uri":@"spotify:track:0000000000000000000001"}], @"next_page_url":@"/context-resolve/v1/page2"}]}, [NSURL URLWithString:@"https://spclient.wg.spotify.com/context-resolve/v1/test"], &next, &count).count == 1 && next.length, @"album/playlist context pagination and relative URL");
     check([SGTranslationTracksPage(@{@"pages":@[@{@"tracks":@[@{@"gid":@"AAAAAAAAAAAAAAAAAAAAAQ=="}]}]}, [NSURL URLWithString:@"https://spclient.wg.spotify.com/"], &next, &count).firstObject[@"id"] isEqual:@"0000000000000000000001"], @"context GID-only tracks convert to Spotify base62 IDs");
     SGTranslationQueue *single = job(root, @"single.json", 1);
+    check([single prepareLanguage:@"vi-VN"] && [single.language isEqual:@"vi-VN"], @"pending Vietnamese queue survives device/picker language alias change");
+    check(![single prepareLanguage:@"en"], @"pending queue still rejects an actual target language change");
     single.execute = ^(NSDictionary *item, NSString *language, void (^done)(NSString *, NSError *)) { done(@"succeeded", nil); };
     [single resume]; check([single.statistics[@"succeeded"] integerValue] == 1, @"one song succeeds and commits");
     check([single recheckSavedResults] && [single.context[@"verifyOnly"] boolValue] && [single.statistics[@"pending"] integerValue] == 1, @"old success can be explicitly rechecked without AI");

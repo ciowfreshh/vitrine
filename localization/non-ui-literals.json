@@ -338,7 +338,7 @@
     "Vitrine.TranslationQueue": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "artist": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "attempts": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "auditSaved": "internal per-item audit scope",
+    "auditSaved": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "code": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "context": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "cooldown": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
@@ -356,7 +356,7 @@
     "pending": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "queue-report-%@.json": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "reason": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
-    "repairSaved": "internal explicit repair mode",
+    "repairSaved": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "retry": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "retryAfter": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "running": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
@@ -450,6 +450,11 @@
     "method": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "offset": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
     "size": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
+  },
+  "tweak/Sources/Core/TranslationStore/SGTranslationLanguage.h": {
+    "abcdefghijklmnopqrstuvwxyz": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "latn": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",
+    "vi": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction"
   },
   "tweak/Sources/Core/TranslationStore/SGTranslationStore.m": {
     "%02x": "technical identifier, external data, protocol token, diagnostic, proper name, legal original or unchanged AI instruction",

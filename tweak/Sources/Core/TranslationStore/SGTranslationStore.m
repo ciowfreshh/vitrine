@@ -1,5 +1,6 @@
 #import "Core/SGLocalization.h"
 #import "SGTranslationStore.h"
+#import "SGTranslationLanguage.h"
 #import <sqlite3.h>
 #import <TargetConditionals.h>
 #import <math.h>
@@ -194,6 +195,46 @@ static BOOL text(id value, NSUInteger limit) {
     });
     if (error) *error = failure;
     return rows;
+}
+
+- (NSArray<NSDictionary *> *)recordsForTrack:(NSString *)track compatibleLanguage:(NSString *)language error:(NSError **)error {
+    __block NSMutableArray<NSDictionary *> *records = [NSMutableArray array];
+    __block NSError *failure = nil;
+    dispatch_sync(_queue, ^{
+        if (![self ready:&failure]) return;
+        sqlite3_stmt *stmt = NULL;
+        if (sqlite3_prepare_v2(self->_db, "SELECT language,json FROM translations WHERE track=? ORDER BY made DESC,language", -1, &stmt, NULL) != SQLITE_OK) {
+            failure = problem(SGLocalized(@"Could not read saved translations.")); return;
+        }
+        sqlite3_bind_text(stmt, 1, track.UTF8String, -1, SQLITE_TRANSIENT);
+        int result;
+        while ((result = sqlite3_step(stmt)) == SQLITE_ROW) {
+            const char *tag = (const char *)sqlite3_column_text(stmt, 0);
+            if (!tag || !SGTranslationSameLanguage(@(tag), language)) continue;
+            NSData *data = [NSData dataWithBytes:sqlite3_column_blob(stmt, 1) length:(NSUInteger)sqlite3_column_bytes(stmt, 1)];
+            id record = [NSJSONSerialization JSONObjectWithData:data options:0 error:&failure];
+            if (![record isKindOfClass:NSDictionary.class]) { if (!failure) failure = problem(SGLocalized(@"Could not read saved translations.")); break; }
+            [records addObject:record];
+        }
+        if (result != SQLITE_DONE && !failure) failure = problem(SGLocalized(@"Could not read saved translations."));
+        sqlite3_finalize(stmt);
+    });
+    if (error) *error = failure;
+    if (failure) return @[];
+    NSString *requested = SGTranslationLanguageTag(language);
+    // Newer records win among aliases. A deliberately selected exact target takes priority.
+    NSMutableArray *ordered = [NSMutableArray array];
+    for (NSDictionary *record in records) if ([SGTranslationLanguageTag(record[@"language"]) isEqual:requested]) [ordered addObject:record];
+    for (NSDictionary *record in records) if (![SGTranslationLanguageTag(record[@"language"]) isEqual:requested]) [ordered addObject:record];
+    return ordered;
+}
+- (NSDictionary *)compatibleRecordForTrack:(NSString *)track language:(NSString *)language error:(NSError **)error {
+    NSArray<NSDictionary *> *records = [self recordsForTrack:track compatibleLanguage:language error:error];
+    if (!records.count) return nil;
+    NSMutableDictionary *record = [records.firstObject mutableCopy], *lines = [NSMutableDictionary dictionary];
+    for (NSDictionary *source in records.reverseObjectEnumerator) if ([source[@"lines"] isKindOfClass:NSDictionary.class]) [lines addEntriesFromDictionary:source[@"lines"]];
+    record[@"lines"] = lines;
+    return record;
 }
 
 - (BOOL)removeTrack:(NSString *)track language:(NSString *)language error:(NSError **)error {
