@@ -6,13 +6,15 @@ Bản này dựa trên tag upstream `v1.0.0-beta.17` ở commit `13c48337aa4def4
 
 Mở **Cài đặt Vitrine → Thư viện lời bài hát**, chạm nút menu rồi chọn **Quét Bài hát đã thích**. Thư viện ghi trên thiết bị sau từng bài. Quét tiếp đọc lại danh sách của tài khoản hiện tại, giữ các bài đã có lời và thử lại những bài chưa có lời.
 
-Để tải cả lời khi quét, đặt **Nguồn lời được cấp phép** thành địa chỉ HTTPS của một kho mà bạn có quyền tải, lưu và xuất lời. Kho cần trả JSON của từng bài tại `<địa-chỉ>/<trackId>.json`, hoặc trả HTTP 404/204 nếu bài chưa có lời. Nguồn này nhận định danh bài, còn phiên đăng nhập Spotify chỉ được dùng với máy chủ Spotify để quét thông tin bài. Bạn cũng có thể nhập trực tiếp lời mình được phép sử dụng từ ứng dụng Tệp.
+App tự lấy lời gốc khi quét. Nó dùng lời đã tải cho trình phát, thử Spotify, rồi thử các nguồn lời đang bật trong Vitrine. Nếu đã cấu hình **Nguồn lời được cấp phép**, app hỏi kho đó trước. Kho riêng trả JSON của bài tại `<địa-chỉ>/<trackId>.json`. Bạn vẫn có thể nhập trực tiếp lời từ ứng dụng Tệp.
 
 - **Chọn tất cả** chọn toàn bộ thư viện, kể cả bài ngoài bộ lọc đang mở.
 - **Xuất mục đã chọn** và **Xuất tất cả** tạo ZIP gồm `manifest.json` cùng một tệp `tracks/<trackId>.json` cho từng bài. Bài thiếu lời vẫn có thông tin và trạng thái.
 - Để thêm bản dịch, chỉ thêm thuộc tính `translation` vào từng dòng. Giữ nguyên `id`, `index`, `text`, `startMs` và `endMs`.
 - **Nhập JSON hoặc ZIP** nhận một tệp bài hát, tài liệu JSON chứa danh sách bài hoặc ZIP theo định dạng đã xuất. Khi một mục lỗi, các mục hợp lệ đã ghi vẫn còn. Sửa tệp và nhập lại để tiếp tục.
 - **Xóa lời lưu của mục đã chọn** xóa các mục tại thiết bị. Spotify vẫn giữ lượt thích của bạn.
+
+Phát bài đã nhập và mở trang lời bài hát của giao diện thiết kế mới. Bản dịch hiện ngay dưới dòng gốc. Nút dịch trên trang lời có mục **Chỉ hiện lời gốc** hoặc **Hiện bản dịch trong thư viện**.
 
 ## Định dạng phiên bản 1
 

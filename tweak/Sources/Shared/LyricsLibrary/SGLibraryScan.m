@@ -1,5 +1,7 @@
 #import "SGLibraryScan.h"
 #import "SGLibraryModel.h"
+#import "SGLibraryOriginal.h"
+#import "Shared/LyricsSources/LyricsSources.h"
 #import "SGLibraryStore.h"
 #import "Shared/Lyrics/Lyrics.h"
 
@@ -186,6 +188,8 @@ static NSURLSession *scanSession(void) {
         request.allHTTPHeaderFields = headers;
     }
     [request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    if ([url.host isEqual:spotifyHost] && [url.path hasPrefix:@"/color-lyrics/"])
+        [NSURLProtocol setProperty:@YES forKey:SGLyricsOwnRequestKey inRequest:request];
     NSUInteger generation = _generation;
     _task = [scanSession() dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
         NSInteger status = !error && [response isKindOfClass:NSHTTPURLResponse.class] ? [(NSHTTPURLResponse *)response statusCode] : 0;
@@ -315,8 +319,12 @@ static NSURLSession *scanSession(void) {
 }
 
 - (void)processLyrics:(NSDictionary *)track headers:(NSDictionary *)headers {
-    if (!_source || [track[@"lines"] count]) {
+    if ([track[@"lines"] count]) {
         [self commit:track headers:headers pauseForError:NO];
+        return;
+    }
+    if (!_source) {
+        [self fetchSpotifyOriginal:track headers:headers];
         return;
     }
     NSURL *url = [_source URLByAppendingPathComponent:[track[@"trackId"] stringByAppendingString:@".json"]];
@@ -328,11 +336,58 @@ static NSURLSession *scanSession(void) {
             for (NSString *key in @[@"source", @"language", @"lines"]) record[key] = candidate[key];
             if (![record[@"title"] length]) record[@"title"] = candidate[@"title"];
             if (![record[@"artists"] count]) record[@"artists"] = candidate[@"artists"];
+            [self commit:record headers:headers pauseForError:NO];
         } else {
-            record[@"status"] = status == 404 || status == 204 ? @"missing" : @"error";
+            [self fetchSpotifyOriginal:track headers:headers];
         }
-        [self commit:record headers:headers pauseForError:status == 0 || status == 429 || status >= 500];
     }];
+}
+
+- (void)fetchSpotifyOriginal:(NSDictionary *)track headers:(NSDictionary *)headers {
+    NSString *trackID = track[@"trackId"];
+    NSArray<SGKaraokeLine *> *cached = SGKaraokeLinesForTrack(trackID);
+    NSDictionary *original = SGLibraryOriginalFromLines(track, cached, SGLyricsCreditFor(trackID));
+    if (original) {
+        [self commit:original headers:headers pauseForError:NO];
+        return;
+    }
+    NSString *address = [NSString stringWithFormat:@"https://%@/color-lyrics/v2/track/%@?format=json&vocalRemoval=false&market=from_token", spotifyHost, trackID];
+    [self request:[NSURL URLWithString:address] headers:headers done:^(id json, NSInteger status) {
+        NSDictionary *record = SGLibrarySpotifyOriginal(track, json);
+        if (record) {
+            [self commit:record headers:headers pauseForError:NO];
+            return;
+        }
+        if (status == 429 || status == 0 || status >= 500) {
+            [self finishMissing:track headers:headers status:status];
+            return;
+        }
+        [self tryVitrineSources:track headers:headers status:status];
+    }];
+}
+
+- (void)tryVitrineSources:(NSDictionary *)track headers:(NSDictionary *)headers status:(NSInteger)status {
+    if (!SGLyricsEnabled()) {
+        [self finishMissing:track headers:headers status:status];
+        return;
+    }
+    SGLyricsQuery *query = [SGLyricsQuery new];
+    query.trackID = track[@"trackId"];
+    query.title = track[@"title"];
+    query.artist = [track[@"artists"] firstObject];
+    NSUInteger generation = _generation;
+    SGLyricsFetchForQuery(query, ^(SGLyricsResult *result) {
+        if (generation != self->_generation) return;
+        NSDictionary *record = SGLibraryOriginalFromLines(track, result.karaokeLines, result.provider ?: @"Vitrine");
+        if (record) [self commit:record headers:headers pauseForError:NO];
+        else [self finishMissing:track headers:headers status:status];
+    });
+}
+
+- (void)finishMissing:(NSDictionary *)track headers:(NSDictionary *)headers status:(NSInteger)status {
+    NSMutableDictionary *record = [track mutableCopy];
+    record[@"status"] = status == 404 || status == 204 ? @"missing" : @"error";
+    [self commit:record headers:headers pauseForError:status == 0 || status == 429 || status >= 500];
 }
 
 - (void)commit:(NSDictionary *)track headers:(NSDictionary *)headers pauseForError:(BOOL)pauseForError {
@@ -363,9 +418,10 @@ static NSURLSession *scanSession(void) {
                     (unsigned long)_processed, (unsigned long)_tracks.count]];
         return;
     }
-    if (_processed == 1 || _processed % 20 == 0) {
-        [self report:[NSString stringWithFormat:@"Đang xử lý %lu/%lu bài · %lu lỗi",
-                      (unsigned long)_processed, (unsigned long)_tracks.count, (unsigned long)_failed]];
+    if (_processed == 1 || _processed % 10 == 0) {
+        [self report:[NSString stringWithFormat:@"Đang lấy lời %lu/%lu bài · %lu có lời · %lu chưa tìm thấy · %lu lỗi",
+                      (unsigned long)_processed, (unsigned long)_tracks.count, (unsigned long)(_original + _translated),
+                      (unsigned long)_missing, (unsigned long)_failed]];
         [NSNotificationCenter.defaultCenter postNotificationName:SGLibraryDidChange object:nil];
     }
     [self processNextWithHeaders:headers];

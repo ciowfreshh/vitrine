@@ -1,4 +1,5 @@
 #import "SGLyricsLibrary.h"
+#import "SGLibraryOriginal.h"
 #import "Shared/Lyrics/Lyrics.h"
 
 NSString *const SGLibraryShowTranslationKey = @"spotifyglass.synaLibrary.showTranslation";
@@ -30,4 +31,20 @@ NSArray<SGKaraokeLine *> *SGLibraryKaraokeLines(NSDictionary *record) {
         [result addObject:line];
     }
     return result.count ? SGKaraokeInTimeOrder(result) : nil;
+}
+
+
+NSArray<SGKaraokeLine *> *SGLibraryOverlayTranslations(NSArray<SGKaraokeLine *> *original, NSArray<SGKaraokeLine *> *imported) {
+    if (!original.count || original.count != imported.count) return imported;
+    NSMutableArray<SGKaraokeLine *> *merged = [NSMutableArray arrayWithCapacity:original.count];
+    for (NSUInteger i = 0; i < original.count; i++) {
+        SGKaraokeLine *base = original[i], *library = imported[i];
+        if (base.start != library.start || (base.timing == SGKaraokeTimingNone) != (library.timing == SGKaraokeTimingNone) ||
+            ![SGLibraryLineText(base) isEqual:SGKaraokeLineText(library)]) return imported;
+        SGKaraokeLine *line = [base copy];
+        line.translation = library.translation;
+        line.translationMade = NO;
+        [merged addObject:line];
+    }
+    return merged;
 }

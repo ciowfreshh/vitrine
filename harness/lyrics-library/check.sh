@@ -9,7 +9,7 @@ printf '#import <Foundation/Foundation.h>\n' > "$build_dir/UIKit/UIKit.h"
 xcrun --sdk macosx clang -fobjc-arc -fblocks -Werror -Wno-incompatible-pointer-types \
   -I"$sources" -I"$build_dir" -framework Foundation -framework CoreFoundation -lz \
   harness/lyrics-library/main.m \
-  "$sources"/Shared/LyricsLibrary/{SGLibraryModel,SGLibraryZIP,SGLibraryStore,SGLibraryScan,SGLibraryPlayback}.m \
+  "$sources"/Shared/LyricsLibrary/{SGLibraryModel,SGLibraryZIP,SGLibraryStore,SGLibraryScan,SGLibraryPlayback,SGLibraryOriginal}.m \
   "$sources"/Core/SGVietnamese.m "$sources"/Shared/Lyrics/KaraokeTiming.m \
   -o "$build_dir/check"
 "$build_dir/check"

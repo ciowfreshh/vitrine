@@ -6,10 +6,19 @@
 #import "Shared/LyricsLibrary/SGLibraryScan.h"
 #import "Shared/LyricsLibrary/SGLyricsLibrary.h"
 #import "Shared/Lyrics/Lyrics.h"
+#import "Shared/LyricsSources/LyricsSources.h"
+#import "Shared/LyricsLibrary/SGLibraryOriginal.h"
 
 void SGSpclientHeaders(void (^completion)(NSDictionary *headers)) { completion(nil); }
 void SGLog(NSString *format, ...) {}
 NSString *SGKaraokeCollectionContext(void) { return nil; }
+NSArray<SGKaraokeLine *> *SGKaraokeLinesForTrack(NSString *trackID) { return nil; }
+NSString *SGLyricsCreditFor(NSString *trackID) { return nil; }
+BOOL SGLyricsEnabled(void) { return NO; }
+void SGLyricsFetchForQuery(SGLyricsQuery *query, void (^done)(SGLyricsResult *result)) { done(nil); }
+NSString *const SGLyricsOwnRequestKey = @"TestOwnedRequest";
+@implementation SGLyricsQuery
+@end
 
 static void check(BOOL condition, NSString *message) {
     if (condition) return;
@@ -125,8 +134,32 @@ int main(void) {
         check(liked.count == 1 && [liked[0][@"title"] isEqual:@"Tên bài"] &&
             [liked[0][@"artists"] isEqual:@[@"Nghệ sĩ"]] && SGLibrarySpotifyPageURL(next) &&
             !SGLibrarySpotifyPageURL(@"https://api.spotify.com/v1/me"), @"Spotify Web API pagination");
+        NSDictionary *source = @{@"lyrics": @{@"syncType": @"LINE_SYNCED", @"providerDisplayName": @"Fixture",
+            @"language": @"en", @"lines": @[
+                @{@"startTimeMs": @"1500", @"endTimeMs": @"2000", @"words": @"A quiet line ((Hey))"},
+                @{@"startTimeMs": @"3500", @"endTimeMs": @"0", @"words": @"A quiet line ((Hey))"},
+            ]}};
+        NSDictionary *scanned = SGLibrarySpotifyOriginal(fixture(13), source);
+        check([scanned[@"status"] isEqual:@"original"] && [scanned[@"language"] isEqual:@"en"] &&
+              [scanned[@"lines"][0][@"text"] isEqual:@"A quiet line ((Hey))"] &&
+              [scanned[@"lines"][0][@"startMs"] isEqual:@1500] && [scanned[@"lines"][1][@"endMs"] isEqual:NSNull.null],
+              @"lyrics scan fills a previously metadata-only track with original lyrics");
+        check([store save:scanned error:nil] && [store exportIDs:@[trackID(13)] toURL:backup error:nil],
+              @"newly scanned lyrics export straight from Liked Songs");
+        SGLibraryZIP *scannedZip = [[SGLibraryZIP alloc] initWithData:[NSData dataWithContentsOfURL:backup] error:nil];
+        NSString *trackFile = [NSString stringWithFormat:@"tracks/%@.json", trackID(13)];
+        NSDictionary *scannedFile = SGLibraryReadJSON([scannedZip dataForName:trackFile error:nil], nil);
+        writeJSON(translatedTrack(scannedFile), single);
+        check([[store importURL:single error:nil][@"translated"] intValue] == 1, @"import a translation of the newly scanned lyrics");
+        NSArray<SGKaraokeLine *> *scanLines = SGLibraryKaraokeLines(scanned);
+        NSArray<SGKaraokeLine *> *importedLines = SGLibraryKaraokeLines([store track:trackID(13) error:nil]);
+        NSArray<SGKaraokeLine *> *overlay = SGLibraryOverlayTranslations(scanLines, importedLines);
+        check(overlay.count == 2 && overlay[0].words == scanLines[0].words &&
+              [overlay[0].translation isEqual:@"Dòng thứ nhất"] && [overlay[1].translation isEqual:@"Dòng điệp khúc"],
+              @"inline player displays the imported translations on separate original lines");
+        check(!SGLibrarySpotifyOriginal(fixture(13), @{@"lyrics": @{@"lines": @[]}}), @"empty network lyrics stay missing");
         [NSFileManager.defaultManager removeItemAtURL:root error:nil];
-        puts("PASS: 2100 tracks, JSON/ZIP round trip, playback line timing, missing, duplicates, invalid data, deletion and resume");
+        puts("PASS: Spotify original lyrics fixture and inline translations; 2100 tracks, JSON/ZIP round trip, playback line timing, missing, duplicates, invalid data, deletion and resume");
     }
     return 0;
 }

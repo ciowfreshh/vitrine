@@ -588,7 +588,7 @@ static void whenNamed(NSString *trackID, NSTimeInterval waited) {
     });
 }
 
-void SGLyricsFetch(NSString *trackID, void (^done)(SGLyricsResult *result)) {
+static void fetch(NSString *trackID, SGLyricsQuery *query, void (^done)(SGLyricsResult *result)) {
     setUp();
     dispatch_async(dispatch_get_main_queue(), ^{
         if (!trackID.length) {
@@ -606,8 +606,17 @@ void SGLyricsFetch(NSString *trackID, void (^done)(SGLyricsResult *result)) {
             return;
         }
         sg_waiting[trackID] = [NSMutableArray arrayWithObject:[done copy]];
-        whenNamed(trackID, 0);
+        if (query) startWalk(trackID, query);
+        else whenNamed(trackID, 0);
     });
+}
+
+void SGLyricsFetch(NSString *trackID, void (^done)(SGLyricsResult *result)) {
+    fetch(trackID, nil, done);
+}
+
+void SGLyricsFetchForQuery(SGLyricsQuery *query, void (^done)(SGLyricsResult *result)) {
+    fetch(query.trackID, query, done);
 }
 
 BOOL SGLyricsMayHave(NSString *trackID) {

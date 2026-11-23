@@ -79,7 +79,7 @@ static NSString *statusTitle(NSString *status) {
 - (void)updateStatus {
     SGLibraryScanner *scanner = SGLibraryScanner.shared;
     _status.text = [NSString stringWithFormat:@"%lu bài · %lu đã chọn\n%@", (unsigned long)_all.count,
-                    (unsigned long)_selected.count, scanner.progress ?: @"Quét Bài hát đã thích để bắt đầu."];
+                    (unsigned long)_selected.count, scanner.progress ?: @"Quét Bài hát đã thích để tải lời gốc."];
     [self updateMenu];
 }
 
@@ -160,8 +160,8 @@ static NSString *statusTitle(NSString *status) {
                    identifier:nil options:0 children:filters],
         [self action:@"Chọn tất cả" symbol:@"checkmark.circle" selector:@selector(selectAll) disabled:!_all.count],
         [self action:@"Bỏ chọn tất cả" symbol:@"circle" selector:@selector(clearSelection) disabled:!_selected.count],
-        [self action:@"Xuất mục đã chọn" symbol:@"square.and.arrow.up" selector:@selector(exportSelected) disabled:!_selected.count || _busy],
-        [self action:@"Xuất tất cả" symbol:@"square.and.arrow.up.on.square" selector:@selector(exportAll) disabled:!_all.count || _busy],
+        [self action:@"Xuất mục đã chọn" symbol:@"square.and.arrow.up" selector:@selector(exportSelected) disabled:!_selected.count || _busy || scan],
+        [self action:@"Xuất tất cả" symbol:@"square.and.arrow.up.on.square" selector:@selector(exportAll) disabled:!_all.count || _busy || scan],
         [self action:@"Nhập JSON hoặc ZIP" symbol:@"square.and.arrow.down" selector:@selector(pickImport) disabled:_busy],
         [self action:@"Xóa lời lưu của mục đã chọn" symbol:@"trash" selector:@selector(confirmDelete) disabled:!_selected.count || _busy || scan],
     ]];
@@ -186,7 +186,7 @@ static NSString *statusTitle(NSString *status) {
 
 - (void)editSource {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Nguồn lời được cấp phép"
-        message:@"Nhập địa chỉ HTTPS của kho lời mà bạn có quyền tải và xuất. Kho trả một tệp <Spotify track ID>.json theo định dạng Thư viện cho mỗi bài. Bỏ trống để chỉ dùng JSON hoặc ZIP nhập từ Tệp."
+        message:@"Nhập địa chỉ HTTPS của kho lời mà bạn có quyền tải và xuất. Kho trả một tệp <Spotify track ID>.json theo định dạng Thư viện cho mỗi bài. Bỏ trống để tự lấy lời từ Spotify và các nguồn đã bật trong Vitrine."
         preferredStyle:UIAlertControllerStyleAlert];
     [alert addTextFieldWithConfigurationHandler:^(UITextField *field) {
         field.text = [NSUserDefaults.standardUserDefaults stringForKey:sourceKey];
@@ -227,7 +227,20 @@ static NSString *statusTitle(NSString *status) {
 - (void)exportAll { [self exportIDs:[_all valueForKey:@"trackId"]]; }
 
 - (void)exportIDs:(NSArray *)ids {
-    if (_busy || !ids.count) return;
+    if (_busy || !ids.count || SGLibraryScanner.shared.isRunning) return;
+    NSSet *selected = [NSSet setWithArray:ids];
+    BOOL hasLyrics = NO;
+    for (NSDictionary *record in _all) {
+        if ([selected containsObject:record[@"trackId"]] &&
+            ([record[@"status"] isEqual:@"original"] || [record[@"status"] isEqual:@"translated"])) {
+            hasLyrics = YES;
+            break;
+        }
+    }
+    if (!hasLyrics) {
+        [self alert:@"Chưa có lời để xuất" message:@"Quét lại hoặc chọn bài có lời gốc trước khi xuất ZIP để dịch."];
+        return;
+    }
     _busy = YES;
     [self updateMenu];
     dispatch_async(SGLibraryQueue(), ^{

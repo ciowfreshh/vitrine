@@ -225,6 +225,7 @@ typedef struct {
     NSDictionary *_libraryRecord;
     NSArray<SGKaraokeLine *> *_libraryLines;
     NSArray<SGKaraokeLine *> *_activeLibraryLines;
+    NSArray<SGKaraokeLine *> *_libraryPlaybackBase;
     NSUInteger _libraryRevision;
     BOOL _untranslated;   // whether a line with words has no translation, which a translator can fill in
     SGTranslationSource *_saved;   // who made the song's saved translation and when, nil with none saved
@@ -308,6 +309,7 @@ typedef struct {
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(restyle) name:SGRLyricsTextDidChangeNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(restyle) name:SGLyricsRomanisedDidChangeNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(libraryChanged:) name:SGLibraryDidChange object:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(libraryPlaybackChanged:) name:SGKaraokeLinesKeptNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(translationsChanged) name:SGLyricsTranslationsDidChangeNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(sourceChosen:) name:SGLyricsSourceChosenNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(lookChanged) name:SGRLyricsLookDidChangeNotification object:nil];
@@ -390,13 +392,14 @@ typedef struct {
 }
 
 - (void)syncLibraryLines {
+    _libraryPlaybackBase = SGKaraokeLinesForTrack(_track);
     if (!_libraryLines.count) {
         _activeLibraryLines = nil;
         return;
     }
     if (!SGLibraryShowsTranslation()) {
         _activeLibraryLines = nil;
-        if (SGKaraokeLinesForTrack(_track).count) return;
+        if (_libraryPlaybackBase.count) return;
         NSMutableArray<SGKaraokeLine *> *original = [NSMutableArray arrayWithCapacity:_libraryLines.count];
         for (SGKaraokeLine *entry in _libraryLines) {
             SGKaraokeLine *line = [entry copy];
@@ -406,25 +409,14 @@ typedef struct {
         _activeLibraryLines = original;
         return;
     }
-    NSArray<SGKaraokeLine *> *original = SGKaraokeLinesForTrack(_track);
-    if (original.count != _libraryLines.count) {
-        _activeLibraryLines = _libraryLines;
-        return;
-    }
-    NSMutableArray<SGKaraokeLine *> *merged = [NSMutableArray arrayWithCapacity:original.count];
-    for (NSUInteger i = 0; i < original.count; i++) {
-        SGKaraokeLine *base = original[i], *imported = _libraryLines[i];
-        if (base.start != imported.start || (base.timing == SGKaraokeTimingNone) != (imported.timing == SGKaraokeTimingNone) ||
-            ![SGKaraokeLineText(base) isEqual:SGKaraokeLineText(imported)]) {
-            _activeLibraryLines = _libraryLines;
-            return;
-        }
-        SGKaraokeLine *line = [base copy];
-        line.translation = imported.translation;
-        line.translationMade = NO;
-        [merged addObject:line];
-    }
-    _activeLibraryLines = merged;
+    _activeLibraryLines = SGLibraryOverlayTranslations(_libraryPlaybackBase, _libraryLines);
+}
+
+- (void)libraryPlaybackChanged:(NSNotification *)notification {
+    if (!_libraryLines.count || ![notification.object isEqual:_track] ||
+        _libraryPlaybackBase == SGKaraokeLinesForTrack(_track)) return;
+    [self syncLibraryLines];
+    [self dropLines];
 }
 
 - (void)libraryChanged:(NSNotification *)notification {
@@ -1418,6 +1410,7 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
         _libraryRecord = nil;
         _libraryLines = nil;
         _activeLibraryLines = nil;
+        _libraryPlaybackBase = nil;
         [self dropLines];
         [self libraryChanged:nil];
     }
