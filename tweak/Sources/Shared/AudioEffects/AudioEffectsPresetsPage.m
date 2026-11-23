@@ -57,10 +57,7 @@ static NSArray<NSString *> *userPresetNames(void) {
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    _footer = SGNote(@"Picking a preset turns Audio effects on and replaces the other effects' settings. A built-in "
-                      "preset leaves the Graphic EQ, your headphones' correction, as it is; your own presets keep every "
-                      "effect, the Graphic EQ too. What you had before the first pick is kept under Yours as Before presets. "
-                      "Swipe left on one of yours to delete it.");
+    _footer = SGNote(@"Chọn cấu hình sẽ bật Hiệu ứng âm thanh và áp dụng cài đặt trong đó. Cấu hình tích hợp giữ nguyên cân bằng đồ họa của tai nghe. Cấu hình tự tạo lưu cả cân bằng đồ họa. Cài đặt trước lần chọn đầu tiên nằm trong Của bạn. Vuốt sang trái để xóa cấu hình tự tạo.");
     self.tableView.tableFooterView = _footer;
 }
 
@@ -369,8 +366,7 @@ static BOOL headphoneInUse(void) {
 
 - (NSString *)outputFooter {
     NSString *name = SGAutoEqOutputName();
-    return [NSString stringWithFormat:@"With this on, the correction you pick is kept for %@. It comes back each time audio plays through "
-            "%@, and goes off on outputs with none remembered.", name, name];
+    return [NSString stringWithFormat:@"Khi bật, cấu hình hiệu chỉnh được lưu cho %@. Cấu hình tự áp dụng khi phát qua %@ và tắt khi dùng đầu ra chưa lưu cấu hình.", name, name];
 }
 
 - (UIView *)tableView:(UITableView *)table viewForFooterInSection:(NSInteger)section {

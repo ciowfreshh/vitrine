@@ -45,9 +45,7 @@ static NSString *playingLocalFile(void) {
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    _footer = SGNote(@"Import for current track links the file to the local file playing, whatever its tags say. "
-                      "Import LRC… keeps a file for any track whose title and artist match its [ti:] and [ar:] tags, "
-                      "or its name as \"Artist - Title\". Swipe left on a file to delete it.");
+    _footer = SGNote(@"Nhập lời cho bài đang phát sẽ gắn tệp lời với bản nhạc cục bộ hiện tại. Nhập LRC… ghép theo thẻ [ti:] và [ar:] hoặc tên tệp dạng \"Nghệ sĩ - Tên bài\". Vuốt tệp sang trái để xóa.");
     self.tableView.tableFooterView = _footer;
 }
 

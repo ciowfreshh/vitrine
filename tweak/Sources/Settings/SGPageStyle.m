@@ -1,4 +1,5 @@
 #import "SGPageStyle.h"
+#import "Core/SGVietnamese.h"
 #import "Core/SGCore.h"
 
 // The rows' title font of Spotify's settings list ([0]) and of its side drawer ([1]).
@@ -77,7 +78,7 @@ UIImageView *SGSymbolView(NSString *name, CGFloat size, UIImageSymbolWeight weig
 // A gray note in a wrapper view, for the table header and footer.
 UIView *SGNote(NSString *text) {
     UILabel *label = [UILabel new];
-    label.text = text;
+    label.text = SGVI(text);
     label.font = SGSubtitleFont();
     label.adjustsFontForContentSizeCategory = YES;
     label.textColor = SGGrey();
@@ -358,7 +359,7 @@ void SGOpenURL(NSString *url) {
 }
 
 void SGOfferRestart(NSString *message) {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Khởi động lại Spotify" message:message preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Khởi động lại Spotify" message:SGVI(message) preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"Để sau" style:UIAlertActionStyleCancel handler:nil]];
     [alert addAction:[UIAlertAction actionWithTitle:@"Khởi động lại ngay" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) { SGRestartSpotify(); }]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];

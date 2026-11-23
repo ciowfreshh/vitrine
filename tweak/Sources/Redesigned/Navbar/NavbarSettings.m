@@ -225,7 +225,7 @@ typedef NS_ENUM(NSInteger, SGRSplitSection) {
         cell.accessibilityHint = entry[SGRNavbarURI] ? @"Opens the tab to edit it" : nil;
     } else {
         SGFillCell(cell, _stock[(NSUInteger)path.row], nil, nil, nil);
-        cell.accessibilityHint = @"Moves the tab to the right end of the bar";
+        cell.accessibilityHint = @"Đưa thẻ về cuối bên phải";
     }
     return cell;
 }

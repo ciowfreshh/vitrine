@@ -57,14 +57,15 @@ static BOOL validName(NSString *name) {
                 unpacked > zipLimit - total || word(entry + 34) || (flags & ~0x080eU) ||
                 (method != 0 && method != Z_DEFLATED) || (method == 0 && packed != unpacked)) goto invalid;
             NSString *name = [[NSString alloc] initWithBytes:entry + 46 length:nameLength encoding:NSUTF8StringEncoding];
-            if (!validName(name) || entries[name]) goto invalid;
+            BOOL directory = [name isEqual:@"tracks/"];
+            if ((!directory && !validName(name)) || entries[name] || (directory && unpacked)) goto invalid;
             const uint8_t *localHeader = p + local;
             NSUInteger headerLength = 30 + nameLength + word(localHeader + 28);
             if (longword(localHeader) != 0x04034b50 || word(localHeader + 6) != flags ||
                 word(localHeader + 8) != method || word(localHeader + 26) != nameLength ||
                 headerLength > start - local || packed > start - local - headerLength ||
                 memcmp(localHeader + 30, entry + 46, nameLength)) goto invalid;
-            entries[name] = @[@(local + headerLength), @(packed), @(unpacked), @(method), @(crc)];
+            if (!directory) entries[name] = @[@(local + headerLength), @(packed), @(unpacked), @(method), @(crc)];
             total += unpacked;
             offset += entrySize;
         }

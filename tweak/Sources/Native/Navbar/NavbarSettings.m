@@ -76,8 +76,7 @@ static void appendTab(NSDictionary *tab) {
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    _intro = SGNote(@"Tabs switched on here sit apart from the others at the right end of the bar, the way the Music "
-                    "app sets Search apart. Hidden tabs stay hidden.");
+    _intro = SGNote(@"Các thẻ bật ở đây nằm riêng bên phải, tương tự Tìm kiếm trong Apple Music. Thẻ đã ẩn vẫn được giữ ẩn.");
     self.tableView.tableHeaderView = _intro;
     _entries = navbarEntries();
     _split = [NSMutableSet setWithArray:SGNavbarSplit()];

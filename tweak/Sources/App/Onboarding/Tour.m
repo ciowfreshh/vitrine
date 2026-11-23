@@ -1,4 +1,5 @@
 #import "Core/SGCore.h"
+#import "Core/SGVietnamese.h"
 #import "Settings/SGPageStyle.h"
 #import "Onboarding.h"
 #import "App/About/About.h"

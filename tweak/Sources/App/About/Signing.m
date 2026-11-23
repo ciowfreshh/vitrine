@@ -57,12 +57,7 @@ static void showFix(void) {
     UIViewController *top = SGTopController();
     if (!appID || !top) return;
     NSString *message = [NSString stringWithFormat:
-        @"Sign Spotify again with the bundle id set to\n\n%@\n\n"
-        @"In Feather that is the Identifier field; leave PPQ protection off, it appends a random "
-        @"string and breaks this again.\n\n"
-        @"Why: this build is installed as %@ but signed under the App ID %@. iOS opens the now "
-        @"playing card by the App ID, so it asks for an app that is not there. Nothing else in the "
-        @"mod is affected.", appID, bundleID, appID];
+        @"Ký lại Spotify với Bundle ID sau\n\n%@\n\nTrong Feather, nhập vào trường Identifier. Giữ PPQ protection tắt để Feather không thêm hậu tố ngẫu nhiên.\n\nBản này được cài với mã %@ nhưng ký dưới App ID %@. Khi chạm thẻ đang phát, iOS mở theo App ID của chứng chỉ nên không tìm thấy ứng dụng. Các tính năng còn lại vẫn hoạt động.", appID, bundleID, appID];
     UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"Màn hình khóa không mở được Spotify"
                                                                   message:message
                                                            preferredStyle:UIAlertControllerStyleAlert];
