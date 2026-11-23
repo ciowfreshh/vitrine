@@ -16,6 +16,7 @@
 //   UITableView bg #121212: header with an 11pt gray description at (16, 24), 53pt cells with the
 #import "Core/SGCore.h"
 #import "Shared/Haptics/SGHapticRelay.h"
+#import "Shared/LyricsLibrary/SGLyricsLibrary.h"
 #import "Settings/SGPage.h"
 #import "Settings/SGPageStyle.h"
 #import "Settings/SGModPage.h"
@@ -89,7 +90,8 @@ static UIViewController *modSettingsPage(void) {
         redesignedHome,
         home,
         pageRow(@"Player", @"play.fill", UIColor.systemPinkColor, ^UIViewController *{ return SGPlayerSettingsPage(); }),
-        pageRow(@"Lyrics", @"quote.bubble.fill", UIColor.systemOrangeColor, ^UIViewController *{ return SGLyricsSettingsPage(); }),
+        pageRow(@"Lời bài hát", @"quote.bubble.fill", UIColor.systemOrangeColor, ^UIViewController *{ return SGLyricsSettingsPage(); }),
+        pageRow(@"Thư viện lời bài hát", @"books.vertical.fill", UIColor.systemOrangeColor, ^UIViewController *{ return SGLyricsLibraryPage(); }),
         albums,
         artists,
     ])];
@@ -154,7 +156,7 @@ static UIViewController *modSettingsPage(void) {
     if (!(self = [super initWithFrame:frame])) return nil;
     _icon = SGSymbolView(@"slider.horizontal.3", 20, UIImageSymbolWeightRegular, 24);
     _title = [UILabel new];
-    _title.text = @"Mod Settings";
+    _title.text = @"Cài đặt Vitrine";
     _title.textColor = UIColor.whiteColor;
     _chevron = SGSymbolView(@"chevron.right", 11, UIImageSymbolWeightSemibold, 12);
     for (UIView *v in @[_icon, _title, _chevron]) [self addSubview:v];

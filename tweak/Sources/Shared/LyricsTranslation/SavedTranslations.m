@@ -1,29 +1,24 @@
 // Translations kept on disk, whichever way they were made: one small JSON file a song and language in
-// Caches/Vitrine/Translations, each line's text to its translation under "lines" with who made it ("by",
-// "model") and when ("made", seconds since 1970), so a song comes back translated after
-// a relaunch and lyrics from another source still find their lines. The newest kKept files stay; iOS may
-// clear Caches when it runs low, which costs a translation again.
+// Application Support/Vitrine/Translations, with a fallback for translations made by an older build.
 #import "Core/SGCore.h"
 #import "Settings/SGModPage.h"
 #import "Settings/SGPageStyle.h"
 #import "Shared/Lyrics/Lyrics.h"
 #import "LyricsTranslation.h"
 
-static const NSUInteger kKept = 200;
-
-static NSURL *folder(void) {
-    NSURL *caches = [NSFileManager.defaultManager URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask].firstObject;
-    return [[caches URLByAppendingPathComponent:@"Vitrine" isDirectory:YES] URLByAppendingPathComponent:@"Translations" isDirectory:YES];
+static NSURL *folder(NSSearchPathDirectory directory) {
+    NSURL *root = [NSFileManager.defaultManager URLsForDirectory:directory inDomains:NSUserDomainMask].firstObject;
+    return [root URLByAppendingPathComponent:@"Vitrine/Translations" isDirectory:YES];
 }
 
-static NSURL *fileFor(NSString *track, NSString *language) {
+static NSURL *fileFor(NSString *track, NSString *language, NSSearchPathDirectory directory) {
     NSCharacterSet *unsafe = [NSCharacterSet characterSetWithCharactersInString:@"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"].invertedSet;
     NSString *tag = [[language componentsSeparatedByCharactersInSet:unsafe] componentsJoinedByString:@"_"];
-    return [folder() URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.%@.json", track, tag]];
+    return [folder(directory) URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.%@.json", track, tag]];
 }
 
 static NSArray<NSURL *> *files(void) {
-    return [NSFileManager.defaultManager contentsOfDirectoryAtURL:folder() includingPropertiesForKeys:@[NSURLContentModificationDateKey, NSURLFileSizeKey]
+    return [NSFileManager.defaultManager contentsOfDirectoryAtURL:folder(NSApplicationSupportDirectory) includingPropertiesForKeys:@[NSURLContentModificationDateKey, NSURLFileSizeKey]
                                                           options:NSDirectoryEnumerationSkipsHiddenFiles error:nil] ?: @[];
 }
 
@@ -42,7 +37,8 @@ NSDictionary<NSString *, NSString *> *SGSavedTranslationLines(id json, SGTransla
 
 SGTranslationSource *SGLyricsSyncSavedTranslation(NSString *track, NSString *language, NSArray<SGKaraokeLine *> *lines) {
     if (!track.length || !language.length || !lines.count) return nil;
-    NSData *data = [NSData dataWithContentsOfURL:fileFor(track, language)];
+    NSData *data = [NSData dataWithContentsOfURL:fileFor(track, language, NSApplicationSupportDirectory)];
+    if (!data) data = [NSData dataWithContentsOfURL:fileFor(track, language, NSCachesDirectory)];
     SGTranslationSource *source = nil;
     NSDictionary *saved = SGSavedTranslationLines(data ? [NSJSONSerialization JSONObjectWithData:data options:0 error:nil] : nil, &source);
     BOOL shown = NO;
@@ -85,30 +81,22 @@ SGTranslationSource *SGLyricsSaveTranslation(NSString *track, NSString *language
     if (source.model) file[@"model"] = source.model;
     NSData *data = [NSJSONSerialization dataWithJSONObject:file options:0 error:nil];
     dispatch_async(writes(), ^{
-        [NSFileManager.defaultManager createDirectoryAtURL:folder() withIntermediateDirectories:YES attributes:nil error:nil];
-        [data writeToURL:fileFor(track, language) atomically:YES];
-        NSArray<NSURL *> *all = files();
-        if (all.count <= kKept) return;
-        NSArray<NSURL *> *oldestFirst = [all sortedArrayUsingComparator:^NSComparisonResult(NSURL *a, NSURL *b) {
-            NSDate *da, *db;
-            [a getResourceValue:&da forKey:NSURLContentModificationDateKey error:nil];
-            [b getResourceValue:&db forKey:NSURLContentModificationDateKey error:nil];
-            return [da ?: NSDate.distantPast compare:db ?: NSDate.distantPast];
-        }];
-        for (NSUInteger i = 0; i < all.count - kKept; i++) [NSFileManager.defaultManager removeItemAtURL:oldestFirst[i] error:nil];
+        [NSFileManager.defaultManager createDirectoryAtURL:folder(NSApplicationSupportDirectory) withIntermediateDirectories:YES attributes:nil error:nil];
+        [data writeToURL:fileFor(track, language, NSApplicationSupportDirectory) atomically:YES];
     });
     return [SGTranslationSource by:source.by model:source.model made:now];
 }
 
 BOOL SGLyricsHasSavedTranslation(NSString *track, NSString *language) {
     if (!track.length || !language.length) return NO;
-    return [NSFileManager.defaultManager fileExistsAtPath:fileFor(track, language).path];
+    return [NSFileManager.defaultManager fileExistsAtPath:fileFor(track, language, NSApplicationSupportDirectory).path] ||
+           [NSFileManager.defaultManager fileExistsAtPath:fileFor(track, language, NSCachesDirectory).path];
 }
 
 // After any write still queued, so it cannot bring a file back.
-static void deleteQueued(NSURL *url, NSString *what) {
+static void deleteQueued(NSArray<NSURL *> *urls, NSString *what) {
     dispatch_async(writes(), ^{
-        [NSFileManager.defaultManager removeItemAtURL:url error:nil];
+        for (NSURL *url in urls) [NSFileManager.defaultManager removeItemAtURL:url error:nil];
         dispatch_async(dispatch_get_main_queue(), ^{
             SGLog(@"translation: %@ deleted", what);
             [NSNotificationCenter.defaultCenter postNotificationName:SGLyricsTranslationsDidChangeNotification object:nil];
@@ -119,7 +107,7 @@ static void deleteQueued(NSURL *url, NSString *what) {
 void SGLyricsDeleteSavedTranslation(NSString *track, NSString *language) {
     if (!track.length || !language.length) return;
     SGLyricsForgetAITranslation(track, language);
-    deleteQueued(fileFor(track, language), [NSString stringWithFormat:@"%@ in %@", track, language]);
+    deleteQueued(@[fileFor(track, language, NSApplicationSupportDirectory), fileFor(track, language, NSCachesDirectory)], [NSString stringWithFormat:@"%@ in %@", track, language]);
 }
 
 static NSString *summary(void) {
@@ -143,7 +131,7 @@ SGModRow *SGSavedTranslationsRow(void) {
             message:@"Songs translated before are translated again the next time you ask." preferredStyle:UIAlertControllerStyleAlert];
         [alert addAction:[UIAlertAction actionWithTitle:@"Delete" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
             SGLyricsForgetAITranslation(nil, nil);
-            deleteQueued(folder(), @"saved translations");
+            deleteQueued(@[folder(NSApplicationSupportDirectory), folder(NSCachesDirectory)], @"saved translations");
         }]];
         [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
         [SGTopController() presentViewController:alert animated:YES completion:nil];

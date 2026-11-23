@@ -1,0 +1,79 @@
+name: Spotify SYNA Beta.17
+on:
+  push:
+    branches: [syna-vitrine-beta17]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: spotify-syna-beta17-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  THEOS: ${{ github.workspace }}/theos
+jobs:
+  source:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - run: scripts/check-layers.sh tweak/Sources
+      - run: harness/lyrics-library/check.sh
+  ipa:
+    needs: source
+    runs-on: macos-latest
+    if: github.repository == 'ciowfreshh/vitrine' && github.ref == 'refs/heads/syna-vitrine-beta17'
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - uses: actions/checkout@v5
+        with:
+          repository: theos/theos
+          path: theos
+          submodules: recursive
+          persist-credentials: false
+      - name: Install build tools
+        run: |
+          brew install make dpkg ldid
+          python3 -m pip install --break-system-packages git+https://github.com/asdfzxcvbn/pyzule-rw.git
+      - name: Verify supplied Spotify input
+        run: |
+          mkdir -p ipa
+          curl --fail --silent --show-error --location --retry 3 --proto '=https' \
+            'https://github.com/codeboy2012/PwEevee/releases/download/v3.1.6.1/com.spotify.client_9.1.90_und3fined.ipa' \
+            -o ipa/spotify.ipa
+          echo '409601a58953818eea17edb92963d10256ae6fcf00c69954105e5becc08ec296  ipa/spotify.ipa' | shasum -a 256 -c -
+      - name: Build Spotify SYNA
+        run: scripts/pipeline.sh ipa/spotify.ipa --no-flex --name 'Spotify SYNA' -o out/Spotify_SYNA_Beta17.ipa
+      - name: Verify output and record build
+        run: |
+          IPA=out/Spotify_SYNA_Beta17.ipa
+          unzip -tq "$IPA"
+          python3 - "$IPA" <<'PY'
+          import plistlib, re, sys, zipfile
+          with zipfile.ZipFile(sys.argv[1]) as ipa:
+              info = [n for n in ipa.namelist() if re.fullmatch(r"Payload/[^/]+\.app/Info\.plist", n)]
+              assert len(info) == 1, info
+              app = plistlib.loads(ipa.read(info[0]))
+              assert app.get("CFBundleDisplayName") == "Spotify SYNA", app.get("CFBundleDisplayName")
+              assert app.get("CFBundleShortVersionString") == "9.1.90"
+              assert any(n.endswith("/spotifyglass.dylib") for n in ipa.namelist()), "Missing Vitrine tweak"
+          PY
+          {
+            echo "Spotify SYNA, Vitrine Beta.17, Spotify 9.1.90"
+            echo "Commit: $GITHUB_SHA"
+            echo "Runner: $(sw_vers -productVersion)"
+            xcodebuild -version
+            shasum -a 256 "$IPA"
+          } | tee out/build-report.txt >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v5
+        with:
+          name: Spotify_SYNA_Beta17
+          path: |
+            out/Spotify_SYNA_Beta17.ipa
+            out/build-report.txt
+          if-no-files-found: error
