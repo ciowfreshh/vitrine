@@ -1245,7 +1245,7 @@ static void askForKey(void) {
     [alert addAction:paste];
     if (save) [alert addAction:save];
     if (stored) {
-        [alert addAction:[UIAlertAction actionWithTitle:@"Remove" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+        [alert addAction:[UIAlertAction actionWithTitle:@"Xóa" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
             storeSecret(p, kKeyAccount, nil);
             storeSecret(p, kServerAccount, nil);
             if ([p->tag isEqualToString:@"gemini"]) {
@@ -1255,7 +1255,7 @@ static void askForKey(void) {
             translatorChanged();
         }]];
     }
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
@@ -1418,11 +1418,11 @@ static void fetchGeminiModels(void) {
 static void askForModel(void) {
     const SGAIProvider *p = chosen();
     NSString *example = p->models[1] ?: p->models[0] ?: @"gpt-6-astra, or a model your server lists";
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:[NSString stringWithFormat:@"%@ model", p->name]
-        message:[NSString stringWithFormat:@"A model id, such as %@.", example] preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:[NSString stringWithFormat:@"Mô hình %@", p->name]
+        message:[NSString stringWithFormat:@"Mã định danh mô hình, ví dụ %@.", example] preferredStyle:UIAlertControllerStyleAlert];
     alert.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
     __weak UIAlertController *weakAlert = alert;
-    UIAlertAction *save = [UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    UIAlertAction *save = [UIAlertAction actionWithTitle:@"Lưu" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         NSString *modelID = modelIDIn(weakAlert.textFields.firstObject.text, p);
         if (modelID) [NSUserDefaults.standardUserDefaults setObject:modelID forKey:modelKey(p)];
         translatorChanged();
@@ -1437,7 +1437,7 @@ static void askForModel(void) {
         forControlEvents:UIControlEventEditingChanged];
     }];
     [alert addAction:save];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
@@ -1511,8 +1511,8 @@ static NSArray<NSString *> *modelMenu(const SGAIProvider *p) {
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemClose target:self action:@selector(close)];
     // Plain: Spotify's white tint fills a Done item's glass and hides its glyph.
     UIBarButtonItem *done = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"checkmark"] style:UIBarButtonItemStylePlain target:self action:@selector(save)];
-    done.accessibilityLabel = @"Save";
-    UIBarButtonItem *reset = [[UIBarButtonItem alloc] initWithTitle:@"Default" style:UIBarButtonItemStylePlain target:self action:@selector(reset)];
+    done.accessibilityLabel = @"Lưu";
+    UIBarButtonItem *reset = [[UIBarButtonItem alloc] initWithTitle:@"Mặc định" style:UIBarButtonItemStylePlain target:self action:@selector(reset)];
     self.navigationItem.rightBarButtonItems = @[done, reset];
 }
 
@@ -1609,7 +1609,7 @@ NSArray<SGModRow *> *SGAITranslatorRows(void) {
     NSMutableArray<NSString *> *timeouts = [NSMutableArray array];
     for (NSNumber *seconds in timeoutSeconds) [timeouts addObject:[NSString stringWithFormat:@"%@ s", seconds]];
     SGModRow *timeout = SGMenuRow(@"Timeout", timeouts, ^NSString *{
-        return [NSString stringWithFormat:@"%ld s", (long)aiTimeout()];
+        return [NSString stringWithFormat:@"%ld giây", (long)aiTimeout()];
     }, ^(NSInteger index) {
         NSInteger seconds = timeoutSeconds[index].integerValue;
         if (seconds == kDefaultAITimeout) [NSUserDefaults.standardUserDefaults removeObjectForKey:SGKeyAITimeout];

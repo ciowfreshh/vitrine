@@ -142,7 +142,7 @@ NSString *SGSponsorBlockSummary(void) {
     for (size_t i = 0; i < kCategoryCount; i++) {
         if (SGSponsorBlockCategoryBehavior(kCategories[i].key) != SGSponsorBlockBehaviorOff) active++;
     }
-    return active ? [NSString stringWithFormat:@"%lu active", (unsigned long)active] : @"None";
+    return active ? [NSString stringWithFormat:@"%lu đang hoạt động", (unsigned long)active] : @"None";
 }
 
 BOOL SGSponsorBlockSubSwitchEnabled(NSString *key) {
@@ -184,7 +184,7 @@ static UIViewController *sponsorBlockAdvancedPage(void) {
     __block __weak SGModPage *weakPage = nil;
 
     SGModRow *serverRow = SGWithSymbol(SGActionRow(@"Server URL", @"Custom SponsorBlock API server address", ^{
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Server URL"
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"URL máy chủ"
                                                                        message:@"Enter custom SponsorBlock API server address (default: https://sponsor.ajay.app)"
                                                                 preferredStyle:UIAlertControllerStyleAlert];
         __weak UIAlertController *weakAlert = alert;
@@ -195,16 +195,16 @@ static UIViewController *sponsorBlockAdvancedPage(void) {
             textField.autocapitalizationType = UITextAutocapitalizationTypeNone;
             textField.autocorrectionType = UITextAutocorrectionTypeNo;
         }];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+        [alert addAction:[UIAlertAction actionWithTitle:@"Lưu" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
             UITextField *tf = weakAlert.textFields.firstObject;
             SGSetSponsorBlockServerURL(tf.text);
             [weakPage.tableView reloadData];
         }]];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Reset to Default" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+        [alert addAction:[UIAlertAction actionWithTitle:@"Khôi phục mặc định" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
             SGSetSponsorBlockServerURL(nil);
             [weakPage.tableView reloadData];
         }]];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+        [alert addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
         presentDarkAlert(alert);
     }), @"network");
     serverRow.value = ^NSString *{
@@ -229,7 +229,7 @@ static UIViewController *sponsorBlockAdvancedPage(void) {
         });
 
     SGModRow *resetAction = SGWithSymbol(SGActionRow(@"Reset advanced settings", @"Restore default server and duration settings", ^{
-        UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"Reset what?"
+        UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"Chọn nội dung muốn đặt lại"
                                                                         message:nil
                                                                  preferredStyle:UIAlertControllerStyleActionSheet];
         void (^resetSettings)(BOOL) = ^(BOOL includeStats) {
@@ -246,13 +246,13 @@ static UIViewController *sponsorBlockAdvancedPage(void) {
             SGSponsorBlockPreferencesDidChange();
             [weakPage.tableView reloadData];
         };
-        [sheet addAction:[UIAlertAction actionWithTitle:@"Settings (toggles + categories + colors)" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Cài đặt (công tắc, danh mục và màu)" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
             resetSettings(NO);
         }]];
-        [sheet addAction:[UIAlertAction actionWithTitle:@"Everything (settings + statistics)" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Tất cả (cài đặt và thống kê)" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
             resetSettings(YES);
         }]];
-        [sheet addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
         UIView *source = weakPage.view ?: SGTopController().view;
         sheet.popoverPresentationController.sourceView = source;
         sheet.popoverPresentationController.sourceRect = CGRectMake(CGRectGetMidX(source.bounds), CGRectGetMidY(source.bounds), 1, 1);
@@ -261,7 +261,7 @@ static UIViewController *sponsorBlockAdvancedPage(void) {
     }), @"arrow.counterclockwise");
     resetAction.color = SGRed();
 
-    SGModPage *page = [[SGModPage alloc] initWithTitle:@"Advanced" intro:nil sections:@[
+    SGModPage *page = [[SGModPage alloc] initWithTitle:@"Nâng cao" intro:nil sections:@[
         SGSection(@"Server", @[serverRow]),
         SGSection(@"Tuning", @[minDuration, toastDuration, promptDuration]),
         SGSection(nil, @[resetAction]),
@@ -291,14 +291,14 @@ UIViewController *SGSponsorBlockSettingsPage(void) {
     }
 
     SGModRow *resetCategoriesRow = SGWithSymbol(SGActionRow(@"Reset categories and colors", @"Restore default behaviors and segment colors", ^{
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Reset categories and colors?"
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Đặt lại danh mục và màu?"
                                                                         message:@"This restores all categories to their default behaviors and segment colors."
                                                                  preferredStyle:UIAlertControllerStyleAlert];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Reset" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+        [alert addAction:[UIAlertAction actionWithTitle:@"Đặt lại" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
             SGResetSponsorBlockCategoriesToDefaults();
             [weakPage.tableView reloadData];
         }]];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+        [alert addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
         presentDarkAlert(alert);
     }), @"arrow.counterclockwise");
     [categories addObject:resetCategoriesRow];
@@ -314,14 +314,14 @@ UIViewController *SGSponsorBlockSettingsPage(void) {
     }), @"clock");
 
     SGModRow *resetStatsRow = SGWithSymbol(SGActionRow(@"Reset statistics", nil, ^{
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Reset statistics?"
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Đặt lại thống kê?"
                                                                         message:@"This clears your skipped segment count and time saved."
                                                                  preferredStyle:UIAlertControllerStyleAlert];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Reset" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+        [alert addAction:[UIAlertAction actionWithTitle:@"Đặt lại" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
             SGResetSponsorBlockStats();
             [weakPage.tableView reloadData];
         }]];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+        [alert addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
         presentDarkAlert(alert);
     }), @"trash");
 

@@ -1,6 +1,7 @@
 #import <dlfcn.h>
 #import <objc/message.h>
 #import "Core/SGCore.h"
+#import "Core/SGVietnamese.h"
 #import "Shared/Lyrics/Lyrics.h"
 #import "Shared/LyricsSources/LyricsSources.h"
 #import "Shared/AlbumQueue/AlbumQueue.h"
@@ -140,7 +141,7 @@ static NSArray<NSString *> *textsOfLines(NSArray<SGKaraokeLine *> *lines) {
 static void resolveTracks(NSString *uri, void (^completion)(NSArray<NSString *> *trackIDs, NSString *error)) {
     SGSpclientHeaders(^(NSDictionary<NSString *, NSString *> *headers) {
         if (!headers) {
-            completion(nil, @"Spotify is not ready");
+            completion(nil, @"Spotify chưa sẵn sàng");
             return;
         }
         NSMutableArray<NSString *> *collected = [NSMutableArray array];
@@ -157,7 +158,7 @@ static void resolveTracks(NSString *uri, void (^completion)(NSArray<NSString *> 
                 if (![json isKindOfClass:NSDictionary.class]) {
                     fetchPage = nil;
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        completion(nil, @"Could not load songs");
+                        completion(nil, @"Không tải được danh sách bài hát");
                     });
                     return;
                 }
@@ -310,18 +311,18 @@ static void showBatchErrorAlert(NSString *error) {
     dispatch_async(dispatch_get_main_queue(), ^{
         NSString *title = SGLyricsErrorTitle(error);
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:title
-                                                                       message:error preferredStyle:UIAlertControllerStyleAlert];
+                                                                       message:SGVIError(error) preferredStyle:UIAlertControllerStyleAlert];
         SGPresentDark(alert);
         if ([error hasPrefix:@"Download "]) {
-            [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-            UIAlertAction *open = [UIAlertAction actionWithTitle:@"Open Settings" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+            [alert addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
+            UIAlertAction *open = [UIAlertAction actionWithTitle:@"Mở Cài đặt" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
                 [SGOnDeviceTranslation openTranslateSettings];
             }];
             [alert addAction:open];
             alert.preferredAction = open;
         } else {
-            [alert addAction:[UIAlertAction actionWithTitle:@"Dismiss" style:UIAlertActionStyleCancel handler:nil]];
-            UIAlertAction *open = [UIAlertAction actionWithTitle:@"Open Settings" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+            [alert addAction:[UIAlertAction actionWithTitle:@"Đóng" style:UIAlertActionStyleCancel handler:nil]];
+            UIAlertAction *open = [UIAlertAction actionWithTitle:@"Mở Cài đặt" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
                 SGOpenModSettings(nil);
             }];
             [alert addAction:open];
@@ -339,28 +340,28 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
     }
     sg_translating = YES;
     BOOL isAlbum = SGAlbumQueueIsAlbumURI(uri);
-    NSString *entityName = isAlbum ? @"Album" : @"Playlist";
+    NSString *entityName = isAlbum ? @"album" : @"danh sách phát";
     NSString *targetLang = SGLyricsTranslationTarget();
 
-    [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"Translating %@", entityName] detail:@"Resolving songs…" symbol:@"translate" persistent:YES];
+    [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"Đang dịch %@", entityName] detail:@"Đang tải danh sách bài…" symbol:@"translate" persistent:YES];
 
     resolveTracks(uri, ^(NSArray<NSString *> *trackIDs, NSString *resolveError) {
         if (resolveError || !trackIDs.count) {
             sg_translating = NO;
-            [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"Could Not Load %@", entityName] detail:resolveError ?: @"No songs found" symbol:@"exclamationmark.circle" persistent:NO];
+            [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"Không tải được %@", entityName] detail:resolveError ?: @"Không tìm thấy bài hát" symbol:@"exclamationmark.circle" persistent:NO];
             return;
         }
-        [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"Translating %@", entityName] detail:@"Checking lyrics…" symbol:@"translate" persistent:YES];
+        [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"Đang dịch %@", entityName] detail:@"Đang kiểm tra lời bài hát…" symbol:@"translate" persistent:YES];
         filterCandidateSongs(trackIDs, targetLang, ^(NSArray<SGBatchCandidateSong *> *candidates, NSUInteger savedCount, NSUInteger sameLangCount) {
             if (!candidates.count) {
                 sg_translating = NO;
                 if (savedCount > 0 && sameLangCount == 0) {
-                    NSString *detail = savedCount == 1 ? @"1 song saved" : [NSString stringWithFormat:@"%lu songs saved", (unsigned long)savedCount];
-                    [SGAlbumQueueNotice showIn:window title:@"Already Translated" detail:detail symbol:@"checkmark.circle" persistent:NO];
+                    NSString *detail = savedCount == 1 ? @"Đã lưu 1 bài" : [NSString stringWithFormat:@"Đã lưu %lu bài", (unsigned long)savedCount];
+                    [SGAlbumQueueNotice showIn:window title:@"Đã có bản dịch" detail:detail symbol:@"checkmark.circle" persistent:NO];
                 } else if (sameLangCount > 0 && savedCount == 0) {
-                    [SGAlbumQueueNotice showIn:window title:@"Already in Your Language" detail:nil symbol:@"checkmark.circle" persistent:NO];
+                    [SGAlbumQueueNotice showIn:window title:@"Lời đã bằng ngôn ngữ bạn chọn" detail:nil symbol:@"checkmark.circle" persistent:NO];
                 } else if (savedCount > 0) {
-                    [SGAlbumQueueNotice showIn:window title:@"Already Translated" detail:nil symbol:@"checkmark.circle" persistent:NO];
+                    [SGAlbumQueueNotice showIn:window title:@"Đã có bản dịch" detail:nil symbol:@"checkmark.circle" persistent:NO];
                 } else {
                     [SGAlbumQueueNotice showIn:window title:@"No Lyrics Found" detail:nil symbol:@"exclamationmark.circle" persistent:NO];
                 }
@@ -382,7 +383,7 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                 NSMutableSet<NSString *> *savedTrackIDs = [NSMutableSet set];
                 SGTranslationSource *source = SGAITranslatorSource();
                 NSString *providerName = SGAITranslatorName() ?: @"AI";
-                NSString *translatingTitle = [NSString stringWithFormat:@"Translating %@", entityName];
+                NSString *translatingTitle = [NSString stringWithFormat:@"Đang dịch %@", entityName];
 
                 void (^saveSongTranslation)(SGBatchCandidateSong *, NSArray<NSString *> *) = ^(SGBatchCandidateSong *song, NSArray<NSString *> *trans) {
                     if (!song || trans.count != song.lines.count || [savedTrackIDs containsObject:song.trackID]) return;
@@ -404,8 +405,8 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                     if (chunkIndex >= chunks.count) {
                         processChunk = nil;
                         sg_translating = NO;
-                        NSString *detail = completed == 1 ? @"1 song saved" : [NSString stringWithFormat:@"%lu songs saved", (unsigned long)completed];
-                        [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"%@ Translated", entityName] detail:detail symbol:@"checkmark.circle" persistent:NO];
+                        NSString *detail = completed == 1 ? @"Đã lưu 1 bài" : [NSString stringWithFormat:@"Đã lưu %lu bài", (unsigned long)completed];
+                        [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"Đã dịch %@", entityName] detail:detail symbol:@"checkmark.circle" persistent:NO];
                         [NSNotificationCenter.defaultCenter postNotificationName:SGLyricsTranslationsDidChangeNotification object:nil];
                         return;
                     }
@@ -418,19 +419,19 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                         lookup[song.trackID] = song;
                     }
                     NSString *askDetail = completed > 0
-                        ? [NSString stringWithFormat:@"%lu of %lu songs…", (unsigned long)completed, (unsigned long)total]
-                        : [NSString stringWithFormat:@"Asking %@…", providerName];
+                        ? [NSString stringWithFormat:@"%lu trên %lu bài…", (unsigned long)completed, (unsigned long)total]
+                        : [NSString stringWithFormat:@"Đang gửi yêu cầu đến %@…", providerName];
                     [SGAlbumQueueNotice showIn:window title:translatingTitle detail:askDetail symbol:@"sparkles" persistent:YES];
 
                     SGLyricsTranslateBatchWithAI(songsMap, targetLang, ^(NSString *phase) {
                         if (!sg_translating) return;
                         if ([phase isEqualToString:@"Thinking…"]) {
                             NSString *thinkDetail = completed > 0
-                                ? [NSString stringWithFormat:@"Thinking • %lu/%lu…", (unsigned long)completed, (unsigned long)total]
-                                : @"Thinking…";
+                                ? [NSString stringWithFormat:@"Đang xử lý · %lu/%lu…", (unsigned long)completed, (unsigned long)total]
+                                : @"Đang xử lý…";
                             [SGAlbumQueueNotice showIn:window title:translatingTitle detail:thinkDetail symbol:@"sparkles" persistent:YES];
                         } else if ([phase isEqualToString:@"Writing"]) {
-                            NSString *writeDetail = [NSString stringWithFormat:@"%lu of %lu songs…", (unsigned long)MIN(completed + 1, total), (unsigned long)total];
+                            NSString *writeDetail = [NSString stringWithFormat:@"%lu trên %lu bài…", (unsigned long)MIN(completed + 1, total), (unsigned long)total];
                             [SGAlbumQueueNotice showIn:window title:translatingTitle detail:writeDetail symbol:@"sparkles" persistent:YES];
                         }
                     }, ^(NSString *trackKey, NSArray<NSString *> *lines) {
@@ -447,7 +448,7 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                         }
                         if (song && lines.count == song.lines.count && ![savedTrackIDs containsObject:song.trackID]) {
                             saveSongTranslation(song, lines);
-                            NSString *progressDetail = [NSString stringWithFormat:@"%lu of %lu songs…", (unsigned long)MIN(completed + 1, total), (unsigned long)total];
+                            NSString *progressDetail = [NSString stringWithFormat:@"%lu trên %lu bài…", (unsigned long)MIN(completed + 1, total), (unsigned long)total];
                             [SGAlbumQueueNotice showIn:window title:translatingTitle detail:progressDetail symbol:@"sparkles" persistent:YES];
                         }
                     }, ^(NSDictionary<NSString *, NSArray<NSString *> *> *results, NSString *error) {
@@ -463,11 +464,11 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                             processChunk = nil;
                             sg_translating = NO;
                             if (completed > 0) {
-                                NSString *title = [NSString stringWithFormat:@"Translated %lu of %lu", (unsigned long)completed, (unsigned long)total];
-                                [SGAlbumQueueNotice showIn:window title:title detail:error ?: @"Could not read reply" symbol:@"exclamationmark.circle" persistent:NO];
+                                NSString *title = [NSString stringWithFormat:@"Đã dịch %lu trên %lu", (unsigned long)completed, (unsigned long)total];
+                                [SGAlbumQueueNotice showIn:window title:title detail:error ?: @"Không đọc được phản hồi" symbol:@"exclamationmark.circle" persistent:NO];
                                 [NSNotificationCenter.defaultCenter postNotificationName:SGLyricsTranslationsDidChangeNotification object:nil];
                             } else {
-                                showBatchErrorAlert(error ?: @"Could not read reply");
+                                showBatchErrorAlert(error ?: @"Không đọc được phản hồi");
                             }
                             return;
                         }
@@ -486,14 +487,14 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                         translateNext = nil;
                         sg_translating = NO;
                         if (completed == total) {
-                            NSString *detail = completed == 1 ? @"1 song saved" : [NSString stringWithFormat:@"%lu songs saved", (unsigned long)completed];
-                            [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"%@ Translated", entityName] detail:detail symbol:@"checkmark.circle" persistent:NO];
+                            NSString *detail = completed == 1 ? @"Đã lưu 1 bài" : [NSString stringWithFormat:@"Đã lưu %lu bài", (unsigned long)completed];
+                            [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"Đã dịch %@", entityName] detail:detail symbol:@"checkmark.circle" persistent:NO];
                         } else if (completed > 0) {
-                            NSString *title = [NSString stringWithFormat:@"Translated %lu of %lu", (unsigned long)completed, (unsigned long)total];
-                            NSString *detail = lastError ?: [NSString stringWithFormat:@"%lu songs saved", (unsigned long)completed];
+                            NSString *title = [NSString stringWithFormat:@"Đã dịch %lu trên %lu", (unsigned long)completed, (unsigned long)total];
+                            NSString *detail = lastError ?: [NSString stringWithFormat:@"Đã lưu %lu bài", (unsigned long)completed];
                             [SGAlbumQueueNotice showIn:window title:title detail:detail symbol:@"exclamationmark.circle" persistent:NO];
                         } else {
-                            showBatchErrorAlert(lastError ?: @"Could not translate songs");
+                            showBatchErrorAlert(lastError ?: @"Không dịch được các bài hát");
                         }
                         if (completed > 0) {
                             [NSNotificationCenter.defaultCenter postNotificationName:SGLyricsTranslationsDidChangeNotification object:nil];
@@ -501,7 +502,7 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                         return;
                     }
                     SGBatchCandidateSong *song = candidates[idx];
-                    [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"Translating %@", entityName] detail:[NSString stringWithFormat:@"%lu of %lu songs…", (unsigned long)(idx + 1), (unsigned long)total] symbol:symbol persistent:YES];
+                    [SGAlbumQueueNotice showIn:window title:[NSString stringWithFormat:@"Đang dịch %@", entityName] detail:[NSString stringWithFormat:@"%lu trên %lu bài…", (unsigned long)(idx + 1), (unsigned long)total] symbol:symbol persistent:YES];
                     void (^onDone)(NSArray<NSString *> *, NSString *) = ^(NSArray<NSString *> *translations, NSString *err) {
                         if (!err && translations.count == song.lines.count) {
                             for (NSUInteger lIdx = 0; lIdx < song.lines.count; lIdx++) {
@@ -521,8 +522,8 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                                 translateNext = nil;
                                 sg_translating = NO;
                                 if (completed > 0) {
-                                    NSString *title = [NSString stringWithFormat:@"Translated %lu of %lu", (unsigned long)completed, (unsigned long)total];
-                                    [SGAlbumQueueNotice showIn:window title:title detail:err symbol:@"exclamationmark.circle" persistent:NO];
+                                    NSString *title = [NSString stringWithFormat:@"Đã dịch %lu trên %lu", (unsigned long)completed, (unsigned long)total];
+                                    [SGAlbumQueueNotice showIn:window title:title detail:SGVIError(err) symbol:@"exclamationmark.circle" persistent:NO];
                                     [NSNotificationCenter.defaultCenter postNotificationName:SGLyricsTranslationsDidChangeNotification object:nil];
                                 } else {
                                     showBatchErrorAlert(err);
@@ -616,7 +617,7 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
     UIWindow *strongWindow = window;
 
     if (onDevice) {
-        UIAction *action = [UIAction actionWithTitle:@"Translate on iPhone" image:[UIImage systemImageNamed:@"translate"] identifier:nil handler:^(UIAction *a) {
+        UIAction *action = [UIAction actionWithTitle:@"Dịch trên iPhone" image:[UIImage systemImageNamed:@"translate"] identifier:nil handler:^(UIAction *a) {
             [weakMenu dismissViewControllerAnimated:YES completion:nil];
             SGBatchTranslateURI(uri, SGBatchTranslationEngineOnDevice, strongWindow);
         }];

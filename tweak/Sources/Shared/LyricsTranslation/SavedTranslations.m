@@ -107,7 +107,7 @@ static void deleteQueued(NSArray<NSURL *> *urls, NSString *what) {
 void SGLyricsDeleteSavedTranslation(NSString *track, NSString *language) {
     if (!track.length || !language.length) return;
     SGLyricsForgetAITranslation(track, language);
-    deleteQueued(@[fileFor(track, language, NSApplicationSupportDirectory), fileFor(track, language, NSCachesDirectory)], [NSString stringWithFormat:@"%@ in %@", track, language]);
+    deleteQueued(@[fileFor(track, language, NSApplicationSupportDirectory), fileFor(track, language, NSCachesDirectory)], [NSString stringWithFormat:@"%@ bằng %@", track, language]);
 }
 
 static NSString *summary(void) {
@@ -127,13 +127,13 @@ SGModRow *SGSavedTranslationsRow(void) {
     return SGStatActionRow(@"Saved translations", @"Songs translated on this iPhone or by an AI translator come back translated",
                            ^NSString *{ return summary(); }, ^{
         if (!files().count) return;
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Delete saved translations?"
-            message:@"Songs translated before are translated again the next time you ask." preferredStyle:UIAlertControllerStyleAlert];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Delete" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Xóa các bản dịch đã lưu?"
+            message:@"Các bài này sẽ được dịch lại khi bạn yêu cầu." preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:@"Xóa" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
             SGLyricsForgetAITranslation(nil, nil);
             deleteQueued(@[folder(NSApplicationSupportDirectory), folder(NSCachesDirectory)], @"saved translations");
         }]];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+        [alert addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
         [SGTopController() presentViewController:alert animated:YES completion:nil];
     });
 }

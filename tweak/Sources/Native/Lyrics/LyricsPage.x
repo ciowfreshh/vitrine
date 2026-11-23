@@ -16,9 +16,37 @@
 #import "Native/Player/NowPlaying.h"
 #import "Native/Appearance/Repaint.h"
 #import "Shared/LyricsSources/LyricsSources.h"
+#import "Shared/LyricsLibrary/SGLyricsLibrary.h"
+#import "Settings/SGPageStyle.h"
 #import <objc/runtime.h>
 
-static char kPageGlassKey;
+static char kPageGlassKey, kLibraryButtonKey;
+
+static void addLibraryButton(UIView *page) {
+    if (objc_getAssociatedObject(page, &kLibraryButtonKey)) return;
+    __weak UIView *anchor = page;
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
+    [button setImage:[UIImage systemImageNamed:@"character.bubble"] forState:UIControlStateNormal];
+    button.accessibilityLabel = @"Lời và bản dịch trong thư viện";
+    button.tintColor = UIColor.whiteColor;
+    button.backgroundColor = [UIColor colorWithWhite:0 alpha:0.6];
+    button.layer.cornerRadius = 22;
+    [button addAction:[UIAction actionWithHandler:^(UIAction *action) {
+        if (!anchor.window) return;
+        UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:SGLibraryPlayingLyricsPage()];
+        SGPresentDark(nav);
+        [SGTopController() presentViewController:nav animated:YES completion:nil];
+    }] forControlEvents:UIControlEventTouchUpInside];
+    button.translatesAutoresizingMaskIntoConstraints = NO;
+    [page addSubview:button];
+    [NSLayoutConstraint activateConstraints:@[
+        [button.widthAnchor constraintEqualToConstant:44],
+        [button.heightAnchor constraintEqualToConstant:44],
+        [button.trailingAnchor constraintEqualToAnchor:page.safeAreaLayoutGuide.trailingAnchor constant:-16],
+        [button.bottomAnchor constraintEqualToAnchor:page.safeAreaLayoutGuide.bottomAnchor constant:-16],
+    ]];
+    objc_setAssociatedObject(page, &kLibraryButtonKey, button, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
 
 // A class's name never changes, so its prefix test is answered once (main thread only, as the layout is).
 static BOOL isTransitionClass(Class cls) {
@@ -50,9 +78,10 @@ static UIView *clearAncestors(UIView *view) {
 
 - (void)layoutSubviews {
     %orig;
-    if (!SGFlag(SGKeyLyricsCard, NO)) return;
     UIView *page = (UIView *)self;
     if (page.bounds.size.height < 200) return;
+    addLibraryButton(page);
+    if (!SGFlag(SGKeyLyricsCard, NO)) return;
 
     page.layer.backgroundColor = NULL;
     sg_lyricsPageRoot = clearAncestors(page);

@@ -32,7 +32,7 @@ static NSString *extensionList(SGDSPFileKind kind) {
     if (dotted.count < 2) return dotted.firstObject ?: @"";
     NSString *last = dotted.lastObject;
     [dotted removeLastObject];
-    return [NSString stringWithFormat:@"%@ or %@", [dotted componentsJoinedByString:@", "], last];
+    return [NSString stringWithFormat:@"%@ hoặc %@", [dotted componentsJoinedByString:@", "], last];
 }
 
 static void showAlert(UIViewController *owner, NSString *title, NSString *message) {
@@ -184,7 +184,7 @@ static UITableViewCell *tiledCell(UITableView *table, NSString *title, NSString 
 - (UITableViewCell *)tableView:(UITableView *)table cellForRowAtIndexPath:(NSIndexPath *)path {
     if (path.section == 0) return [self errorCellIn:table];
     if (path.section == 2) {
-        NSString *subtitle = [NSString stringWithFormat:@"A %@ file from Files", extensionList(_kind)];
+        NSString *subtitle = [NSString stringWithFormat:@"Tệp %@ từ ứng dụng Tệp", extensionList(_kind)];
         return tiledCell(table, @"Import file…", subtitle, @"square.and.arrow.down", nil);
     }
     UITableViewCell *cell = SGDequeueCell(table, @"file");
@@ -224,7 +224,7 @@ static UITableViewCell *tiledCell(UITableView *table, NSString *title, NSString 
 - (UISwipeActionsConfiguration *)tableView:(UITableView *)table trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)path {
     if (path.section != 1 || !_files.count) return nil;
     NSString *name = _files[(NSUInteger)path.row];
-    UIContextualAction *delete = [UIContextualAction contextualActionWithStyle:UIContextualActionStyleDestructive title:@"Delete"
+    UIContextualAction *delete = [UIContextualAction contextualActionWithStyle:UIContextualActionStyleDestructive title:@"Xóa"
         handler:^(UIContextualAction *action, UIView *view, void (^done)(BOOL)) {
             [self deleteFile:name at:path];
             done(YES);
@@ -257,7 +257,7 @@ static UITableViewCell *tiledCell(UITableView *table, NSString *title, NSString 
     NSURL *url = urls.firstObject;
     if (!url) return;
     if (![SGDSPFileExtensions(_kind) containsObject:url.pathExtension.lowercaseString]) {
-        showAlert(self, @"Not a file this effect takes", [NSString stringWithFormat:@"Pick a %@ file.", extensionList(_kind)]);
+        showAlert(self, @"Not a file this effect takes", [NSString stringWithFormat:@"Chọn một tệp %@.", extensionList(_kind)]);
         return;
     }
     NSError *error = nil;

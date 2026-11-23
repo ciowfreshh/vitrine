@@ -50,7 +50,7 @@ static NSArray<NSString *> *userPresetNames(void) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Presets";
+    self.title = @"Cấu hình có sẵn";
     _builtIn = SGDSPBuiltInPresetNames();
     return self;
 }
@@ -152,7 +152,7 @@ static NSArray<NSString *> *userPresetNames(void) {
 - (UISwipeActionsConfiguration *)tableView:(UITableView *)table trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)path {
     if (path.section != 1 || !_mine.count) return nil;
     NSString *name = _mine[(NSUInteger)path.row];
-    UIContextualAction *delete = [UIContextualAction contextualActionWithStyle:UIContextualActionStyleDestructive title:@"Delete"
+    UIContextualAction *delete = [UIContextualAction contextualActionWithStyle:UIContextualActionStyleDestructive title:@"Xóa"
         handler:^(UIContextualAction *action, UIView *view, void (^done)(BOOL)) {
             SGDSPDeleteUserPreset(name);
             self->_mine = userPresetNames();
@@ -169,15 +169,15 @@ static NSArray<NSString *> *userPresetNames(void) {
 }
 
 - (void)askForName {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Save preset"
-        message:@"A preset of the same name is replaced." preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Lưu cấu hình"
+        message:@"Cấu hình trùng tên sẽ được thay thế." preferredStyle:UIAlertControllerStyleAlert];
     [alert addTextFieldWithConfigurationHandler:^(UITextField *field) {
-        field.placeholder = @"Name";
+        field.placeholder = @"Tên";
         field.autocapitalizationType = UITextAutocapitalizationTypeSentences;
         field.keyboardAppearance = UIKeyboardAppearanceDark;
     }];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    [alert addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Lưu" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         NSString *name = [alert.textFields.firstObject.text stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
         if (!name.length) return;
         SGDSPSaveUserPreset(name);
@@ -229,7 +229,7 @@ typedef NS_ENUM(NSInteger, SGDSPHeadphoneSection) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Headphones";
+    self.title = @"Tai nghe";
     return self;
 }
 
@@ -238,7 +238,7 @@ typedef NS_ENUM(NSInteger, SGDSPHeadphoneSection) {
     UITableView *table = self.tableView;
     table.keyboardDismissMode = UIScrollViewKeyboardDismissModeOnDrag;
     _search = [UISearchBar new];
-    _search.placeholder = @"Search headphones";
+    _search.placeholder = @"Tìm tai nghe";
     _search.searchBarStyle = UISearchBarStyleMinimal;
     _search.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
     _search.keyboardAppearance = UIKeyboardAppearanceDark;
@@ -302,7 +302,7 @@ typedef NS_ENUM(NSInteger, SGDSPHeadphoneSection) {
         [self.refreshControl endRefreshing];
         if (headphones) self->_all = headphones;
         self->_failed = error != nil;
-        self->_message = error ? [NSString stringWithFormat:@"%@. Tap to try again.", error] : nil;
+        self->_message = error ? [NSString stringWithFormat:@"%@. Chạm để thử lại.", error] : nil;
         [self filter];
     });
 }
@@ -393,8 +393,8 @@ static NSString *correctionName(NSString *path) {
         NSString *uid = SGAutoEqOutputUID();
         BOOL remembered = SGAutoEqOutputRemembered(uid);
         NSString *current = correctionName(headphoneInUse() ? SGDSPString(SGKeyDSPGraphicEqHeadphone) : nil);
-        SGFillCell(cell, [NSString stringWithFormat:@"Use for %@", SGAutoEqOutputName()],
-                   remembered ? [NSString stringWithFormat:@"%@ while it plays", current] : [NSString stringWithFormat:@"Remember %@ for this output", current], nil, nil);
+        SGFillCell(cell, [NSString stringWithFormat:@"Dùng cho %@", SGAutoEqOutputName()],
+                   remembered ? [NSString stringWithFormat:@"%@ khi đang phát", current] : [NSString stringWithFormat:@"Ghi nhớ %@ cho đầu ra này", current], nil, nil);
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
         UISwitch *toggle = [UISwitch new];
         toggle.onTintColor = SGGreen();
@@ -407,10 +407,10 @@ static NSString *correctionName(NSString *path) {
     if (path.section == SGDSPHeadphoneRemembered) {
         NSDictionary<NSString *, NSString *> *output = _remembered[(NSUInteger)path.row];
         BOOL now = [output[@"uid"] isEqualToString:SGAutoEqOutputUID()];
-        SGFillCell(cell, output[@"name"], now ? [NSString stringWithFormat:@"%@ · playing now", correctionName(output[@"path"])] : correctionName(output[@"path"]), nil, nil);
+        SGFillCell(cell, output[@"name"], now ? [NSString stringWithFormat:@"%@ · đang phát", correctionName(output[@"path"])] : correctionName(output[@"path"]), nil, nil);
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
         cell.accessibilityTraits = UIAccessibilityTraitNone;
-        cell.accessibilityHint = @"Swipe left to remove";
+        cell.accessibilityHint = @"Vuốt sang trái để xóa";
         return cell;
     }
     cell.accessibilityHint = nil;
@@ -437,11 +437,11 @@ static NSString *correctionName(NSString *path) {
     if ([headphone.path isEqualToString:_applying]) {
         UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
         spinner.color = SGGrey();
-        spinner.accessibilityLabel = @"Applying";
+        spinner.accessibilityLabel = @"Đang áp dụng";
         [spinner startAnimating];
         cell.accessoryView = spinner;
         // The cell is what VoiceOver reads, not the spinner in it.
-        cell.accessibilityValue = @"Applying";
+        cell.accessibilityValue = @"Đang áp dụng";
         return cell;
     }
     tick(cell, headphoneInUse() && [headphone.path isEqualToString:SGDSPString(SGKeyDSPGraphicEqHeadphone)]);
@@ -461,7 +461,7 @@ static NSString *correctionName(NSString *path) {
 - (UISwipeActionsConfiguration *)tableView:(UITableView *)table trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)path {
     if (path.section != SGDSPHeadphoneRemembered) return nil;
     NSString *uid = _remembered[(NSUInteger)path.row][@"uid"];
-    UIContextualAction *remove = [UIContextualAction contextualActionWithStyle:UIContextualActionStyleDestructive title:@"Remove"
+    UIContextualAction *remove = [UIContextualAction contextualActionWithStyle:UIContextualActionStyleDestructive title:@"Xóa"
         handler:^(UIContextualAction *action, UIView *view, void (^done)(BOOL)) {
             SGAutoEqForgetOutput(uid);
             done(YES);
@@ -490,7 +490,7 @@ static NSString *correctionName(NSString *path) {
     SGAutoEqApply(headphone, ^(NSString *error) {
         self->_applying = nil;
         [self reload:UITableViewRowAnimationNone];
-        if (error) showAlert(self, [NSString stringWithFormat:@"Could not apply %@", headphone.name], error);
+        if (error) showAlert(self, [NSString stringWithFormat:@"Không thể áp dụng %@", headphone.name], error);
     });
 }
 

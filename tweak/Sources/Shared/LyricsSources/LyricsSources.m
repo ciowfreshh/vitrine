@@ -388,7 +388,7 @@ void SGLyricsOpenCreditLinks(NSArray<SGLyricsLink *> *links, UIView *from) {
             [UIApplication.sharedApplication openURL:url options:@{} completionHandler:nil];
         }]];
     }
-    [sheet addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [sheet addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
     sheet.popoverPresentationController.sourceView = from;
     sheet.popoverPresentationController.sourceRect = from.bounds;
     [SGTopController() presentViewController:sheet animated:YES completion:nil];
@@ -670,10 +670,10 @@ NSArray<NSString *> *SGLyricsTranslationLanguages(void) {
 }
 
 NSArray<NSString *> *SGLyricsTranslationLanguageNames(void) {
-    NSLocale *english = [NSLocale localeWithLocaleIdentifier:@"en"];
+    NSLocale *vietnamese = [NSLocale localeWithLocaleIdentifier:@"vi"];
     NSMutableArray<NSString *> *names = [NSMutableArray array];
     for (NSString *tag in SGLyricsTranslationLanguages()) {
-        [names addObject:tag.length ? [english localizedStringForLocaleIdentifier:tag] ?: tag : @"Any · iPhone's language"];
+        [names addObject:tag.length ? [vietnamese localizedStringForLocaleIdentifier:tag] ?: tag : @"Bất kỳ · dùng ngôn ngữ của iPhone"];
     }
     return names;
 }

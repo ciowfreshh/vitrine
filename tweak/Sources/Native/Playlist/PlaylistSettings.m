@@ -2,7 +2,7 @@
 #import "Playlist.h"
 
 UIViewController *SGPlaylistSettingsPage(void) {
-    return [[SGModPage alloc] initWithTitle:@"Playlists" intro:nil sections:@[
+    return [[SGModPage alloc] initWithTitle:@"Danh sách phát" intro:nil sections:@[
         SGSection(@"Header", @[
             SGOptionRow(@"Artwork background", nil, SGKeyPlaylistBackdrop),
         ]),

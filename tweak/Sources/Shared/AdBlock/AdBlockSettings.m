@@ -10,7 +10,7 @@ NSString *const SGFakePremiumWarning = @"This is the part of EeveeSpotify Spotif
 // the thing, off is Spotify's own value. Hide ads and Hide upsells already force the first two
 // sections off, which locks those rows.
 static UIViewController *adFlagsPage(void) {
-    return [[SGModPage alloc] initWithTitle:@"Ad and upsell flags" intro:SGRestartNote sections:@[
+    return [[SGModPage alloc] initWithTitle:@"Cờ quảng cáo và mời nâng cấp" intro:SGRestartNote sections:@[
         SGNotedSection(@"Ads", @[
             SGKillRow(@"Block the ad when the app opens", @"ios-feature-adonappopen.enabled"),
             SGKillRow(@"Block its CTA card", @"ios-feature-adonappopen.cta_card_enabled"),
@@ -44,7 +44,7 @@ UIViewController *SGAdsSettingsPage(void) {
         [counts addObject:SGStatRow(label, ^NSString *{
             NSUInteger checked = SGAdBlockChecked(label);
             return checked == NSNotFound ? @(SGAdBlockCount(label)).stringValue
-                : [NSString stringWithFormat:@"%lu of %lu", (unsigned long)SGAdBlockCount(label), (unsigned long)checked];
+                : [NSString stringWithFormat:@"%lu trên %lu", (unsigned long)SGAdBlockCount(label), (unsigned long)checked];
         })];
     }
     [counts addObject:SGStatRow(@"Total", ^NSString *{
@@ -70,7 +70,7 @@ UIViewController *SGAdsSettingsPage(void) {
     sponsorBlockPage.value = ^NSString *{ return SGSponsorBlockSummary(); };
     sponsorBlockPage.waitsOn = SGKeySponsorBlockEnabled;
 
-    return [[SGModPage alloc] initWithTitle:@"Premium, ads & privacy" intro:SGRestartNote sections:@[
+    return [[SGModPage alloc] initWithTitle:@"Premium, quảng cáo và quyền riêng tư" intro:SGRestartNote sections:@[
         SGNotedSection(@"Ads", ads, @"Audio ads between songs need Spoof Premium."),
         SGNotedSection(@"Podcasts", @[
             sponsorBlock,

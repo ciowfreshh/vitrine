@@ -3,7 +3,7 @@
 #import "NowPlayingBar.h"
 
 UIViewController *SGNowPlayingBarSettingsPage(void) {
-    return [[SGModPage alloc] initWithTitle:@"Now playing bar" intro:SGRestartNote sections:@[
+    return [[SGModPage alloc] initWithTitle:@"Thanh đang phát" intro:SGRestartNote sections:@[
         SGSection(nil, @[
             SGHideRow(@"Hide the device button", nil, SGHideBarConnect),
         ]),

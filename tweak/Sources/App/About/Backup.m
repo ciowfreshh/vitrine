@@ -173,8 +173,8 @@ static void importSettings(NSDictionary *settings) {
         return;
     }
     NSString *mod = [file[@"mod"] isKindOfClass:NSString.class] ? file[@"mod"] : @"unknown";
-    NSString *message = [NSString stringWithFormat:@"Your settings are replaced by the file's, exported from version %@. Anything it does not have goes back to its default, and Spotify restarts.", mod];
-    showAlert(@"Import settings?", message, [UIAlertAction actionWithTitle:@"Import and restart" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+    NSString *message = [NSString stringWithFormat:@"Cài đặt sẽ được thay bằng dữ liệu xuất từ phiên bản %@. Các mục thiếu trong tệp trở về mặc định và Spotify sẽ khởi động lại.", mod];
+    showAlert(@"Import settings?", message, [UIAlertAction actionWithTitle:@"Nhập và khởi động lại" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         importSettings(settings);
     }]);
 }

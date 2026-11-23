@@ -78,7 +78,7 @@ static UILabel *label(NSString *text, UIFontTextStyle style, UIFontWeight weight
     UILabel *title = label(@"What's New in Vitrine", UIFontTextStyleLargeTitle, UIFontWeightBold, UIColor.whiteColor);
     title.textAlignment = NSTextAlignmentCenter;
     title.accessibilityTraits = UIAccessibilityTraitHeader;
-    UILabel *version = label([NSString stringWithFormat:@"Version %s", SG_VERSION], UIFontTextStyleSubheadline, UIFontWeightRegular, SGGrey());
+    UILabel *version = label([NSString stringWithFormat:@"Phiên bản %s", SG_VERSION], UIFontTextStyleSubheadline, UIFontWeightRegular, SGGrey());
     version.textAlignment = NSTextAlignmentCenter;
 
     UIStackView *column = [[UIStackView alloc] initWithArrangedSubviews:@[title, version]];

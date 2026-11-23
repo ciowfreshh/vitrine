@@ -6,7 +6,7 @@
 #import "Album.h"
 
 UIViewController *SGRAlbumSettingsPage(void) {
-    return [[SGModPage alloc] initWithTitle:@"Albums" intro:SGRestartNote sections:@[
+    return [[SGModPage alloc] initWithTitle:@"Album" intro:SGRestartNote sections:@[
         SGNotedSection(@"Apple Music", @[
             SGSwitchRow(@"Animated covers", @"At the top of an album that has one, about 5 MB each", SGRKeyAlbumMotion),
             SGOptionRow(@"Download in Low Data Mode", nil, SGKeyMotionLowData),

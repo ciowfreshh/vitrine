@@ -72,7 +72,7 @@ BOOL SGLiveActivityAllowedByInstall(void) {
 // At the top while the install lacks the key, saying why nothing shows and what to do.
 static SGModRow *missingRow(void) {
     SGModRow *row = SGWarningRow(@"Missing from this install", @"Tap for why", ^{
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Live Activity is missing"
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Thiếu Hoạt động trực tiếp"
             message:@"iOS shows a Live Activity only for an app that says it has one, and only Vitrine's IPA build writes that into Spotify. This Spotify was put together another way, such as with Vitrine's .deb injected by hand, so iOS turns the card down. Build the IPA with Vitrine to get it."
             preferredStyle:UIAlertControllerStyleAlert];
         alert.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
@@ -109,7 +109,7 @@ UIViewController *SGLiveActivitySettingsPage(void) {
     NSArray<NSString *> *fades = SGSleepTimerFadeNames();
     SGModRow *fade = SGMenuRow(@"Fade out", fades, ^NSString *{ return fades[(NSUInteger)SGSleepTimerFadeChoice()]; },
                                ^(NSInteger index) { SGSetInt(SGKeySleepTimerFade, index); });
-    SGLiveActivityPage *page = [[SGLiveActivityPage alloc] initWithTitle:@"Live Activity" intro:nil sections:@[
+    SGLiveActivityPage *page = [[SGLiveActivityPage alloc] initWithTitle:@"Hoạt động trực tiếp" intro:nil sections:@[
         SGSection(nil, @[missingRow(), on, view, without, alignment, translation, size]),
         SGNotedSection(@"Card", @[artwork, colors, progress],
                        @"Colors: Spotify puts the cover's color behind Spotify's green, Artwork takes the green from the cover too, "

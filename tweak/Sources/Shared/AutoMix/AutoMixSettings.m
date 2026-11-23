@@ -23,7 +23,7 @@ UIViewController *SGAutoMixSettingsPage(void) {
             return SGTransitionSettingsRead(&s) ? MAX(kShortest, MIN(kLongest, s.milliseconds / 1000.0)) : 5;
         },
         ^(double value) { SGAutoMixSetSeconds(lround(value)); },
-        ^NSString *(double value) { return [NSString stringWithFormat:@"%ld s", lround(value)]; });
+        ^NSString *(double value) { return [NSString stringWithFormat:@"%ld giây", lround(value)]; });
     blend.waitsOn = SGKeyAutoMix;
 
     NSString *note = SGAutoMixAccountAllows() ? nil : @"AutoMix needs Premium, or Spoof Premium under Premium, ads & privacy.";

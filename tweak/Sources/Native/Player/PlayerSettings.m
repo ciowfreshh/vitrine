@@ -43,7 +43,7 @@ SGModRow *SGGlassLyricsRow(void) {
 }
 
 UIViewController *SGQueueSettingsPage(void) {
-    return [[SGModPage alloc] initWithTitle:@"Queue & devices" intro:SGRestartNote sections:@[
+    return [[SGModPage alloc] initWithTitle:@"Hàng đợi và thiết bị" intro:SGRestartNote sections:@[
         SGSection(@"Bottom sheets", @[
             SGFlagRow(@"Queue as a bottom sheet", @"ios-feature-nowplaying.bottom_sheet_queue_enabled"),
             SGFlagRow(@"Connect as a bottom sheet", @"ios-feature-nowplaying-elements.enable_connect_bottom_sheet"),

@@ -5,7 +5,7 @@
 #import "Artist.h"
 
 UIViewController *SGRArtistSettingsPage(void) {
-    return [[SGModPage alloc] initWithTitle:@"Artists" intro:SGRestartNote sections:@[
+    return [[SGModPage alloc] initWithTitle:@"Nghệ sĩ" intro:SGRestartNote sections:@[
         SGNotedSection(@"Apple Music", @[
             SGSwitchRow(@"Artist logos", @"In place of the name on an artist's page", SGRKeyArtistLogo),
         ], @"Only the artist's name is sent to Apple Music."),

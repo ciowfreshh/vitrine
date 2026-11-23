@@ -107,7 +107,7 @@ static NSString *cellLabel(SGGestureAction action) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Gestures";
+    self.title = @"Cử chỉ";
     return self;
 }
 
@@ -144,7 +144,7 @@ static NSString *cellLabel(SGGestureAction action) {
 
 - (void)pickActionFor:(NSInteger)cell {
     NSArray<NSString *> *names = SGGestureActionNames();
-    UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"Double tap here"
+    UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"Chạm hai lần vào đây"
                                                                   message:nil
                                                            preferredStyle:UIAlertControllerStyleActionSheet];
     [names enumerateObjectsUsingBlock:^(NSString *name, NSUInteger index, BOOL *stop) {
@@ -153,7 +153,7 @@ static NSString *cellLabel(SGGestureAction action) {
             [self refresh];
         }]];
     }];
-    [sheet addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [sheet addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
     sheet.popoverPresentationController.sourceView = _grid;
     sheet.popoverPresentationController.sourceRect = _grid.bounds;
     [self presentViewController:sheet animated:YES completion:nil];
@@ -201,7 +201,7 @@ static NSString *cellLabel(SGGestureAction action) {
         case 2: {
             BOOL split = path.section == 1;
             NSString *title = split ? SGGestureSplitNames()[(NSUInteger)path.row]
-                                    : [NSString stringWithFormat:@"%@ seconds", SGGestureStepChoices()[(NSUInteger)path.row]];
+                                    : [NSString stringWithFormat:@"%@ giây", SGGestureStepChoices()[(NSUInteger)path.row]];
             SGFillCell(cell, title, nil, nil, nil);
             cell.selectionStyle = UITableViewCellSelectionStyleDefault;
             if (path.row == (split ? SGGestureSplit() : SGGestureStepChoice())) {

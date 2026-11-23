@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#import "Core/SGVietnamese.h"
 #import "Shared/LyricsLibrary/SGLibraryModel.h"
 #import "Shared/LyricsLibrary/SGLibraryStore.h"
 #import "Shared/LyricsLibrary/SGLibraryZIP.h"
@@ -53,6 +54,11 @@ static void writeJSON(id value, NSURL *url) {
 
 int main(void) {
     @autoreleasepool {
+        check([SGVI(@"SponsorBlock") isEqual:@"SponsorBlock"] &&
+              [SGVI(@"Categories & behavior") isEqual:@"Danh mục và hành vi"] &&
+              [SGVI(@"Legacy Liquid Glass") isEqual:@"Liquid Glass cho iOS cũ"] &&
+              [SGVIError(@"Gemini answered 2 lines for the song's 3. Try again.") isEqual:@"Gemini trả về 2 dòng trong khi bài có 3 dòng. Hãy thử lại."],
+              @"Vietnamese settings and formatted errors preserve provider and numeric values");
         NSURL *root = [NSFileManager.defaultManager.temporaryDirectory URLByAppendingPathComponent:NSUUID.UUID.UUIDString];
         NSURL *storeURL = temporary(root, @"db");
         SGLibraryStore *store = [[SGLibraryStore alloc] initWithDirectory:storeURL];

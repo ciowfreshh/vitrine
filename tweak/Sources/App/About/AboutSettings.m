@@ -26,25 +26,25 @@ static void resetAll(void) {
 }
 
 static void confirmReset(void) {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Reset all settings?"
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Đặt lại tất cả cài đặt?"
                                                                   message:@"Every switch goes off, flag overrides and the tab bar layout are cleared, and Spotify restarts as it came, with the mod doing nothing until asked. Spotify's own settings are untouched."
                                                            preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Reset and restart" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) { resetAll(); }]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Đặt lại và khởi động lại" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) { resetAll(); }]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
 // Reset all leaves the Keychain alone, so a key outlives a reset; this takes every item Vitrine keeps there.
 static void confirmClearKeychain(void) {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Clear Keychain?"
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Xóa dữ liệu Keychain?"
                                                                   message:@"The Gemini, OpenAI-compatible and Anthropic API keys, the OpenAI-compatible server and the Spicy Lyrics key are removed from this iPhone. Settings stay as they are."
                                                            preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Clear Keychain" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+    [alert addAction:[UIAlertAction actionWithTitle:@"Xóa dữ liệu Keychain" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         SGAIForgetKeys();
         SGSpicyLyricsForgetKey();
         SGLog(@"reset: keychain cleared");
     }]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
@@ -62,7 +62,7 @@ UIViewController *SGAboutPage(void) {
     clearKeys.color = SGRed();
     NSString *spotify = SGSpotifyVersion();
     if ([SGSpotifyLikelyWorksVersions containsObject:spotify]) spotify = [spotify stringByAppendingString:@", likely works"];
-    else if (![SGSpotifySupportedVersions containsObject:spotify]) spotify = [NSString stringWithFormat:@"%@, made for %@", spotify, SGSpotifyMadeFor];
+    else if (![SGSpotifySupportedVersions containsObject:spotify]) spotify = [NSString stringWithFormat:@"%@, dành cho %@", spotify, SGSpotifyMadeFor];
     // The row reads out where the build stands and opens the changelog of everything newer than it.
     SGModRow *updates = SGPageRow(@"Updates", ^UIViewController *{ return SGUpdatePage(); });
     updates.value = ^NSString *{ return SGUpdateStatus(); };
@@ -83,7 +83,7 @@ UIViewController *SGAboutPage(void) {
         SGStatRow(@"Spotify", ^NSString *{ return spotify; }), nil];
     SGModRow *signedUntil = SGSigningExpiryRow();
     if (signedUntil) [build addObject:signedUntil];
-    return [[SGModPage alloc] initWithTitle:@"Mod" intro:nil sections:@[
+    return [[SGModPage alloc] initWithTitle:@"Giới thiệu bản mod" intro:nil sections:@[
         SGSection(nil, build),
         SGSection(nil, links),
         SGSection(nil, @[

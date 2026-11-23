@@ -38,15 +38,15 @@ static BOOL anythingLearned(void) {
 
 // Both learned sizes back to the defaults, asked first; `done` runs once they are.
 static void forget(void (^done)(void)) {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Forget your nod and shake?"
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Xóa mẫu gật đầu và lắc đầu?"
         message:@"Both go back to the default sizes. You can teach them again." preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Forget" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+    [alert addAction:[UIAlertAction actionWithTitle:@"Quên" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         SGSetInt(SGKeyHeadNod, 0);
         SGSetInt(SGKeyHeadShake, 0);
         SGHeadGesturesSettingsChanged();
         done();
     }]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
@@ -104,7 +104,7 @@ UIViewController *SGHeadGesturesSettingsPage(void) {
     forgetRow.visible = ^BOOL { return anythingLearned(); };
     for (SGModRow *row in @[nodAction, shakeAction, chime, teach, sensitivity, tryRow, forgetRow]) row.waitsOn = SGKeyHeadGestures;
 
-    SGModPage *shown = [[SGModPage alloc] initWithTitle:@"AirPods gestures" intro:nil sections:@[
+    SGModPage *shown = [[SGModPage alloc] initWithTitle:@"Cử chỉ AirPods" intro:nil sections:@[
         SGSection(nil, @[SGWithSymbol(toggle, @"airpods.pro")]),
         SGNotedSection(@"Gestures", @[nodAction, shakeAction, chime],
             @"They work while Spotify plays through headphones that track head motion: AirPods Pro, AirPods (3rd "

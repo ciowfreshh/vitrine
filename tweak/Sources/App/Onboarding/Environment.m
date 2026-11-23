@@ -48,8 +48,8 @@ static SGProblem version(void) {
     NSArray<NSString *> *likely = SGSpotifyLikelyWorksVersions;
     NSString *also = !likely.count ? @""
         : [NSString stringWithFormat:@", and %@ likely %@ too", joined(likely, @"and"), likely.count == 1 ? @"works" : @"work"];
-    return @[[NSString stringWithFormat:@"Spotify %@ is not the version Vitrine is made for", SGSpotifyVersion()],
-             [NSString stringWithFormat:@"Vitrine is made for Spotify %@%@. On another version some of its changes find nothing to change, and some screens can look wrong or crash. Inject Vitrine into Spotify %@.",
+    return @[[NSString stringWithFormat:@"Spotify %@ nằm ngoài các phiên bản Vitrine hỗ trợ", SGSpotifyVersion()],
+             [NSString stringWithFormat:@"Vitrine hỗ trợ Spotify %@%@. Phiên bản khác có thể hiển thị sai, lỗi một số tính năng hoặc thoát đột ngột. Hãy dùng Spotify %@.",
                  joined(SGSpotifySupportedVersions, @"and"), also,
                  joined([SGSpotifySupportedVersions arrayByAddingObjectsFromArray:likely], @"or")]];
 }
@@ -75,19 +75,19 @@ static BOOL withoutAppChanges(void) {
 
 static SGProblem appChanges(void) {
     return @[@"Installed without Vitrine's app changes",
-             [NSString stringWithFormat:@"Some of what Vitrine does needs changes to the app that only its IPA build makes. Without them, %@. Build the IPA with Vitrine instead of injecting its .deb.",
+             [NSString stringWithFormat:@"Một số tính năng cần thay đổi ở ứng dụng khi tạo IPA. Bản hiện tại thiếu các thay đổi đó nên %@. Hãy build IPA bằng Vitrine.",
                  joined(missingAppChanges(), @"and")]];
 }
 
 static SGProblem fellBack(void) {
     return @[@"The redesign did not start",
-             [NSString stringWithFormat:@"Spotify did not get going with the redesign on iOS %@, so it is back in Legacy and Redesigned UI is off. Mod Settings can turn it on again.",
+             [NSString stringWithFormat:@"Spotify mở giao diện thiết kế mới thất bại trên iOS %@ nên đã trở lại giao diện gốc. Bạn có thể bật lại trong Cài đặt Vitrine.",
                  UIDevice.currentDevice.systemVersion]];
 }
 
 // One problem is the alert's title and message; several are a paragraph each under a count.
 static void tell(NSArray<SGProblem> *list) {
-    NSString *title = list.count == 1 ? list[0][0] : [NSString stringWithFormat:@"%lu things to know", (unsigned long)list.count];
+    NSString *title = list.count == 1 ? list[0][0] : [NSString stringWithFormat:@"%lu điều cần biết", (unsigned long)list.count];
     NSMutableArray<NSString *> *paragraphs = [NSMutableArray array];
     for (SGProblem problem in list) {
         [paragraphs addObject:list.count == 1 ? problem[1] : [NSString stringWithFormat:@"%@.\n%@", problem[0], problem[1]]];
@@ -130,16 +130,16 @@ static void offerCleanup(void) {
     NSArray<NSURL *> *leftovers = chromaLeftovers();
     if (!leftovers.count) return;
     NSString *size = sizeOf(leftovers);
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:[NSString stringWithFormat:@"Chroma left %@ on this iPhone", size]
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:[NSString stringWithFormat:@"Chroma để lại %@ dữ liệu trên iPhone này", size]
                                                                   message:@"Its Karaoke voice model and its saved lock screen videos are still in Spotify's storage, and Vitrine uses neither. Your listening history and audio effects stay."
                                                            preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Delete" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+    [alert addAction:[UIAlertAction actionWithTitle:@"Xóa" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
             for (NSURL *url in leftovers) [NSFileManager.defaultManager removeItemAtURL:url error:nil];
             SGLog(@"environment: deleted %@ Chroma left", size);
         });
     }]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Keep" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Giữ lại" style:UIAlertActionStyleCancel handler:nil]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
@@ -158,13 +158,13 @@ NSArray<SGModRow *> *SGEnvironmentWarningRows(void) {
     if (SGEeveeSpotifyInjected())
         [rows addObject:SGWarningRow(@"EeveeSpotify is injected too", @"Tap for what that does", ^{ tell(@[eevee()]); })];
     if (otherVersion())
-        [rows addObject:SGWarningRow([NSString stringWithFormat:@"Made for Spotify %@", joined(SGSpotifySupportedVersions, @"and")],
-                                     [NSString stringWithFormat:@"This is %@. Tap for what that does", SGSpotifyVersion()],
+        [rows addObject:SGWarningRow([NSString stringWithFormat:@"Dành cho Spotify %@", joined(SGSpotifySupportedVersions, @"and")],
+                                     [NSString stringWithFormat:@"Đây là %@. Chạm để xem tác dụng", SGSpotifyVersion()],
                                      ^{ tell(@[version()]); })];
     if (withoutAppChanges())
         [rows addObject:SGWarningRow(@"Installed without the app changes", @"Tap for what that does", ^{ tell(@[appChanges()]); })];
     if (chromaLeftovers().count)
-        [rows addObject:SGWarningRow(@"Chroma left files behind", [NSString stringWithFormat:@"%@ Vitrine never uses. Tap to delete", sizeOf(chromaLeftovers())], ^{ offerCleanup(); })];
+        [rows addObject:SGWarningRow(@"Chroma left files behind", [NSString stringWithFormat:@"Vitrine không dùng %@ này. Chạm để xóa", sizeOf(chromaLeftovers())], ^{ offerCleanup(); })];
     return rows;
 }
 

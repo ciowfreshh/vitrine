@@ -442,15 +442,15 @@ static BOOL adFree(void) {
 
     BOOL glass = SGRedesignAvailable();
     UILabel *heading = [UILabel new];
-    heading.text = @"Pick your look.";
+    heading.text = @"Chọn giao diện.";
     heading.font = [UIFont systemFontOfSize:30 weight:UIFontWeightBold];
     heading.textColor = UIColor.whiteColor;
     heading.numberOfLines = 0;
 
-    NSString *redesign = glass ? @"Looks like Apple Music. Better lyrics, Live Activity."
-                               : [NSString stringWithFormat:@"Looks like Apple Music. Untested on iOS %@.", UIDevice.currentDevice.systemVersion];
-    _redesigned = [[SGLookCard alloc] initWithSymbol:@"sparkles" title:@"Redesigned" subtitle:redesign];
-    _legacy = [[SGLookCard alloc] initWithSymbol:@"slider.horizontal.3" title:@"Legacy" subtitle:@"More options, still looks like Spotify."];
+    NSString *redesign = glass ? @"Giao diện kiểu Apple Music, cải thiện phần lời bài hát và có Hoạt động trực tiếp."
+                               : [NSString stringWithFormat:@"Giao diện kiểu Apple Music. Chưa kiểm thử trên iOS %@.", UIDevice.currentDevice.systemVersion];
+    _redesigned = [[SGLookCard alloc] initWithSymbol:@"sparkles" title:@"Giao diện thiết kế mới" subtitle:redesign];
+    _legacy = [[SGLookCard alloc] initWithSymbol:@"slider.horizontal.3" title:@"Giao diện gốc" subtitle:@"Giữ giao diện Spotify và có thêm tùy chọn."];
     for (SGLookCard *card in @[_redesigned, _legacy]) [card addTarget:self action:@selector(picked:) forControlEvents:UIControlEventTouchUpInside];
     // The first launch offers the redesign where it is at home; below iOS 26 it waits to be asked for.
     // The tour again from the Mod page shows the stored look.
@@ -464,13 +464,13 @@ static BOOL adFree(void) {
     _ads = [UISwitch new];
     _ads.onTintColor = SGGreen();
     _ads.on = adFree();
-    _adsCard = [[SGLookCard alloc] initWithSymbol:@"speaker.slash" title:@"No ads"
-                                         subtitle:@"No ads, no Premium upsells, and Premium spoofed." accessory:_ads];
+    _adsCard = [[SGLookCard alloc] initWithSymbol:@"speaker.slash" title:@"Không quảng cáo"
+                                         subtitle:@"Ẩn quảng cáo, ẩn lời mời nâng cấp và bật mô phỏng Premium." accessory:_ads];
     [_adsCard addTarget:self action:@selector(toggleAds) forControlEvents:UIControlEventTouchUpInside];
     _adsCard.isAccessibilityElement = YES;
-    _adsCard.accessibilityLabel = @"No ads";
-    _adsCard.accessibilityHint = @"No ads, no Premium upsells, and Premium spoofed.";
-    _adsCard.accessibilityValue = _ads.on ? @"On" : @"Off";
+    _adsCard.accessibilityLabel = @"Không quảng cáo";
+    _adsCard.accessibilityHint = @"Ẩn quảng cáo, ẩn lời mời nâng cấp và bật mô phỏng Premium.";
+    _adsCard.accessibilityValue = _ads.on ? @"Bật" : @"Tắt";
     if (@available(iOS 17.0, *)) _adsCard.accessibilityTraits = UIAccessibilityTraitToggleButton;
     else _adsCard.accessibilityTraits = UIAccessibilityTraitButton;
     UILabel *adsText = [UILabel new];
@@ -486,12 +486,12 @@ static BOOL adFree(void) {
     _sponsorBlock.onTintColor = SGGreen();
     _sponsorBlock.on = SGHidden(SGKeySponsorBlockEnabled);
     _sponsorBlockCard = [[SGLookCard alloc] initWithSymbol:@"shield.lefthalf.filled" title:@"SponsorBlock"
-                                                  subtitle:@"Skip sponsored segments and filler in podcasts." accessory:_sponsorBlock];
+                                                  subtitle:@"Bỏ qua đoạn tài trợ và đoạn đệm trong podcast." accessory:_sponsorBlock];
     [_sponsorBlockCard addTarget:self action:@selector(toggleSponsorBlock) forControlEvents:UIControlEventTouchUpInside];
     _sponsorBlockCard.isAccessibilityElement = YES;
     _sponsorBlockCard.accessibilityLabel = @"SponsorBlock";
-    _sponsorBlockCard.accessibilityHint = @"Skip sponsored segments and filler in podcasts.";
-    _sponsorBlockCard.accessibilityValue = _sponsorBlock.on ? @"On" : @"Off";
+    _sponsorBlockCard.accessibilityHint = @"Bỏ qua đoạn tài trợ và đoạn đệm trong podcast.";
+    _sponsorBlockCard.accessibilityValue = _sponsorBlock.on ? @"Bật" : @"Tắt";
     if (@available(iOS 17.0, *)) _sponsorBlockCard.accessibilityTraits = UIAccessibilityTraitToggleButton;
     else _sponsorBlockCard.accessibilityTraits = UIAccessibilityTraitButton;
     UILabel *sponsorBlockText = [UILabel new];
@@ -504,7 +504,7 @@ static BOOL adFree(void) {
     sponsorBlockNote.layoutMarginsRelativeArrangement = YES;
 
     UILabel *tipsHeading = [UILabel new];
-    tipsHeading.text = @"Easy to miss";
+    tipsHeading.text = @"Dễ bỏ sót";
     tipsHeading.font = [UIFont systemFontOfSize:17 weight:UIFontWeightSemibold];
     tipsHeading.textColor = UIColor.whiteColor;
     UIView *tips = [self tipsView];
@@ -606,13 +606,13 @@ static BOOL adFree(void) {
 
 - (void)toggleAds {
     [_ads setOn:!_ads.on animated:YES];
-    _adsCard.accessibilityValue = _ads.on ? @"On" : @"Off";
+    _adsCard.accessibilityValue = _ads.on ? @"Bật" : @"Tắt";
     [self refresh];
 }
 
 - (void)toggleSponsorBlock {
     [_sponsorBlock setOn:!_sponsorBlock.on animated:YES];
-    _sponsorBlockCard.accessibilityValue = _sponsorBlock.on ? @"On" : @"Off";
+    _sponsorBlockCard.accessibilityValue = _sponsorBlock.on ? @"Bật" : @"Tắt";
     [self refresh];
 }
 

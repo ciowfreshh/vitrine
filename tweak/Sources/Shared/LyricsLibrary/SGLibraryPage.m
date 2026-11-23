@@ -50,8 +50,8 @@ static NSString *statusTitle(NSString *status) {
     _status.adjustsFontForContentSizeCategory = YES;
     _status.textColor = UIColor.secondaryLabelColor;
     self.tableView.tableHeaderView = _status;
-    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(refresh) name:SGLibraryDidChange object:nil];
-    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(updateStatus) name:SGLibraryScanDidChange object:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(libraryChanged:) name:SGLibraryDidChange object:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(scanChanged:) name:SGLibraryScanDidChange object:nil];
     [self updateStatus];
     [self refresh];
 }
@@ -72,6 +72,9 @@ static NSString *statusTitle(NSString *status) {
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView { SGPlacePageBar(self); }
+
+- (void)libraryChanged:(NSNotification *)notification { [self refresh]; }
+- (void)scanChanged:(NSNotification *)notification { [self updateStatus]; }
 
 - (void)updateStatus {
     SGLibraryScanner *scanner = SGLibraryScanner.shared;
@@ -361,8 +364,12 @@ UIViewController *SGLyricsLibraryPage(void) { return [[SGLibraryPage alloc] init
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain
         target:self action:@selector(toggle)];
     _active = -1;
+    if (self.navigationController.viewControllers.firstObject == self) {
+        self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Đóng" style:UIBarButtonItemStylePlain
+            target:self action:@selector(close)];
+    }
     [self updateToggle];
-    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(reloadLyrics) name:SGLibraryDidChange object:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(libraryChanged:) name:SGLibraryDidChange object:nil];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -377,6 +384,9 @@ UIViewController *SGLyricsLibraryPage(void) { return [[SGLibraryPage alloc] init
     [_timer invalidate];
     _timer = nil;
 }
+
+- (void)close { [self dismissViewControllerAnimated:YES completion:nil]; }
+- (void)libraryChanged:(NSNotification *)notification { [self reloadLyrics]; }
 
 - (void)updateToggle {
     self.navigationItem.rightBarButtonItem.title = SGLibraryShowsTranslation() ? @"Hiện lời gốc" : @"Hiện bản dịch";

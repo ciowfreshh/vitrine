@@ -39,7 +39,7 @@ static NSString *playingLocalFile(void) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Imported LRC files";
+    self.title = @"Tệp LRC đã nhập";
     return self;
 }
 
@@ -134,7 +134,7 @@ static NSString *playingLocalFile(void) {
 - (UISwipeActionsConfiguration *)tableView:(UITableView *)table trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)path {
     if (path.section != 0 || !_files.count) return nil;
     NSString *name = _files[(NSUInteger)path.row];
-    UIContextualAction *delete = [UIContextualAction contextualActionWithStyle:UIContextualActionStyleDestructive title:@"Delete"
+    UIContextualAction *delete = [UIContextualAction contextualActionWithStyle:UIContextualActionStyleDestructive title:@"Xóa"
         handler:^(UIContextualAction *action, UIView *view, void (^done)(BOOL)) {
             BOOL deleted = SGDeleteImportedLRC(name);
             if (deleted) [self reloadFiles];
@@ -166,7 +166,7 @@ static NSString *playingLocalFile(void) {
     [self reloadFiles];
     if (_linkTo) {
         NSString *title = SGLocalFileInfo(_linkTo)[@"title"];
-        showAlert(self, @"Lyrics linked", [NSString stringWithFormat:@"%@ now gives the lyrics for %@.", name,
+        showAlert(self, @"Lyrics linked", [NSString stringWithFormat:@"%@ đang cung cấp lời cho %@.", name,
                                                                      title ? [NSString stringWithFormat:@"\"%@\"", title] : @"this local file"]);
     }
 }

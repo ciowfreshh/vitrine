@@ -41,7 +41,7 @@ UIViewController *SGLicensesPage(void) {
     SGModRow *voice = SGLinkRow(@"Karaoke's voice model", @"Mel-Band RoFormer · MIT License", @"https://huggingface.co/My-Name-Is-Jeff/vitrine-sing");
     SGModRow *lightVoice = SGLinkRow(@"Karaoke's light voice model", @"Mini-BS-RoFormer-18M · MIT License",
                                      @"https://huggingface.co/HiDolen/Mini-BS-RoFormer-18M");
-    return [[SGModPage alloc] initWithTitle:@"Licenses" intro:@"The mod's own license, and the code from others it includes." sections:@[
+    return [[SGModPage alloc] initWithTitle:@"Giấy phép" intro:@"The mod's own license, and the code from others it includes." sections:@[
         SGSection(nil, @[mod]),
         SGNotedSection(nil, @[eevee], @"By whoeevee (whoeevee/EeveeSpotify), under the GNU General Public License v3.0, as Vitrine is.\n\n"
                                       @"Ported from it, on the Premium, ads & privacy page: Hide ads (the ad services kept from starting, "

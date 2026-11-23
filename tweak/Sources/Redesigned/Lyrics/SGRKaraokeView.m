@@ -7,6 +7,9 @@
 // Apple Music lights such a line, unless the Lyrics page's "Simulate word-by-word timing" asks for
 // its estimated words to be swept; lyrics with no timing at all are shown as plain text, every line
 // lit, nothing following the clock.
+#import "Core/SGVietnamese.h"
+#import "Shared/LyricsLibrary/SGLyricsLibrary.h"
+#import "Shared/LyricsLibrary/SGLibraryStore.h"
 #import <NaturalLanguage/NaturalLanguage.h>
 #import "Core/SGCore.h"
 #import "SGRKaraokeView.h"
@@ -219,6 +222,10 @@ typedef struct {
     CFTimeInterval _stillSince;   // when the position stopped moving, 0 while it moves
     SGKaraokeStyle *_style;   // how the lines were laid out
     BOOL _hasSpoken, _hasTranslation;   // whether the song has any line with either
+    NSDictionary *_libraryRecord;
+    NSArray<SGKaraokeLine *> *_libraryLines;
+    NSArray<SGKaraokeLine *> *_activeLibraryLines;
+    NSUInteger _libraryRevision;
     BOOL _untranslated;   // whether a line with words has no translation, which a translator can fill in
     SGTranslationSource *_saved;   // who made the song's saved translation and when, nil with none saved
     NSString *_savedLanguage;      // the language of that saved file: the setting can change while the lyrics are open
@@ -300,6 +307,7 @@ typedef struct {
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(playerTransitionChanged:) name:SGPlayerTransitionEndedNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(restyle) name:SGRLyricsTextDidChangeNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(restyle) name:SGLyricsRomanisedDidChangeNotification object:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(libraryChanged:) name:SGLibraryDidChange object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(translationsChanged) name:SGLyricsTranslationsDidChangeNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(sourceChosen:) name:SGLyricsSourceChosenNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(lookChanged) name:SGRLyricsLookDidChangeNotification object:nil];
@@ -377,7 +385,67 @@ typedef struct {
 }
 
 - (NSArray<SGKaraokeLine *> *)linesFor:(NSString *)track {
-    return _sample ?: SGKaraokeLinesForTrack(track);
+    if (_sample) return _sample;
+    return _activeLibraryLines ?: SGKaraokeLinesForTrack(track);
+}
+
+- (void)syncLibraryLines {
+    if (!_libraryLines.count) {
+        _activeLibraryLines = nil;
+        return;
+    }
+    if (!SGLibraryShowsTranslation()) {
+        _activeLibraryLines = nil;
+        if (SGKaraokeLinesForTrack(_track).count) return;
+        NSMutableArray<SGKaraokeLine *> *original = [NSMutableArray arrayWithCapacity:_libraryLines.count];
+        for (SGKaraokeLine *entry in _libraryLines) {
+            SGKaraokeLine *line = [entry copy];
+            line.translation = nil;
+            [original addObject:line];
+        }
+        _activeLibraryLines = original;
+        return;
+    }
+    NSArray<SGKaraokeLine *> *original = SGKaraokeLinesForTrack(_track);
+    if (original.count != _libraryLines.count) {
+        _activeLibraryLines = _libraryLines;
+        return;
+    }
+    NSMutableArray<SGKaraokeLine *> *merged = [NSMutableArray arrayWithCapacity:original.count];
+    for (NSUInteger i = 0; i < original.count; i++) {
+        SGKaraokeLine *base = original[i], *imported = _libraryLines[i];
+        if (base.start != imported.start || (base.timing == SGKaraokeTimingNone) != (imported.timing == SGKaraokeTimingNone) ||
+            ![SGKaraokeLineText(base) isEqual:SGKaraokeLineText(imported)]) {
+            _activeLibraryLines = _libraryLines;
+            return;
+        }
+        SGKaraokeLine *line = [base copy];
+        line.translation = imported.translation;
+        line.translationMade = NO;
+        [merged addObject:line];
+    }
+    _activeLibraryLines = merged;
+}
+
+- (void)libraryChanged:(NSNotification *)notification {
+    if (_sample) return;
+    NSString *track = _track;
+    NSUInteger revision = ++_libraryRevision;
+    if (!track.length) return;
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(SGLibraryQueue(), ^{
+        NSDictionary *record = [SGLibraryLocalStore() track:track error:nil];
+        NSArray<SGKaraokeLine *> *lines = [record[@"status"] isEqual:@"translated"] ? SGLibraryKaraokeLines(record) : nil;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            SGRKaraokeView *page = weakSelf;
+            if (!page || page->_libraryRevision != revision ||
+                (!lines && !page->_libraryLines) || [page->_libraryRecord isEqual:record]) return;
+            page->_libraryRecord = lines ? record : nil;
+            page->_libraryLines = lines;
+            [page syncLibraryLines];
+            [page dropLines];
+        });
+    });
 }
 
 // What a tap at point (in the view) lands on: the credit, a line's explain bubble (*explains), a line to seek
@@ -737,7 +805,7 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
     _hasSpoken = _hasTranslation = _untranslated = NO;
     _plain = SGKaraokeLinesTiming(_lines) == SGKaraokeTimingNone;
     _savedLanguage = SGLyricsTranslationTarget();
-    _saved = _sample ? nil : SGLyricsSyncSavedTranslation(_track, _savedLanguage, _lines);
+    _saved = (_sample || _activeLibraryLines) ? nil : SGLyricsSyncSavedTranslation(_track, _savedLanguage, _lines);
     _foreign = SGKaraokeInAnotherLanguage(_lines, _savedLanguage);
     NSInteger sungTo = 0;   // the top of the song counts as where the singing before the first line ends
     for (NSUInteger i = 0; i < count; i++) {
@@ -785,7 +853,7 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
     BOOL replace = romanised && SGFlag(SGKeyLyricsRomanisedReplace, NO);
     SGKaraokeStyle *style = [[SGKaraokeStyle alloc] initWithSize:_fontSize order:SGRLyricsTextOrder()
                                                      pronunciation:!replace && _hasSpoken && SGFlag(SGRKeyLyricsPronunciation, NO)
-                                                       translation:_hasTranslation && SGFlag(SGRKeyLyricsTranslation, NO)
+                                                       translation:_hasTranslation && (_activeLibraryLines || SGFlag(SGRKeyLyricsTranslation, NO))
                                                          romanised:romanised && !replace];
     style.japanese = romanised && SGLyricsLooksJapanese(_lines);
     style.romanisedReplace = replace;
@@ -841,12 +909,12 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
     NSString *language = SGLyricsTranslationTarget();
     // A translator is offered only for a song in another language than the one it would translate into,
     // and the translators are asked after (an AI translator's key is a Keychain read).
-    BOOL wanted = _lines && !_sample && (_foreign || SGHidden(SGKeyLyricsTranslateEverySong)) && _untranslated;
+    BOOL wanted = _lines && !_sample && !_activeLibraryLines && (_foreign || SGHidden(SGKeyLyricsTranslateEverySong)) && _untranslated;
     BOOL onDevice = wanted && SGFlag(SGKeyLyricsTranslateOnDevice, YES) && SGOnDeviceTranslation.translationAvailable;
     BOOL intelligence = wanted && SGFlag(SGKeyLyricsAppleIntelligence, YES) && [SGOnDeviceTranslation appleIntelligenceAvailable:language];
     BOOL ai = wanted && SGAITranslatorReady();
     BOOL translatable = ai || onDevice || intelligence;
-    BOOL offered = _lines && !_sample && (_hasSpoken || _hasTranslation || translatable);
+    BOOL offered = _lines && !_sample && (_hasSpoken || _hasTranslation || _libraryLines || translatable);
     if (!offered) {
         _extrasBox.hidden = YES;
         [self setNeedsLayout];
@@ -866,7 +934,7 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
         _extras.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         _extras.showsMenuAsPrimaryAction = YES;
         _extras.preferredMenuElementOrder = UIContextMenuConfigurationElementOrderFixed;
-        _extras.accessibilityLabel = @"Pronunciation and translation";
+        _extras.accessibilityLabel = @"Cách phát âm và bản dịch";
         [_extrasBox addSubview:_extras];
         [self addSubview:_extrasBox];
         self.extrasHidden = _extrasHidden;
@@ -877,18 +945,28 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
     if (config.showsActivityIndicator != translating) {
         config.showsActivityIndicator = translating;
         _extras.configuration = config;
-        _extras.accessibilityValue = translating ? @"Translating" : nil;
+        _extras.accessibilityValue = translating ? @"Đang dịch" : nil;
     }
     NSMutableArray<UIMenuElement *> *items = [NSMutableArray array];
     if (_hasSpoken) {
         BOOL on = SGFlag(SGRKeyLyricsPronunciation, NO);
-        [items addObject:[UIAction actionWithTitle:on ? @"Hide Pronunciation" : @"Show Pronunciation"
+        [items addObject:[UIAction actionWithTitle:on ? @"Ẩn cách phát âm" : @"Hiện cách phát âm"
                                              image:[UIImage systemImageNamed:@"character.phonetic"] identifier:nil
                                            handler:^(UIAction *action) { SGRSetLyricsTextShown(SGRLyricsTextPronunciation, !on); }]];
     }
-    if (_hasTranslation) {
+    if (_libraryLines) {
+        BOOL on = SGLibraryShowsTranslation();
+        __weak typeof(self) weakSelf = self;
+        [items addObject:[UIAction actionWithTitle:on ? @"Chỉ hiện lời gốc" : @"Hiện bản dịch trong thư viện"
+                                             image:[UIImage systemImageNamed:@"character.bubble"] identifier:nil
+                                           handler:^(UIAction *action) {
+            [NSUserDefaults.standardUserDefaults setBool:!on forKey:SGLibraryShowTranslationKey];
+            [weakSelf syncLibraryLines];
+            [weakSelf dropLines];
+        }]];
+    } else if (_hasTranslation) {
         BOOL on = SGFlag(SGRKeyLyricsTranslation, NO);
-        [items addObject:[UIAction actionWithTitle:on ? @"Hide Translation" : @"Show Translation"
+        [items addObject:[UIAction actionWithTitle:on ? @"Ẩn bản dịch" : @"Hiện bản dịch"
                                              image:[UIImage systemImageNamed:@"character.bubble"] identifier:nil
                                            handler:^(UIAction *action) { SGRSetLyricsTextShown(SGRLyricsTextTranslation, !on); }]];
     }
@@ -896,18 +974,18 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
     if (_saved && _hasTranslation) {
         UIAction *source = [UIAction actionWithTitle:_saved.name image:[UIImage systemImageNamed:@"info.circle"] identifier:nil handler:^(UIAction *action) {}];
         source.subtitle = _saved.made ? [NSDateFormatter localizedStringFromDate:_saved.made dateStyle:NSDateFormatterMediumStyle timeStyle:NSDateFormatterShortStyle]
-                                      : @"Date unknown";
+                                      : @"Không rõ ngày";
         source.attributes = UIMenuElementAttributesDisabled;
         NSMutableArray<UIMenuElement *> *about = [NSMutableArray arrayWithObject:source];
         // Not while a translator works: its next batch would save the file again.
         if (_saved.deletable && !translating) {
             NSString *track = _track, *language = _savedLanguage;
-            UIAction *delete = [UIAction actionWithTitle:@"Delete This Translation" image:[UIImage systemImageNamed:@"trash"] identifier:nil
+            UIAction *delete = [UIAction actionWithTitle:@"Xóa bản dịch này" image:[UIImage systemImageNamed:@"trash"] identifier:nil
                                                  handler:^(UIAction *action) { SGLyricsDeleteSavedTranslation(track, language); }];
             delete.attributes = UIMenuElementAttributesDestructive;
             [about addObject:delete];
         }
-        [items addObject:[UIMenu menuWithTitle:@"Translated by" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:about]];
+        [items addObject:[UIMenu menuWithTitle:@"Người dịch" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:about]];
     }
     // Also for a song a source translated in part, as Musixmatch's community often has: the rest is filled in.
     // Said in each item: whether the song's words stay on the phone.
@@ -977,15 +1055,15 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
             // Over the player, which is dark whatever the system's appearance.
             SGPresentDark(alert);
             if (needsDownload) {
-                [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-                UIAlertAction *open = [UIAlertAction actionWithTitle:@"Open Settings" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+                [alert addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
+                UIAlertAction *open = [UIAlertAction actionWithTitle:@"Mở Cài đặt" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
                     [SGOnDeviceTranslation openTranslateSettings];
                 }];
                 [alert addAction:open];
                 alert.preferredAction = open;
             } else if ([error containsString:@"Mod Settings"]) {
-                [alert addAction:[UIAlertAction actionWithTitle:@"Dismiss" style:UIAlertActionStyleCancel handler:nil]];
-                UIAlertAction *open = [UIAlertAction actionWithTitle:@"Open Settings" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+                [alert addAction:[UIAlertAction actionWithTitle:@"Đóng" style:UIAlertActionStyleCancel handler:nil]];
+                UIAlertAction *open = [UIAlertAction actionWithTitle:@"Mở Cài đặt" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
                     SGOpenModSettings(nil);
                 }];
                 [alert addAction:open];
@@ -1261,7 +1339,7 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
 - (void)creditTo:(NSString *)source {
     _creditSource = source;
     BOOL shown = source.length && (_crediting || SGLyricsCreditRequired(source));
-    NSString *text = shown ? [NSString stringWithFormat:@"Lyrics from %@", source] : nil;
+    NSString *text = shown ? [NSString stringWithFormat:@"Lời bài hát từ %@", source] : nil;
     _creditLinks = shown ? SGLyricsCreditLinks(source) : nil;
     _credit.accessibilityTraits = _creditLinks.count ? UIAccessibilityTraitLink : UIAccessibilityTraitStaticText;
     if (text == _credit.text || [text isEqualToString:_credit.text]) return;
@@ -1337,7 +1415,11 @@ static BOOL anyUntranslated(NSArray<SGKaraokeLine *> *lines) {
     if (!(track == _track || [track isEqualToString:_track])) {
         SGLog(@"karaoke: page shows track %@, lyrics %@", track, [self linesFor:track] ? @"captured" : @"not captured yet");
         _track = track;
+        _libraryRecord = nil;
+        _libraryLines = nil;
+        _activeLibraryLines = nil;
         [self dropLines];
+        [self libraryChanged:nil];
     }
     NSArray<SGKaraokeLine *> *kept = _lines && track ? [self linesFor:track] : nil;
     if (kept && kept != _lines && kept != _passedOver) {

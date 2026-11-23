@@ -66,10 +66,10 @@ static void showFix(void) {
     UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"The lock screen cannot open Spotify"
                                                                   message:message
                                                            preferredStyle:UIAlertControllerStyleAlert];
-    [sheet addAction:[UIAlertAction actionWithTitle:@"Copy the bundle id" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    [sheet addAction:[UIAlertAction actionWithTitle:@"Sao chép Bundle ID" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         UIPasteboard.generalPasteboard.string = appID;
     }]];
-    if (SGRepoURL) [sheet addAction:[UIAlertAction actionWithTitle:@"Read more" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    if (SGRepoURL) [sheet addAction:[UIAlertAction actionWithTitle:@"Đọc thêm" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         SGOpenURL([SGRepoURL stringByAppendingString:@"#signing"]);
     }]];
     [sheet addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
@@ -159,7 +159,7 @@ SGModRow *SGSigningExpiryRow(void) {
     else day.dateStyle = NSDateFormatterMediumStyle;                 // "Oct 6, 2027"
     NSString *value = [day stringFromDate:expires];
     SGModRow *row = SGStatRow(@"Signed until", ^NSString *{ return value; });
-    if (week) row.subtitle = [NSString stringWithFormat:@"At %@. A free Apple ID signs for 7 days.",
+    if (week) row.subtitle = [NSString stringWithFormat:@"Hết hạn lúc %@. Chữ ký bằng Apple ID miễn phí có hiệu lực 7 ngày.",
                               [NSDateFormatter localizedStringFromDate:expires dateStyle:NSDateFormatterNoStyle
                                                              timeStyle:NSDateFormatterShortStyle]];
     return row;

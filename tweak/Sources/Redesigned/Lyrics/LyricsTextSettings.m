@@ -14,7 +14,7 @@
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Text sizes";
+    self.title = @"Cỡ chữ";
     return self;
 }
 
@@ -22,7 +22,7 @@
     [super viewDidLoad];
     _order = [SGRLyricsTextOrder() mutableCopy];
     self.tableView.editing = YES;
-    _footer = SGNote(@"Pronunciation and translation are turned on from the button in the lyrics' corner.");
+    _footer = SGNote(@"Bật cách phát âm và bản dịch bằng nút ở góc màn hình lời bài hát.");
     self.tableView.tableFooterView = _footer;
 }
 

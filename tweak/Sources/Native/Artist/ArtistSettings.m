@@ -38,5 +38,5 @@ UIViewController *SGArtistSettingsPage(void) {
             SGFlagRow(@"Artist facts", @"ios-creator-impl.is_artist_facts_enabled"),
         ]),
     ];
-    return [[SGModPage alloc] initWithTitle:@"Artist" intro:nil sections:sections footer:nil];
+    return [[SGModPage alloc] initWithTitle:@"Nghệ sĩ" intro:nil sections:sections footer:nil];
 }

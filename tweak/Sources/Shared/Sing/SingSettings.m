@@ -28,7 +28,7 @@ static void tell(NSString *title, NSString *message) {
 
 static void ask(NSString *title, NSString *message, NSString *action, BOOL destructive, void (^then)(void)) {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
     [alert addAction:[UIAlertAction actionWithTitle:action style:destructive ? UIAlertActionStyleDestructive : UIAlertActionStyleDefault
                                             handler:^(UIAlertAction *a) { then(); }]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];
@@ -39,7 +39,7 @@ NSString *SGSingLevelText(double level) {
     if (level < 0.999) return [NSString stringWithFormat:@"%.0f%%", level * 100];
     if (level <= 1.001) return @"As sung";
     if (level >= 1.999) return @"Vocals only";
-    return [NSString stringWithFormat:@"Backing %.0f%%", (2 - level) * 100];
+    return [NSString stringWithFormat:@"Nhạc nền %.0f%%", (2 - level) * 100];
 }
 
 static NSString *bytes(long long count) {
@@ -61,11 +61,11 @@ static NSString *modelValue(void) {
             if (SGSingModelChecking()) return @"Checking…";
             if (SGSingModelWaitingForNetwork()) return SGSingModelOverCellular() ? @"Waiting for the network" : @"Waiting for Wi-Fi";
             return [NSString stringWithFormat:@"%.0f%%", SGSingModelProgress() * 100];
-        case SGSingModelReady: return [NSString stringWithFormat:@"Downloaded · %@", SGSingModelSizeText()];
+        case SGSingModelReady: return [NSString stringWithFormat:@"Đã tải · %@", SGSingModelSizeText()];
         case SGSingModelMissing:
             if (SGSingModelError()) return update ? @"Update failed, try again" : @"Failed, try again";
             if (SGSingModelPausedBytes()) {
-                return [NSString stringWithFormat:@"%@ · %@ of %@", update ? @"Update paused" : @"Paused", bytes(SGSingModelPausedBytes()), SGSingModelSizeText()];
+                return [NSString stringWithFormat:@"%@ · %@ trên %@", update ? @"Update paused" : @"Paused", bytes(SGSingModelPausedBytes()), SGSingModelSizeText()];
             }
             return [NSString stringWithFormat:update ? @"Update available · %@" : @"Download, %@", SGSingModelSizeText()];
     }
@@ -80,8 +80,8 @@ static void modelTapped(UITableViewController *page) {
     switch (rowState()) {
         case SGSingModelMissing: {
             BOOL update = SGSingModelUpdateAvailable();
-            NSString *message = [NSString stringWithFormat:@"%@%@%@ from Hugging Face. It waits for Wi-Fi unless you let it use cellular. It stays on this iPhone, and no audio leaves it.",
-                                 SGSingModelError() ? [NSString stringWithFormat:@"The last try failed: %@\n\n", SGSingModelError()] : @"",
+            NSString *message = [NSString stringWithFormat:@"%@%@%@ từ Hugging Face. Tệp chờ Wi-Fi hoặc tải qua dữ liệu di động nếu bạn cho phép. Dữ liệu và âm thanh ở lại iPhone này.",
+                                 SGSingModelError() ? [NSString stringWithFormat:@"Lần thử gần nhất thất bại: %@\n\n", SGSingModelError()] : @"",
                                  update ? @"The new voice model runs on the Neural Engine, faster and cooler, and Karaoke keeps the one it has until it is in. " : @"",
                                  SGSingModelSizeText()];
             if (untestedChip()) {
@@ -96,14 +96,14 @@ static void modelTapped(UITableViewController *page) {
         }
         case SGSingModelDownloading:
             if (SGSingModelWaitingForNetwork() && !SGSingModelOverCellular()) {
-                ask(@"Download over cellular?", [NSString stringWithFormat:@"The download waits for Wi-Fi. Over cellular or a Low Data Mode network it uses up to %@ of your plan.",
+                ask(@"Download over cellular?", [NSString stringWithFormat:@"Tệp chờ Wi-Fi để tải. Nếu dùng mạng di động hoặc Chế độ dữ liệu thấp, tệp có thể dùng đến %@ lưu lượng.",
                                                  SGSingModelSizeText()], @"Use cellular", NO, ^{ SGSingDownloadModelOverCellular(); });
                 break;
             }
             ask(@"Stop the download?", @"What has come in is kept, so the next download carries on from it.", @"Stop", YES, ^{ SGSingCancelModelDownload(); });
             break;
         case SGSingModelReady:
-            ask(@"Delete the voice model?", [NSString stringWithFormat:@"It frees %@. Karaoke needs it again to turn the vocals down.", SGSingModelInUseSizeText()],
+            ask(@"Delete the voice model?", [NSString stringWithFormat:@"Thao tác này giải phóng %@. Karaoke sẽ cần tải lại mô hình để giảm giọng hát.", SGSingModelInUseSizeText()],
                 @"Delete", YES, ^{
                     SGSetSingOn(NO);
                     SGSingDeleteModel();
@@ -147,7 +147,7 @@ UIViewController *SGSpatialVoiceSettingsPage(void) {
         SGSetSingSpatial(on);
         [page.preview refresh];
     };
-    SGSpatialVoicePage *made = [[SGSpatialVoicePage alloc] initWithTitle:@"Spatial voice" intro:nil sections:@[
+    SGSpatialVoicePage *made = [[SGSpatialVoicePage alloc] initWithTitle:@"Giọng hát không gian" intro:nil sections:@[
         SGNotedSection(nil, @[spatial],
                        @"The singer's voice keeps its place in front of you as you turn your head, while the rest of the song turns with "
                        @"you; stay turned, and it comes round in front again. It follows your head through headphones that "
@@ -162,7 +162,7 @@ UIViewController *SGSpatialVoiceSettingsPage(void) {
             }, ^NSString *(double value) { return [NSString stringWithFormat:@"%.0f%%", value]; }),
             SGSliderRow(@"Back in front", nil, 5, 60, 1, ^double { return SGSingSpatialFront(); }, ^(double value) {
                 SGSetSingSpatialSound(SGSingSpatialDistance(), SGSingSpatialRoom(), value, SGSingSpatialWidth());
-            }, ^NSString *(double value) { return [NSString stringWithFormat:@"After %.0f s", value]; }),
+            }, ^NSString *(double value) { return [NSString stringWithFormat:@"Sau %.0f giây", value]; }),
             SGSliderRow(@"Instruments width", nil, 0, 200, 5, ^double { return SGSingSpatialWidth(); }, ^(double value) {
                 SGSetSingSpatialSound(SGSingSpatialDistance(), SGSingSpatialRoom(), SGSingSpatialFront(), value);
             }, ^NSString *(double value) { return [NSString stringWithFormat:@"%.0f%%", value]; }),
@@ -223,8 +223,8 @@ UIViewController *SGSingSettingsPage(void) {
     SGModRow *remove = SGActionRow(@"Remove voice model", nil, ^{
         BOOL partial = SGSingModelCurrentState() != SGSingModelReady;
         ask(partial ? @"Remove the paused download?" : @"Remove the voice model?",
-            partial ? [NSString stringWithFormat:@"It frees %@. A new download starts from the beginning.", bytes(SGSingModelPausedBytes())]
-                    : [NSString stringWithFormat:@"It frees %@. Karaoke needs it again to turn the vocals down.", SGSingModelInUseSizeText()],
+            partial ? [NSString stringWithFormat:@"Thao tác này giải phóng %@. Lần tải tiếp theo sẽ bắt đầu lại từ đầu.", bytes(SGSingModelPausedBytes())]
+                    : [NSString stringWithFormat:@"Thao tác này giải phóng %@. Karaoke sẽ cần tải lại mô hình để giảm giọng hát.", SGSingModelInUseSizeText()],
             @"Remove", YES, ^{
                 SGSetSingOn(NO);
                 SGSingDeleteModel();
@@ -254,7 +254,7 @@ UIViewController *SGSingSettingsPage(void) {
                              SGSingModelLight);
     SGModRow *other = SGStatActionRow(@"Remove the other model", nil, ^NSString *{ return bytes(SGSingOtherModelBytes()); }, ^{
         NSString *name = SGSingChosenModel() == SGSingModelFull ? @"Light" : @"Best quality";
-        ask(@"Remove the other model?", [NSString stringWithFormat:@"%@ is not in use. Removing it frees %@, and choosing it again downloads it again.",
+        ask(@"Remove the other model?", [NSString stringWithFormat:@"%@ hiện chưa được sử dụng. Xóa mô hình sẽ giải phóng %@. Chọn lại để tải xuống.",
                                          name, bytes(SGSingOtherModelBytes())],
             @"Remove", YES, ^{
                 SGSingDeleteOtherModel();

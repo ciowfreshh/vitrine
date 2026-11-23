@@ -12,8 +12,8 @@ static const int64_t kDay = 86400;
 
 static NSString *duration(int64_t ms) {
     int64_t minutes = ms / 60000;
-    if (minutes < 60) return [NSString stringWithFormat:@"%lld min", minutes];
-    return [NSString stringWithFormat:@"%lld h %lld min", minutes / 60, minutes % 60];
+    if (minutes < 60) return [NSString stringWithFormat:@"%lld phút", minutes];
+    return [NSString stringWithFormat:@"%lld giờ %lld phút", minutes / 60, minutes % 60];
 }
 
 static NSString *playsText(NSUInteger plays) {
@@ -101,7 +101,7 @@ static BOOL sg_importing;
             NSUInteger added = [SGListeningLog() merge:plays];
             SGLog(@"stats: %lu plays in %lu files, %lu new", (unsigned long)plays.count, (unsigned long)files, (unsigned long)added);
             [page.tableView reloadData];
-            showAlert(@"Imported", [NSString stringWithFormat:@"%@ added from %lu %@, %lu skipped as already here.", playsText(added),
+            showAlert(@"Imported", [NSString stringWithFormat:@"Đã thêm %@ từ %lu %@, bỏ qua %lu mục đã có.", playsText(added),
                                    (unsigned long)files, files == 1 ? @"file" : @"files", (unsigned long)(plays.count - added)]);
         });
     });
@@ -121,14 +121,14 @@ static void pickExport(UITableViewController *page) {
 }
 
 static void confirmErase(UITableViewController *page) {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Erase listening history?"
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Xóa lịch sử nghe?"
                                                                   message:@"Every play recorded on this phone and every one imported is deleted. Spotify's own history is untouched."
                                                            preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Erase" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+    [alert addAction:[UIAlertAction actionWithTitle:@"Xóa" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         [SGListeningLog() erase];
         [page.tableView reloadData];
     }]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
@@ -151,7 +151,7 @@ UIViewController *SGListeningStatsPage(void) {
                                                     ^NSString *{ return sg_importing ? @"Importing…" : nil; }, nil), @"square.and.arrow.down");
     SGModRow *erase = SGWithSymbol(SGActionRow(@"Erase listening history", nil, nil), @"trash");
     erase.color = SGRed();
-    SGModPage *page = [[SGModPage alloc] initWithTitle:@"Listening stats" intro:nil sections:@[
+    SGModPage *page = [[SGModPage alloc] initWithTitle:@"Thống kê nghe" intro:nil sections:@[
         SGNotedSection(nil, @[SGSwitchRow(@"Record plays", nil, SGKeyListeningStats)],
                        @"A play counts once it has run 30 seconds, or half of a shorter track. Everything stays on this phone."),
         SGSection(nil, periods),

@@ -62,7 +62,7 @@ static UILabel *label(UIFontTextStyle style, UIFontWeight weight, CGFloat size, 
     [_close setImage:[UIImage systemImageNamed:@"xmark" withConfiguration:[UIImageSymbolConfiguration configurationWithPointSize:17 weight:UIImageSymbolWeightSemibold]]
             forState:UIControlStateNormal];
     _close.tintColor = UIColor.whiteColor;
-    _close.accessibilityLabel = @"Close";
+    _close.accessibilityLabel = @"Đóng";
     _close.translatesAutoresizingMaskIntoConstraints = NO;
     [_close addTarget:self action:@selector(dismiss) forControlEvents:UIControlEventTouchUpInside];
 

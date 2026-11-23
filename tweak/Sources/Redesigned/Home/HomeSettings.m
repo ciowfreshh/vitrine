@@ -28,7 +28,7 @@ UIViewController *SGRHomeSettingsPage(void) {
     for (NSString *identity in shelves) [rows addObject:SGShownRow(identity, nil, SGRHomeShelfHideKey(identity))];
     if (!rows.count) [rows addObject:SGStatRow(@"None seen yet", ^NSString *{ return @""; })];
 
-    return [[SGModPage alloc] initWithTitle:@"Home" intro:SGRestartNote sections:@[
+    return [[SGModPage alloc] initWithTitle:@"Trang chủ" intro:SGRestartNote sections:@[
         SGNotedSection(nil, @[look, topPicks, from, colour, heading],
                        @"A shelf Home does not show today leaves Top picks off until it is back."),
         SGSection(@"On Home", @[

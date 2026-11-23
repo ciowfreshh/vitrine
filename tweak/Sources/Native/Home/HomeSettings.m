@@ -11,7 +11,7 @@ static SGModRow *choiceRow(NSString *title, NSString *subtitle, SGHomeChoice cho
 }
 
 UIViewController *SGHomeGradientPage(void) {
-    return [[SGModPage alloc] initWithTitle:@"Gradient"
+    return [[SGModPage alloc] initWithTitle:@"Chuyển màu"
                                       intro:@"Turning it on or off applies after you restart Spotify."
                                    sections:@[
         SGSection(@"Gradient", @[
@@ -24,7 +24,7 @@ UIViewController *SGHomeGradientPage(void) {
 }
 
 static UIViewController *libraryPage(void) {
-    return [[SGModPage alloc] initWithTitle:@"Library" intro:nil sections:@[
+    return [[SGModPage alloc] initWithTitle:@"Thư viện" intro:nil sections:@[
         SGSection(@"Library", @[
             SGFlagRow(@"Denser rows", @"ios-feature-yourlibaryx.denser_rows_enabled"),
             SGFlagRow(@"Sort playlists by recently updated", @"ios-feature-yourlibaryx.recently_updated_playlists_sort_enabled"),
@@ -66,5 +66,5 @@ UIViewController *SGHomeSettingsPage(void) {
             SGKillRow(@"DJ beta badge", @"ios-home-evopage-impl.dj_mdc_beta_badge_enabled"),
         ]),
     ];
-    return [[SGModPage alloc] initWithTitle:@"Home & Library" intro:nil sections:sections footer:nil];
+    return [[SGModPage alloc] initWithTitle:@"Trang chủ và Thư viện" intro:nil sections:sections footer:nil];
 }
