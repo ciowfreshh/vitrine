@@ -131,7 +131,7 @@ static void offerCleanup(void) {
     if (!leftovers.count) return;
     NSString *size = sizeOf(leftovers);
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:[NSString stringWithFormat:@"Chroma để lại %@ dữ liệu trên iPhone này", size]
-                                                                  message:@"Its Karaoke voice model and its saved lock screen videos are still in Spotify's storage, and Vitrine uses neither. Your listening history and audio effects stay."
+                                                                  message:@"Mô hình giọng hát Karaoke và video màn hình khóa của Chroma vẫn còn trong bộ nhớ Spotify. Xóa chúng sẽ giữ lại lịch sử nghe và hiệu ứng âm thanh."
                                                            preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"Xóa" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{

@@ -1207,8 +1207,8 @@ static void askForKey(void) {
         UIPasteboard *board = UIPasteboard.generalPasteboard;
         NSString *key = [board.string stringByTrimmingCharactersInSet:around];
         if (!key.length || [key rangeOfCharacterFromSet:NSCharacterSet.whitespaceAndNewlineCharacterSet].location != NSNotFound) {
-            UIAlertController *none = [UIAlertController alertControllerWithTitle:@"No key on the clipboard"
-                                                                          message:@"Copy the API key, then tap Paste Key again."
+            UIAlertController *none = [UIAlertController alertControllerWithTitle:@"Clipboard chưa có khóa"
+                                                                          message:@"Sao chép khóa API rồi chạm lại vào Dán khóa."
                                                                    preferredStyle:UIAlertControllerStyleAlert];
             none.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
             [none addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
@@ -1223,7 +1223,7 @@ static void askForKey(void) {
         board.items = @[];
         translatorChanged();
     }];
-    UIAlertAction *save = server && stored ? [UIAlertAction actionWithTitle:@"Save Server" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    UIAlertAction *save = server && stored ? [UIAlertAction actionWithTitle:@"Lưu máy chủ" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         saveServer();
         translatorChanged();
     }] : nil;

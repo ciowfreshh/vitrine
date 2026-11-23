@@ -73,7 +73,7 @@ BOOL SGLiveActivityAllowedByInstall(void) {
 static SGModRow *missingRow(void) {
     SGModRow *row = SGWarningRow(@"Missing from this install", @"Tap for why", ^{
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Thiếu Hoạt động trực tiếp"
-            message:@"iOS shows a Live Activity only for an app that says it has one, and only Vitrine's IPA build writes that into Spotify. This Spotify was put together another way, such as with Vitrine's .deb injected by hand, so iOS turns the card down. Build the IPA with Vitrine to get it."
+            message:@"iOS chỉ hiện Hoạt động trực tiếp khi ứng dụng khai báo hỗ trợ. Bản Spotify này thiếu khai báo vì được đóng gói theo cách khác, chẳng hạn chèn tệp .deb thủ công. Hãy build IPA bằng Vitrine để dùng tính năng."
             preferredStyle:UIAlertControllerStyleAlert];
         alert.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
         [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];

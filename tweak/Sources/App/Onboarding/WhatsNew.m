@@ -1,4 +1,5 @@
 #import "Core/SGCore.h"
+#import "Core/SGVietnamese.h"
 #import "Settings/SGPageStyle.h"
 #import "Onboarding.h"
 #import "App/About/About.h"
@@ -75,7 +76,7 @@ static UILabel *label(NSString *text, UIFontTextStyle style, UIFontWeight weight
     // iOS 26 gives a sheet its own material; before it the sheet takes the mod's page color.
     if (@available(iOS 26.0, *)) {} else self.view.backgroundColor = SGPageBackground();
 
-    UILabel *title = label(@"What's New in Vitrine", UIFontTextStyleLargeTitle, UIFontWeightBold, UIColor.whiteColor);
+    UILabel *title = label(@"Có gì mới trong Vitrine", UIFontTextStyleLargeTitle, UIFontWeightBold, UIColor.whiteColor);
     title.textAlignment = NSTextAlignmentCenter;
     title.accessibilityTraits = UIAccessibilityTraitHeader;
     UILabel *version = label([NSString stringWithFormat:@"Phiên bản %s", SG_VERSION], UIFontTextStyleSubheadline, UIFontWeightRegular, SGGrey());
@@ -89,7 +90,7 @@ static UILabel *label(NSString *text, UIFontTextStyle style, UIFontWeight weight
     for (SGUpdateChange *change in SGWhatsNewChanges()) {
         if (![change.kind isEqualToString:kind]) {
             kind = change.kind;
-            UILabel *heading = label(kind, UIFontTextStyleTitle3, UIFontWeightSemibold, UIColor.whiteColor);
+            UILabel *heading = label(SGVI(kind), UIFontTextStyleTitle3, UIFontWeightSemibold, UIColor.whiteColor);
             heading.accessibilityTraits = UIAccessibilityTraitHeader;
             if (column.arrangedSubviews.count > 2) [column setCustomSpacing:28 afterView:column.arrangedSubviews.lastObject];
             [column addArrangedSubview:heading];
@@ -107,7 +108,7 @@ static UILabel *label(NSString *text, UIFontTextStyle style, UIFontWeight weight
     [scroll addSubview:column];
     [self.view addSubview:scroll];
 
-    UIButton *done = SGOnboardingButton(@"Continue");
+    UIButton *done = SGOnboardingButton(@"Tiếp tục");
     [done addAction:[UIAction actionWithHandler:^(UIAction *action) {
         [self dismissViewControllerAnimated:YES completion:nil];
     }] forControlEvents:UIControlEventTouchUpInside];

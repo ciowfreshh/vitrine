@@ -5,7 +5,9 @@
 
 NSNotificationName const SGLibraryScanDidChange = @"syna.lyricsLibrary.scan";
 static NSString *const spotifyHost = @"spclient.wg.spotify.com";
-static NSString *const collection = @"https://spclient.wg.spotify.com/context-resolve/v1/spotify:collection:tracks";
+static NSString *const webHost = @"api.spotify.com";
+static NSString *const savedTracksURL = @"https://api.spotify.com/v1/me/tracks?limit=50&offset=0";
+static NSString *const fallbackCollection = @"https://spclient.wg.spotify.com/context-resolve/v1/spotify:collection:tracks";
 
 static NSDictionary *dict(id object) { return [object isKindOfClass:NSDictionary.class] ? object : nil; }
 static NSArray *list(id object) { return [object isKindOfClass:NSArray.class] ? object : nil; }
@@ -17,9 +19,10 @@ NSURL *SGLibrarySpotifyPageURL(NSString *address) {
     if ([address hasPrefix:@"/"] && ![address hasPrefix:@"//"]) address = [@"https://spclient.wg.spotify.com" stringByAppendingString:address];
     NSURLComponents *parts = [NSURLComponents componentsWithString:address];
     NSString *path = parts.URL.path;
-    if (![parts.scheme.lowercaseString isEqual:@"https"] || ![parts.host.lowercaseString isEqual:spotifyHost] ||
-        parts.user || parts.password || parts.port || parts.fragment ||
-        (![path hasPrefix:@"/context-resolve/"] && ![path hasPrefix:@"/context/"] &&
+    if (![parts.scheme.lowercaseString isEqual:@"https"] || parts.user || parts.password || parts.port || parts.fragment) return nil;
+    NSString *host = parts.host.lowercaseString;
+    if ([host isEqual:webHost]) return [path isEqual:@"/v1/me/tracks"] ? parts.URL : nil;
+    if (![host isEqual:spotifyHost] || (![path hasPrefix:@"/context-resolve/"] && ![path hasPrefix:@"/context/"] &&
          ![path hasPrefix:@"/playlist/"] && ![path hasPrefix:@"/collection/"])) return nil;
     return parts.URL;
 }
@@ -37,6 +40,8 @@ NSArray *SGLibraryCollectionPage(id json, NSString **next, NSError **error) {
     *next = nil;
     NSDictionary *response = dict(json);
     NSArray *pages = list(response[@"pages"]);
+    NSArray *items = list(response[@"items"]);
+    if (items) pages = @[@{@"tracks": items, @"next_page_url": string(response[@"next"]) ?: @""}];
     if (!pages && list(response[@"tracks"])) pages = @[response];
     if (!pages) {
         SGLibraryError(error, @"Spotify trả về trang Bài hát đã thích sai định dạng.");
@@ -55,7 +60,8 @@ NSArray *SGLibraryCollectionPage(id json, NSString **next, NSError **error) {
         if (nextURL.length) *next = nextURL;
         if (!pageTracks && pageURL.length) *next = pageURL;
         for (id entry in pageTracks) {
-            NSDictionary *track = dict(entry);
+            NSDictionary *item = dict(entry);
+            NSDictionary *track = dict(item[@"track"]) ?: item;
             NSString *uri = string(track[@"uri"]);
             if (![uri hasPrefix:@"spotify:track:"]) continue;
             NSString *trackID = [uri substringFromIndex:@"spotify:track:".length];
@@ -123,6 +129,7 @@ static NSURLSession *scanSession(void) {
     NSMutableOrderedSet<NSString *> *_tracks;
     NSMutableSet<NSString *> *_pages;
     NSUInteger _generation, _processed, _failed, _missing, _original, _translated;
+    BOOL _contextFallback;
 }
 
 + (instancetype)shared {
@@ -156,6 +163,7 @@ static NSURLSession *scanSession(void) {
     _tracks = [NSMutableOrderedSet orderedSet];
     _pages = [NSMutableSet set];
     _processed = _failed = _missing = _original = _translated = 0;
+    _contextFallback = NO;
     _running = YES;
     NSUInteger generation = ++_generation;
     [self report:@"Đang kết nối với Bài hát đã thích…"];
@@ -166,13 +174,17 @@ static NSURLSession *scanSession(void) {
     });
     SGSpclientHeaders(^(NSDictionary *headers) {
         if (generation != self->_generation) return;
-        [self fetchPage:SGLibrarySpotifyPageURL(collection) headers:headers];
+        [self fetchPage:SGLibrarySpotifyPageURL(savedTracksURL) headers:headers];
     });
 }
 
 - (void)request:(NSURL *)url headers:(NSDictionary *)headers done:(void (^)(id json, NSInteger status))done {
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
-    request.allHTTPHeaderFields = headers;
+    if ([url.host.lowercaseString isEqual:webHost]) {
+        [request setValue:headers[@"authorization"] forHTTPHeaderField:@"Authorization"];
+    } else {
+        request.allHTTPHeaderFields = headers;
+    }
     [request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
     NSUInteger generation = _generation;
     _task = [scanSession() dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
@@ -197,6 +209,11 @@ static NSURLSession *scanSession(void) {
         NSString *next;
         NSArray *tracks = SGLibraryCollectionPage(json, &next, nil);
         if (!tracks) {
+            if (!self->_contextFallback && [url.host isEqual:webHost] && self->_pages.count == 1 &&
+                status != 0 && status != 429 && status < 500) {
+                [self openCollectionContext:headers];
+                return;
+            }
             [self stop:[NSString stringWithFormat:@"Tải danh sách Spotify thất bại (%ld). Bạn có thể quét tiếp.", (long)status]];
             return;
         }
@@ -222,6 +239,33 @@ static NSURLSession *scanSession(void) {
             });
         });
     }];
+}
+
+- (void)openCollectionContext:(NSDictionary *)headers {
+    _contextFallback = YES;
+    NSString *active = SGKaraokeCollectionContext();
+    if (active.length) {
+        [self fetchOwnerCollection:active headers:headers];
+        return;
+    }
+    [self request:[NSURL URLWithString:@"https://api.spotify.com/v1/me"] headers:headers done:^(id json, NSInteger status) {
+        NSString *account = string(dict(json)[@"id"]);
+        NSString *context = account.length ? [NSString stringWithFormat:@"spotify:user:%@:collection", account] : nil;
+        [self fetchOwnerCollection:context headers:headers];
+    }];
+}
+
+- (void)fetchOwnerCollection:(NSString *)context headers:(NSDictionary *)headers {
+    NSString *url = fallbackCollection;
+    NSArray<NSString *> *parts = [context componentsSeparatedByString:@":"];
+    if (parts.count == 4 && [parts[0] isEqual:@"spotify"] && [parts[1] isEqual:@"user"] && [parts[3] isEqual:@"collection"]) {
+        NSCharacterSet *safe = [NSCharacterSet characterSetWithCharactersInString:@"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-"];
+        NSString *account = [parts[2] stringByAddingPercentEncodingWithAllowedCharacters:safe];
+        if (account.length && account.length <= 256) {
+            url = [NSString stringWithFormat:@"https://%@/context-resolve/v1/spotify:user:%@:collection", spotifyHost, account];
+        }
+    }
+    [self fetchPage:SGLibrarySpotifyPageURL(url) headers:headers];
 }
 
 - (void)processNextWithHeaders:(NSDictionary *)headers {

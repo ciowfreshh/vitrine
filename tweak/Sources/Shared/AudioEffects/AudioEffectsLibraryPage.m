@@ -157,7 +157,7 @@ static UITableViewCell *tiledCell(UITableView *table, NSString *title, NSString 
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    _footer = SGNote(@"Choosing a file uses it straight away. Swipe left on one to delete it.");
+    _footer = SGNote(@"Tệp được dùng ngay sau khi chọn. Vuốt một tệp sang trái để xóa.");
     self.tableView.tableFooterView = _footer;
 }
 
@@ -299,7 +299,7 @@ typedef NS_ENUM(NSInteger, SGGraphicEqRow) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Graphic EQ";
+    self.title = @"Bộ cân bằng đồ họa";
     self.errorKey = SGKeyDSPGraphicEq;
     return self;
 }

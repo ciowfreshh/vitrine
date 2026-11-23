@@ -9,6 +9,7 @@
 
 void SGSpclientHeaders(void (^completion)(NSDictionary *headers)) { completion(nil); }
 void SGLog(NSString *format, ...) {}
+NSString *SGKaraokeCollectionContext(void) { return nil; }
 
 static void check(BOOL condition, NSString *message) {
     if (condition) return;
@@ -118,6 +119,12 @@ int main(void) {
         check(SGLibraryCollectionPage(page, &next, nil).count == 1 &&
               [SGLibrarySpotifyPageURL(next).host isEqual:@"spclient.wg.spotify.com"] &&
               !SGLibrarySpotifyPageURL(@"https://example.org/collection/redirect"), @"pagination does not send headers off host");
+        NSDictionary *savedTracks = @{@"items": @[@{@"track": @{@"uri": original[@"uri"], @"name": @"Tên bài",
+            @"artists": @[@{@"name": @"Nghệ sĩ"}]}}], @"next": @"https://api.spotify.com/v1/me/tracks?offset=50&limit=50"};
+        NSArray *liked = SGLibraryCollectionPage(savedTracks, &next, nil);
+        check(liked.count == 1 && [liked[0][@"title"] isEqual:@"Tên bài"] &&
+            [liked[0][@"artists"] isEqual:@[@"Nghệ sĩ"]] && SGLibrarySpotifyPageURL(next) &&
+            !SGLibrarySpotifyPageURL(@"https://api.spotify.com/v1/me"), @"Spotify Web API pagination");
         [NSFileManager.defaultManager removeItemAtURL:root error:nil];
         puts("PASS: 2100 tracks, JSON/ZIP round trip, playback line timing, missing, duplicates, invalid data, deletion and resume");
     }

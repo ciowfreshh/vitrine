@@ -39,7 +39,7 @@ static BOOL anythingLearned(void) {
 // Both learned sizes back to the defaults, asked first; `done` runs once they are.
 static void forget(void (^done)(void)) {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Xóa mẫu gật đầu và lắc đầu?"
-        message:@"Both go back to the default sizes. You can teach them again." preferredStyle:UIAlertControllerStyleAlert];
+        message:@"Cả hai cử chỉ trở về ngưỡng mặc định. Bạn có thể hướng dẫn nhận diện lại." preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"Quên" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         SGSetInt(SGKeyHeadNod, 0);
         SGSetInt(SGKeyHeadShake, 0);

@@ -17,7 +17,8 @@ include $(THEOS)/makefiles/common.mk
 # The What's new sheet's text, this version's section of CHANGELOG.md, as a gitignored header that
 # App/Onboarding/WhatsNew.m reads. A copy of tweak/ without the scripts beside it builds without it.
 ifneq ($(wildcard ../scripts/whats-new.sh),)
-$(shell ../scripts/whats-new.sh $(SG_VERSION) ../CHANGELOG.md Sources/App/Onboarding/SGWhatsNewNotes.h)
+SG_WHATS_NEW := $(or $(wildcard ../docs/CHANGELOG-beta17.vi.md),../CHANGELOG.md)
+$(shell ../scripts/whats-new.sh $(SG_VERSION) $(SG_WHATS_NEW) Sources/App/Onboarding/SGWhatsNewNotes.h)
 endif
 
 TWEAK_NAME := spotifyglass

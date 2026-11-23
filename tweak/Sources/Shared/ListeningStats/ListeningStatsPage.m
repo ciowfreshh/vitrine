@@ -122,7 +122,7 @@ static void pickExport(UITableViewController *page) {
 
 static void confirmErase(UITableViewController *page) {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Xóa lịch sử nghe?"
-                                                                  message:@"Every play recorded on this phone and every one imported is deleted. Spotify's own history is untouched."
+                                                                  message:@"Xóa mọi lượt phát ghi trên thiết bị hoặc đã nhập. Spotify vẫn giữ lịch sử của tài khoản."
                                                            preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"Xóa" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         [SGListeningLog() erase];

@@ -165,7 +165,7 @@ typedef NS_ENUM(NSInteger, SGNavbarSection) {
     [super viewDidLoad];
     self.tableView.allowsSelectionDuringEditing = YES;
     self.tableView.editing = YES;
-    _intro = SGNote(@"Drag to reorder, tap to show or hide.");
+    _intro = SGNote(@"Kéo để đổi thứ tự. Chạm để hiện hoặc ẩn.");
     self.tableView.tableHeaderView = _intro;
     _entries = navbarEntries();
 }

@@ -399,7 +399,7 @@ static BOOL adFree(void) {
     } else {
         _noteIcon.image = [UIImage systemImageNamed:@"info.circle.fill"];
         _noteIcon.tintColor = SGGrey();
-        _noteText.text = @"Apple Music style lyrics, the redesigned player and the glass tab bar come with the redesign only.";
+        _noteText.text = @"Giao diện thiết kế mới có lời bài hát kiểu Apple Music, trình phát mới và thanh thẻ dạng kính.";
     }
     _report.hidden = !untested || !SGRepoURL;
     _note.hidden = _redesigned.selected && !untested;
@@ -474,9 +474,7 @@ static BOOL adFree(void) {
     if (@available(iOS 17.0, *)) _adsCard.accessibilityTraits = UIAccessibilityTraitToggleButton;
     else _adsCard.accessibilityTraits = UIAccessibilityTraitButton;
     UILabel *adsText = [UILabel new];
-    adsText.text = @"Three switches of Premium, ads & privacy, applied at the restart; off leaves each as it is. Spoof Premium is "
-                   @"untested and can end in a forced logout; a Premium account gains nothing from it. Offline, audio quality and "
-                   @"sessions stay the server's.";
+    adsText.text = @"Các công tắc trong mục Premium, quảng cáo và quyền riêng tư có hiệu lực sau khi mở lại ứng dụng. Mô phỏng Premium chưa được kiểm thử, có thể buộc bạn đăng nhập lại và không có lợi cho tài khoản Premium. Máy chủ vẫn quản lý chế độ ngoại tuyến, chất lượng âm thanh và phiên đăng nhập.";
     UIStackView *adsNote = noteLine(SGSymbolView(@"info.circle.fill", 15, UIImageSymbolWeightSemibold, 22), adsText);
     adsNote.arrangedSubviews.firstObject.tintColor = SGGrey();
     adsNote.layoutMargins = UIEdgeInsetsMake(4, 4, 0, 4);
@@ -495,9 +493,7 @@ static BOOL adFree(void) {
     if (@available(iOS 17.0, *)) _sponsorBlockCard.accessibilityTraits = UIAccessibilityTraitToggleButton;
     else _sponsorBlockCard.accessibilityTraits = UIAccessibilityTraitButton;
     UILabel *sponsorBlockText = [UILabel new];
-    sponsorBlockText.text = @"Skips segments submitted by listeners to sponsor.ajay.app, with an Undo banner after each skip. "
-                            @"Newer or less common episodes may not be marked yet. "
-                            @"Categories and behavior live in Mod Settings > Premium, ads & privacy.";
+    sponsorBlockText.text = @"Bỏ qua các đoạn người nghe gửi lên sponsor.ajay.app và hiện nút Hoàn tác sau mỗi lần bỏ qua. Tập mới hoặc ít người nghe có thể chưa được đánh dấu. Xem danh mục và hành vi trong Cài đặt Vitrine > Premium, quảng cáo và quyền riêng tư.";
     UIStackView *sponsorBlockNote = noteLine(SGSymbolView(@"info.circle.fill", 15, UIImageSymbolWeightSemibold, 22), sponsorBlockText);
     sponsorBlockNote.arrangedSubviews.firstObject.tintColor = SGGrey();
     sponsorBlockNote.layoutMargins = UIEdgeInsetsMake(4, 4, 0, 4);
@@ -531,7 +527,7 @@ static BOOL adFree(void) {
     _primary = SGOnboardingButton(@"Start listening");
     [_primary addTarget:self action:@selector(finish) forControlEvents:UIControlEventTouchUpInside];
     UILabel *footer = [UILabel new];
-    footer.text = @"Hold Home to open settings.";
+    footer.text = @"Nhấn giữ Trang chủ để mở cài đặt.";
     footer.font = [UIFont systemFontOfSize:13];
     footer.textColor = SGGrey();
     footer.textAlignment = NSTextAlignmentCenter;

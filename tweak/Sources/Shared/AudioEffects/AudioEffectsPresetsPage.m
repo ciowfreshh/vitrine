@@ -254,9 +254,9 @@ typedef NS_ENUM(NSInteger, SGDSPHeadphoneSection) {
         [_search.topAnchor constraintEqualToAnchor:_searchHeader.topAnchor constant:kSearchTop],
         [_search.heightAnchor constraintEqualToConstant:44],
     ]];
-    _header = SGNote(@"Corrections that make your headphones sound neutral, measured by AutoEq. Picking one turns Audio effects and the Graphic EQ on with it.");
+    _header = SGNote(@"Các cấu hình AutoEq cân chỉnh âm sắc về trung tính theo mẫu tai nghe. Chọn một cấu hình để bật Hiệu ứng âm thanh và bộ cân bằng đồ họa.");
     table.tableHeaderView = _header;
-    _footer = SGNote(@"From AutoEq by Jaakko Pasanen, MIT License. Pull down to fetch the list again.");
+    _footer = SGNote(@"Dữ liệu AutoEq của Jaakko Pasanen, giấy phép MIT. Kéo xuống để tải lại danh sách.");
     table.tableFooterView = _footer;
     self.refreshControl = [UIRefreshControl new];
     [self.refreshControl addTarget:self action:@selector(refresh) forControlEvents:UIControlEventValueChanged];

@@ -27,7 +27,7 @@ static void resetAll(void) {
 
 static void confirmReset(void) {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Đặt lại tất cả cài đặt?"
-                                                                  message:@"Every switch goes off, flag overrides and the tab bar layout are cleared, and Spotify restarts as it came, with the mod doing nothing until asked. Spotify's own settings are untouched."
+                                                                  message:@"Tắt các tùy chọn của Vitrine, xóa cờ đã ghi đè và bố cục thanh thẻ. Spotify sẽ mở lại với cài đặt gốc của Vitrine và giữ cài đặt Spotify của bạn."
                                                            preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"Đặt lại và khởi động lại" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) { resetAll(); }]];
     [alert addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
@@ -37,7 +37,7 @@ static void confirmReset(void) {
 // Reset all leaves the Keychain alone, so a key outlives a reset; this takes every item Vitrine keeps there.
 static void confirmClearKeychain(void) {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Xóa dữ liệu Keychain?"
-                                                                  message:@"The Gemini, OpenAI-compatible and Anthropic API keys, the OpenAI-compatible server and the Spicy Lyrics key are removed from this iPhone. Settings stay as they are."
+                                                                  message:@"Xóa khóa Gemini, khóa API tương thích OpenAI, khóa Anthropic, địa chỉ máy chủ tương thích OpenAI và khóa Spicy Lyrics khỏi iPhone này. Các cài đặt khác được giữ lại."
                                                            preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"Xóa dữ liệu Keychain" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         SGAIForgetKeys();

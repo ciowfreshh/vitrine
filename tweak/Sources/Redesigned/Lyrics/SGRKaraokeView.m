@@ -124,7 +124,7 @@ static char kBubbleKey, kUnderlineKey;
         bubble.alpha = kBubbleAlpha;
         bubble.frame = CGRectMake(x, last.center.y - kBubbleSide / 2, kBubbleSide, kBubbleSide);
         bubble.isAccessibilityElement = YES;
-        bubble.accessibilityLabel = @"Meaning from the artist";
+        bubble.accessibilityLabel = @"Giải thích từ nghệ sĩ";
         [self addSubview:bubble];
         objc_setAssociatedObject(self, &kBubbleKey, bubble, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
         return;

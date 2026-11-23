@@ -398,6 +398,11 @@ static SPTPlayerState *playerState(void) {
     return [player respondsToSelector:@selector(state)] ? [(id<SPTPlayer>)player state] : nil;
 }
 
+NSString *SGKaraokeCollectionContext(void) {
+    NSString *context = SGURIString(playerState().contextURI);
+    return [context hasPrefix:@"spotify:user:"] && [context hasSuffix:@":collection"] ? context : nil;
+}
+
 NSString *SGKaraokePlayingTrack(void) {
     return idOf(playerState().track);
 }

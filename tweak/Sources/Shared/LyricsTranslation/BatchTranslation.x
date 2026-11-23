@@ -335,7 +335,7 @@ static void showBatchErrorAlert(NSString *error) {
 void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindow *window) {
     window = normalAppWindow(window);
     if (sg_translating) {
-        [SGAlbumQueueNotice showIn:window title:@"Already Translating" detail:@"Wait for this batch" symbol:@"exclamationmark.circle" persistent:NO];
+        [SGAlbumQueueNotice showIn:window title:@"Đang thực hiện lượt dịch khác" detail:@"Wait for this batch" symbol:@"exclamationmark.circle" persistent:NO];
         return;
     }
     sg_translating = YES;
@@ -363,7 +363,7 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
                 } else if (savedCount > 0) {
                     [SGAlbumQueueNotice showIn:window title:@"Đã có bản dịch" detail:nil symbol:@"checkmark.circle" persistent:NO];
                 } else {
-                    [SGAlbumQueueNotice showIn:window title:@"No Lyrics Found" detail:nil symbol:@"exclamationmark.circle" persistent:NO];
+                    [SGAlbumQueueNotice showIn:window title:@"Không tìm thấy lời bài hát" detail:nil symbol:@"exclamationmark.circle" persistent:NO];
                 }
                 return;
             }
@@ -621,15 +621,15 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
             [weakMenu dismissViewControllerAnimated:YES completion:nil];
             SGBatchTranslateURI(uri, SGBatchTranslationEngineOnDevice, strongWindow);
         }];
-        action.subtitle = @"Apple's Translate, on this iPhone";
+        action.subtitle = @"Dịch bằng Apple Translate trên iPhone";
         [items addObject:action];
     }
     if (intelligence) {
-        UIAction *action = [UIAction actionWithTitle:@"Translate with Apple Intelligence" image:[UIImage systemImageNamed:@"apple.intelligence"] identifier:nil handler:^(UIAction *a) {
+        UIAction *action = [UIAction actionWithTitle:@"Dịch bằng Apple Intelligence" image:[UIImage systemImageNamed:@"apple.intelligence"] identifier:nil handler:^(UIAction *a) {
             [weakMenu dismissViewControllerAnimated:YES completion:nil];
             SGBatchTranslateURI(uri, SGBatchTranslationEngineAppleIntelligence, strongWindow);
         }];
-        action.subtitle = @"On this iPhone";
+        action.subtitle = @"Trên iPhone này";
         [items addObject:action];
     }
     if (ai) {
@@ -643,9 +643,9 @@ void SGBatchTranslateURI(NSString *uri, SGBatchTranslationEngine engine, UIWindo
         [items addObject:action];
     }
     if (!onDevice && !intelligence && !ai) {
-        UIAction *action = [UIAction actionWithTitle:@"No Translator Configured" image:[UIImage systemImageNamed:@"exclamationmark.circle"] identifier:nil handler:^(UIAction *a) {}];
+        UIAction *action = [UIAction actionWithTitle:@"Chưa thiết lập trình dịch" image:[UIImage systemImageNamed:@"exclamationmark.circle"] identifier:nil handler:^(UIAction *a) {}];
         action.attributes = UIMenuElementAttributesDisabled;
-        action.subtitle = @"Add an API key in Mod Settings > Lyrics";
+        action.subtitle = @"Thêm khóa API trong Cài đặt Vitrine > Lời bài hát";
         [items addObject:action];
     }
     self.menu = [UIMenu menuWithTitle:rowTitle image:[UIImage systemImageNamed:@"translate"] identifier:nil options:0 children:items];

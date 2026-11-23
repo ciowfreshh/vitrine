@@ -192,6 +192,7 @@ BOOL SGEeveeLyricsOn(void);
 BOOL SGLyricsStandAsideForEevee(void);
 // The base62 id, a local file's lyrics key (Shared/LocalFiles), nil before the player reported.
 NSString *SGKaraokePlayingTrack(void);
+NSString *SGKaraokeCollectionContext(void);  // current liked-song playback context, if loaded
 NSInteger SGKaraokePositionMs(void);     // negative when unknown
 // The Lyrics page's Delay: every line shows this many ms later than the song, for headphones that play
 // behind it. Whatever times lines against the position compares them with the position less this, and a

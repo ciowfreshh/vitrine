@@ -5,6 +5,7 @@
 // A check that lands rebuilds it where it stands, which is what makes Check now worth having: the
 // changelog of a release nobody had heard of a second ago fills the page in without leaving it.
 #import "Core/SGCore.h"
+#import "Core/SGVietnamese.h"
 #import "Settings/SGPage.h"
 #import "Settings/SGPageStyle.h"
 #import "About.h"
@@ -130,15 +131,15 @@ static NSArray<SGUpdateRelease *> *releasesToShow(void) {
     SGUpdateRow *check = [SGUpdateRow new];
     check.title = @"Kiểm tra ngay";
     check.symbol = @"arrow.clockwise";
-    check.value = ^NSString *{ return SGUpdateStatus(); };
+    check.value = ^NSString *{ return SGVI(SGUpdateStatus()); };
     check.action = ^{ SGCheckForUpdate(YES); };
     NSMutableArray<SGUpdateRow *> *top = [NSMutableArray arrayWithObject:check];
     SGUpdateRelease *newest = SGUpdateNewestRelease();
     if (SGUpdateVersion() && newest.url.length)
-        [top addObject:linkRow([@"Get " stringByAppendingString:newest.version],
-                               newest.prerelease ? @"A beta, on GitHub with its .deb" : @"The release on GitHub, where its .deb is",
+        [top addObject:linkRow([@"Tải bản " stringByAppendingString:newest.version],
+                               newest.prerelease ? @"Bản beta kèm tệp .deb trên GitHub" : @"Mở bản phát hành và tệp .deb trên GitHub",
                                @"arrow.down.circle", newest.url)];
-    if (SGRepoURL) [top addObject:linkRow(@"All releases", @"Every version, this one and the ones before it",
+    if (SGRepoURL) [top addObject:linkRow(@"Tất cả bản phát hành", @"Xem phiên bản hiện tại và các phiên bản trước",
                            @"clock.arrow.circlepath", [SGRepoURL stringByAppendingString:@"/releases"])];
     [groups addObject:group(nil, top)];
 
@@ -166,8 +167,8 @@ static NSArray<SGUpdateRelease *> *releasesToShow(void) {
         NSString *date = shortDate(release.date);
         if (!kinds.count) {
             SGUpdateRow *empty = [SGUpdateRow new];
-            empty.title = @"Nothing written down";
-            empty.subtitle = release.url.length ? @"Tap to read the release on GitHub" : nil;
+            empty.title = @"Chưa có nội dung";
+            empty.subtitle = release.url.length ? @"Chạm để đọc bản phát hành trên GitHub" : nil;
             if (release.url.length) empty.action = ^{ SGOpenURL(release.url); };
             [groups addObject:group([NSString stringWithFormat:@"%@%@", release.version,
                                      date.length ? [@" · " stringByAppendingString:date] : @""], @[empty])];
@@ -175,7 +176,7 @@ static NSArray<SGUpdateRelease *> *releasesToShow(void) {
         }
         [kinds enumerateObjectsUsingBlock:^(NSString *kind, NSUInteger i, BOOL *stop) {
             // The date goes on the first heading of a release, so several releases read as dated blocks.
-            NSString *title = [NSString stringWithFormat:@"%@ · %@%@", release.version, kind,
+            NSString *title = [NSString stringWithFormat:@"%@ · %@%@", release.version, SGVI(kind),
                                i == 0 && date.length ? [@" · " stringByAppendingString:date] : @""];
             [groups addObject:group(title, byKind[kind])];
         }];

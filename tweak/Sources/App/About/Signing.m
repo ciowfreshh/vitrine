@@ -63,7 +63,7 @@ static void showFix(void) {
         @"Why: this build is installed as %@ but signed under the App ID %@. iOS opens the now "
         @"playing card by the App ID, so it asks for an app that is not there. Nothing else in the "
         @"mod is affected.", appID, bundleID, appID];
-    UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"The lock screen cannot open Spotify"
+    UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"Màn hình khóa không mở được Spotify"
                                                                   message:message
                                                            preferredStyle:UIAlertControllerStyleAlert];
     [sheet addAction:[UIAlertAction actionWithTitle:@"Sao chép Bundle ID" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {

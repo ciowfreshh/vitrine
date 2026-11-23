@@ -123,7 +123,7 @@ static NSString *cellLabel(SGGestureAction action) {
     _header.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     [_header addSubview:_grid];
     self.tableView.tableHeaderView = _header;
-    _footer = SGNote(@"Spotify's own buttons keep their taps.");
+    _footer = SGNote(@"Các nút của Spotify vẫn nhận thao tác chạm.");
     self.tableView.tableFooterView = _footer;
 }
 

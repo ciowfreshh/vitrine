@@ -11,7 +11,7 @@
 // own lock screen artwork stay on the All flags page: the Artwork section is the mod's.
 UIViewController *SGLockScreenWidgetPage(void) {
     SGModRow *likes = SGFlagRow(@"Like and dislike buttons", @"ios-feature-lockscreen.like_dislike_enabled");
-    likes.subtitle = @"Off and locked while Switch with the star is on: the star takes their place";
+    likes.subtitle = @"Tắt và khóa khi bật Chuyển bằng nút ngôi sao. Nút ngôi sao sẽ thay thế các nút này.";
     return [[SGModPage alloc] initWithTitle:@"Màn hình khóa" intro:SGRestartNote sections:@[
         SGSection(@"Widget", @[SGLockScreenLyricsRow(), SGLockScreenTranslationRow(), likes]),
         SGSection(@"Artwork", SGLockScreenMotionRows()),

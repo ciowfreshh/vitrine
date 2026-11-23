@@ -264,7 +264,7 @@ UIViewController *SGSingSettingsPage(void) {
     other.color = SGRed();
     other.visible = ^BOOL { return SGSingOtherModelBytes() > 0; };
     SGModRow *spatial = SGPageRow(@"Spatial voice", ^UIViewController *{ return SGSpatialVoiceSettingsPage(); });
-    spatial.subtitle = @"With AirPods, the voice stays in front of you as you turn your head";
+    spatial.subtitle = @"Khi đeo AirPods, giọng hát vẫn ở phía trước dù bạn quay đầu";
     spatial.value = ^NSString *{ return SGSingSpatial() ? @"On" : @"Off"; };
     // Facts about the iPhone, which do not change while the page shows.
     spatial.visible = ^BOOL { return SGSingSpatialAvailable(); };

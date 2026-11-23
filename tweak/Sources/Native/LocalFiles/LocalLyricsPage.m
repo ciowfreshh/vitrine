@@ -150,7 +150,7 @@ static UILabel *label(UIFontTextStyle style, UIFontWeight weight, CGFloat size, 
     NSString *title = state.track.trackTitle, *artist = state.track.artistName;
     _title.text = title;
     _artist.text = artist;
-    _status.text = @"Loading lyrics…";
+    _status.text = @"Đang tải lời bài hát…";
     _status.hidden = NO;
     // The file is read off the main thread the first time; after that it is kept.
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{

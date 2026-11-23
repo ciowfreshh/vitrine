@@ -185,7 +185,7 @@ static UIViewController *sponsorBlockAdvancedPage(void) {
 
     SGModRow *serverRow = SGWithSymbol(SGActionRow(@"Server URL", @"Custom SponsorBlock API server address", ^{
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"URL máy chủ"
-                                                                       message:@"Enter custom SponsorBlock API server address (default: https://sponsor.ajay.app)"
+                                                                       message:@"Nhập địa chỉ máy chủ API SponsorBlock (mặc định https://sponsor.ajay.app)."
                                                                 preferredStyle:UIAlertControllerStyleAlert];
         __weak UIAlertController *weakAlert = alert;
         [alert addTextFieldWithConfigurationHandler:^(UITextField *textField) {
@@ -292,7 +292,7 @@ UIViewController *SGSponsorBlockSettingsPage(void) {
 
     SGModRow *resetCategoriesRow = SGWithSymbol(SGActionRow(@"Reset categories and colors", @"Restore default behaviors and segment colors", ^{
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Đặt lại danh mục và màu?"
-                                                                        message:@"This restores all categories to their default behaviors and segment colors."
+                                                                        message:@"Khôi phục hành vi và màu mặc định cho mọi danh mục."
                                                                  preferredStyle:UIAlertControllerStyleAlert];
         [alert addAction:[UIAlertAction actionWithTitle:@"Đặt lại" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
             SGResetSponsorBlockCategoriesToDefaults();
@@ -315,7 +315,7 @@ UIViewController *SGSponsorBlockSettingsPage(void) {
 
     SGModRow *resetStatsRow = SGWithSymbol(SGActionRow(@"Reset statistics", nil, ^{
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Đặt lại thống kê?"
-                                                                        message:@"This clears your skipped segment count and time saved."
+                                                                        message:@"Xóa số đoạn đã bỏ qua và thời gian đã tiết kiệm."
                                                                  preferredStyle:UIAlertControllerStyleAlert];
         [alert addAction:[UIAlertAction actionWithTitle:@"Đặt lại" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
             SGResetSponsorBlockStats();

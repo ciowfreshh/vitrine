@@ -718,7 +718,7 @@ static UIFont *tabular(UIFont *font) {
 
 - (void)confirmReset {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Đặt lại tất cả hiệu ứng?"
-        message:@"Every effect goes off, and every value, curve and file choice back to its default. The Effects switch and your imported files stay."
+        message:@"Tắt từng hiệu ứng và khôi phục các giá trị, đường cong cùng lựa chọn tệp mặc định. Công tắc tổng và tệp đã nhập được giữ lại."
         preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"Đặt lại" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         SGDSPResetAll();
