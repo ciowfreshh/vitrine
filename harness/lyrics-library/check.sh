@@ -5,7 +5,7 @@ build_dir="$(mktemp -d)"
 trap 'rm -rf "$build_dir"' EXIT
 sources=tweak/Sources
 mkdir "$build_dir/UIKit"
-printf '#import <Foundation/Foundation.h>\n' > "$build_dir/UIKit/UIKit.h"
+printf '#import <Foundation/Foundation.h>\n@class UIView, UIViewController;\n' > "$build_dir/UIKit/UIKit.h"
 xcrun --sdk macosx clang -fobjc-arc -fblocks -Werror -Wno-incompatible-pointer-types \
   -I"$sources" -I"$build_dir" -framework Foundation -framework CoreFoundation -lz \
   harness/lyrics-library/main.m \
