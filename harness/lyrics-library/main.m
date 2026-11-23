@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#include <float.h>
 #import "Core/SGVietnamese.h"
 #import "Shared/LyricsLibrary/SGLibraryModel.h"
 #import "Shared/LyricsLibrary/SGLibraryStore.h"
@@ -27,6 +28,70 @@ static void check(BOOL condition, NSString *message) {
 }
 
 static NSString *trackID(NSUInteger index) { return [NSString stringWithFormat:@"%022lu", (unsigned long)index]; }
+
+@interface SGLibraryScanner (TestHooks)
+- (SGLibraryStore *)store;
+- (NSTimeInterval)uptime;
+- (void)after:(NSTimeInterval)delay perform:(dispatch_block_t)action;
+- (void)loadRequest:(NSURLRequest *)request reply:(void (^)(id, NSHTTPURLResponse *))reply;
+@end
+
+@interface SGMockScanner : SGLibraryScanner
+@property SGLibraryStore *fixtureStore;
+@property NSMutableArray<NSString *> *requests;
+@property NSTimeInterval time, lastRateLimit, minimumDelay;
+@end
+
+@implementation SGMockScanner
+- (SGLibraryStore *)store { return self.fixtureStore; }
+- (NSTimeInterval)uptime { return self.time; }
+- (void)after:(NSTimeInterval)delay perform:(dispatch_block_t)action {
+    self.time += delay;
+    dispatch_async(dispatch_get_main_queue(), action);
+}
+- (void)loadRequest:(NSURLRequest *)request reply:(void (^)(id, NSHTTPURLResponse *))reply {
+    NSURL *url = request.URL;
+    if ([url.path isEqual:@"/v1/me/tracks"]) {
+        NSMutableArray *items = [NSMutableArray array];
+        for (NSUInteger i = 1; i <= 84; i++) {
+            NSString *uri = [@"spotify:track:" stringByAppendingString:trackID(i)];
+            [items addObject:@{@"track": @{@"uri": uri, @"name": @"Test", @"artists": @[@"Test"]}}];
+        }
+        reply(@{@"items": items}, [[NSHTTPURLResponse alloc] initWithURL:url statusCode:200 HTTPVersion:nil headerFields:nil]);
+        return;
+    }
+    NSString *identifier = url.lastPathComponent;
+    [self.requests addObject:identifier];
+    NSUInteger count = [self.requests filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"SELF == %@", identifier]].count;
+    NSInteger status = [identifier isEqual:trackID(82)] && count <= 3 ? 429 :
+                       [identifier isEqual:trackID(83)] && count == 1 ? 503 : 200;
+    if (self.lastRateLimit > 0) self.minimumDelay = MIN(self.minimumDelay, self.time - self.lastRateLimit);
+    self.lastRateLimit = status == 429 ? self.time : 0;
+    id json = status == 200 ? @{@"lyrics": @{@"syncType": @"LINE_SYNCED", @"lines": @[
+        @{@"startTimeMs": @"1000", @"words": @"The original line"},
+    ]}} : nil;
+    reply(json, [[NSHTTPURLResponse alloc] initWithURL:url statusCode:status HTTPVersion:nil
+                                          headerFields:status == 429 ? @{@"Retry-After": @"12"} : nil]);
+}
+@end
+
+static void testScanner(NSURL *root) {
+    SGMockScanner *scanner = [SGMockScanner new];
+    scanner.fixtureStore = [[SGLibraryStore alloc] initWithDirectory:[root URLByAppendingPathComponent:@"scan"]];
+    scanner.requests = [NSMutableArray array];
+    scanner.minimumDelay = DBL_MAX;
+    [scanner startWithSource:nil];
+    NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:15];
+    while (scanner.running && [deadline timeIntervalSinceNow] > 0)
+        [NSRunLoop.currentRunLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    check(!scanner.running && scanner.requests.count == 88, @"real scanner loop automatically retries and finishes");
+    check(scanner.minimumDelay >= 12, @"scanner honors Retry-After across Spotify requests");
+    check([scanner.requests.lastObject isEqual:trackID(82)] &&
+          [scanner.requests containsObject:trackID(84)], @"scanner advances beyond track 82 and retries it once at the end");
+    check([[scanner.fixtureStore track:trackID(82) error:nil][@"status"] isEqual:@"original"] &&
+          [scanner.progress containsString:@"84 có lời gốc"], @"all recovered lyrics are persisted and counted once");
+    puts("PASS: scanner continues past 82, honors Retry-After, recovers 503 and retries deferred track");
+}
 
 static NSDictionary *fixture(NSUInteger index) {
     NSString *identifier = trackID(index);
@@ -70,6 +135,7 @@ int main(void) {
               [SGVIError(@"Gemini answered 2 lines for the song's 3. Try again.") isEqual:@"Gemini trả về 2 dòng trong khi bài có 3 dòng. Hãy thử lại."],
               @"Vietnamese settings and formatted errors preserve provider and numeric values");
         NSURL *root = [NSFileManager.defaultManager.temporaryDirectory URLByAppendingPathComponent:NSUUID.UUID.UUIDString];
+        testScanner(root);
         NSURL *storeURL = temporary(root, @"db");
         SGLibraryStore *store = [[SGLibraryStore alloc] initWithDirectory:storeURL];
         NSMutableArray *ids = [NSMutableArray array];

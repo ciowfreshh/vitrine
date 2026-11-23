@@ -4,12 +4,34 @@
 #import "Shared/LyricsSources/LyricsSources.h"
 #import "SGLibraryStore.h"
 #import "Shared/Lyrics/Lyrics.h"
+#include <math.h>
 
 NSNotificationName const SGLibraryScanDidChange = @"syna.lyricsLibrary.scan";
 static NSString *const spotifyHost = @"spclient.wg.spotify.com";
 static NSString *const webHost = @"api.spotify.com";
 static NSString *const savedTracksURL = @"https://api.spotify.com/v1/me/tracks?limit=50&offset=0";
 static NSString *const fallbackCollection = @"https://spclient.wg.spotify.com/context-resolve/v1/spotify:collection:tracks";
+
+static BOOL transientStatus(NSInteger status) {
+    return status == 0 || status == 408 || status == 429 || (status >= 500 && status <= 599);
+}
+
+static NSTimeInterval retryDelay(NSHTTPURLResponse *response, NSUInteger attempt) {
+    NSString *value = [response valueForHTTPHeaderField:@"Retry-After"];
+    NSScanner *scanner = [NSScanner scannerWithString:value ?: @""];
+    double seconds = 0;
+    if ([scanner scanDouble:&seconds] && scanner.isAtEnd && isfinite(seconds) && seconds >= 0)
+        return MAX(1, seconds);
+    if (value.length) {
+        NSDateFormatter *formatter = [NSDateFormatter new];
+        formatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"];
+        formatter.timeZone = [NSTimeZone timeZoneForSecondsFromGMT:0];
+        formatter.dateFormat = @"EEE, dd MMM yyyy HH:mm:ss zzz";
+        NSTimeInterval until = [[formatter dateFromString:value] timeIntervalSinceNow];
+        if (until > 0) return until;
+    }
+    return (response.statusCode == 429 ? 30.0 : 2.0) * (1 << MIN(attempt, 2u));
+}
 
 static NSDictionary *dict(id object) { return [object isKindOfClass:NSDictionary.class] ? object : nil; }
 static NSArray *list(id object) { return [object isKindOfClass:NSArray.class] ? object : nil; }
@@ -131,7 +153,11 @@ static NSURLSession *scanSession(void) {
     NSMutableOrderedSet<NSString *> *_tracks;
     NSMutableSet<NSString *> *_pages;
     NSUInteger _generation, _processed, _failed, _missing, _original, _translated;
-    BOOL _contextFallback;
+    BOOL _hasHeaders;
+    BOOL _contextFallback, _pagesComplete, _canResume, _retrying;
+    NSUInteger _total;
+    NSMutableOrderedSet<NSString *> *_deferred;
+    NSMutableDictionary<NSString *, NSNumber *> *_notBefore;
 }
 
 + (instancetype)shared {
@@ -156,27 +182,39 @@ static NSURLSession *scanSession(void) {
 }
 
 - (void)pause {
-    if (_running) [self stop:@"Đã tạm dừng. Các bài đã lưu sẽ được giữ khi quét tiếp."];
+    if (!_running) return;
+    _canResume = _pagesComplete;
+    [self stop:@"Đã tạm dừng. Quét tiếp sẽ xử lý từ bài đang chờ."];
 }
 
 - (void)startWithSource:(NSURL *)source {
     if (_running) return;
+    BOOL resume = _canResume && (_source == source || [_source isEqual:source]);
+    _canResume = NO;
     _source = [source copy];
-    _tracks = [NSMutableOrderedSet orderedSet];
-    _pages = [NSMutableSet set];
-    _processed = _failed = _missing = _original = _translated = 0;
-    _contextFallback = NO;
+    if (!resume) {
+        _tracks = [NSMutableOrderedSet orderedSet];
+        _pages = [NSMutableSet set];
+        _deferred = [NSMutableOrderedSet orderedSet];
+        _total = _processed = _failed = _missing = _original = _translated = 0;
+        _contextFallback = _pagesComplete = _retrying = NO;
+    }
+    if (!_notBefore) _notBefore = [NSMutableDictionary dictionary];
     _running = YES;
+    _hasHeaders = NO;
     NSUInteger generation = ++_generation;
     [self report:@"Đang kết nối với Bài hát đã thích…"];
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 15 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-        if (generation == self->_generation && !self->_pages.count) {
+        if (generation == self->_generation && !self->_hasHeaders) {
+            self->_canResume = resume;
             [self stop:@"Spotify chưa sẵn sàng. Hãy mở Bài hát đã thích rồi quét tiếp."];
         }
     });
     SGSpclientHeaders(^(NSDictionary *headers) {
         if (generation != self->_generation) return;
-        [self fetchPage:SGLibrarySpotifyPageURL(savedTracksURL) headers:headers];
+        self->_hasHeaders = YES;
+        if (resume) [self processNextWithHeaders:headers];
+        else [self fetchPage:SGLibrarySpotifyPageURL(savedTracksURL) headers:headers];
     });
 }
 
@@ -190,18 +228,55 @@ static NSURLSession *scanSession(void) {
     [request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
     if ([url.host isEqual:spotifyHost] && [url.path hasPrefix:@"/color-lyrics/"])
         [NSURLProtocol setProperty:@YES forKey:SGLyricsOwnRequestKey inRequest:request];
+    [self sendRequest:request attempt:0 done:done];
+}
+
+- (void)after:(NSTimeInterval)delay perform:(dispatch_block_t)action {
     NSUInteger generation = _generation;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(MIN(delay, 86400) * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        if (generation == self->_generation) action();
+    });
+}
+
+- (void)loadRequest:(NSURLRequest *)request reply:(void (^)(id, NSHTTPURLResponse *))reply {
     _task = [scanSession() dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-        NSInteger status = !error && [response isKindOfClass:NSHTTPURLResponse.class] ? [(NSHTTPURLResponse *)response statusCode] : 0;
-        id json = status == 200 && data.length <= 12 * 1024 * 1024 ? SGLibraryReadJSON(data, nil) : nil;
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (generation != self->_generation) return;
-            self->_task = nil;
-            done(json, status);
-        });
+        NSHTTPURLResponse *http = !error && [response isKindOfClass:NSHTTPURLResponse.class] ? (id)response : nil;
+        id json = http.statusCode == 200 && data.length <= 12 * 1024 * 1024 ? SGLibraryReadJSON(data, nil) : nil;
+        dispatch_async(dispatch_get_main_queue(), ^{ reply(json, http); });
     }];
     [_task resume];
 }
+
+- (NSTimeInterval)uptime { return NSProcessInfo.processInfo.systemUptime; }
+
+- (void)sendRequest:(NSURLRequest *)request attempt:(NSUInteger)attempt done:(void (^)(id, NSInteger))done {
+    NSString *host = request.URL.host.lowercaseString;
+    NSTimeInterval now = [self uptime];
+    NSTimeInterval wait = [_notBefore[host] doubleValue] - now;
+    if (wait > 0) {
+        [self after:wait perform:^{ [self sendRequest:request attempt:attempt done:done]; }];
+        return;
+    }
+    NSUInteger generation = _generation;
+    [self loadRequest:request reply:^(id json, NSHTTPURLResponse *http) {
+        if (generation != self->_generation) return;
+        self->_task = nil;
+        NSInteger status = http.statusCode;
+        if (status == 429)
+            self->_notBefore[host] = @([self uptime] + retryDelay(http, attempt));
+        if (transientStatus(status) && attempt < 2) {
+            [self report:[NSString stringWithFormat:@"Đã xử lý %lu/%lu bài · %@ App sẽ tự thử lại.",
+                          (unsigned long)self->_processed, (unsigned long)self->_total,
+                          status == 429 ? @"Nguồn yêu cầu chờ." : @"Kết nối bị gián đoạn."]];
+            if (status == 429) [self sendRequest:request attempt:attempt + 1 done:done];
+            else [self after:retryDelay(http, attempt) perform:^{ [self sendRequest:request attempt:attempt + 1 done:done]; }];
+            return;
+        }
+        done(json, status);
+    }];
+}
+
+- (SGLibraryStore *)store { return SGLibraryLocalStore(); }
 
 - (void)fetchPage:(NSURL *)url headers:(NSDictionary *)headers {
     if (!url || [_pages containsObject:url.absoluteString] || _pages.count >= 5000) {
@@ -223,7 +298,7 @@ static NSURLSession *scanSession(void) {
         }
         NSUInteger generation = self->_generation;
         dispatch_async(SGLibraryQueue(), ^{
-            SGLibraryStore *store = SGLibraryLocalStore();
+            SGLibraryStore *store = [self store];
             for (NSDictionary *candidate in tracks) @autoreleasepool {
                 NSError *error;
                 NSDictionary *existing = [store track:candidate[@"trackId"] error:&error];
@@ -239,7 +314,11 @@ static NSURLSession *scanSession(void) {
                 [self->_tracks addObjectsFromArray:[tracks valueForKey:@"trackId"]];
                 [self report:[NSString stringWithFormat:@"Đã tìm thấy %lu bài hát đã thích.", (unsigned long)self->_tracks.count]];
                 if (next.length) [self fetchPage:SGLibrarySpotifyPageURL(next) headers:headers];
-                else [self processNextWithHeaders:headers];
+                else {
+                    self->_pagesComplete = YES;
+                    self->_total = self->_tracks.count;
+                    [self processNextWithHeaders:headers];
+                }
             });
         });
     }];
@@ -274,19 +353,28 @@ static NSURLSession *scanSession(void) {
 
 - (void)processNextWithHeaders:(NSDictionary *)headers {
     if (_processed == _tracks.count) {
+        if (!_retrying && _deferred.count) {
+            _retrying = YES;
+            _failed -= _deferred.count;
+            _tracks = _deferred;
+            _processed = 0;
+            [self report:[NSString stringWithFormat:@"Đang thử lại %lu bài bị lỗi tạm thời…", (unsigned long)_tracks.count]];
+            [self processNextWithHeaders:headers];
+            return;
+        }
         [self stop:[NSString stringWithFormat:@"Đã quét %lu bài · %lu có lời gốc · %lu đã dịch · %lu thiếu lời · %lu lỗi.",
-                    (unsigned long)_processed, (unsigned long)_original, (unsigned long)_translated,
+                    (unsigned long)_total, (unsigned long)_original, (unsigned long)_translated,
                     (unsigned long)_missing, (unsigned long)_failed]];
         return;
     }
     NSString *trackID = _tracks[_processed];
     NSUInteger generation = _generation;
     dispatch_async(SGLibraryQueue(), ^{
-        NSDictionary *track = [SGLibraryLocalStore() track:trackID error:nil];
+        NSDictionary *track = [[self store] track:trackID error:nil];
         dispatch_async(dispatch_get_main_queue(), ^{
             if (generation != self->_generation) return;
             if (!track) {
-                [self finished:nil headers:headers pauseForError:NO];
+                [self finished:nil headers:headers retryLater:NO];
             } else if ([track[@"title"] length] && [track[@"artists"] count]) {
                 [self processLyrics:track headers:headers];
             } else {
@@ -309,18 +397,13 @@ static NSURLSession *scanSession(void) {
         if (string(meta[@"name"]).length) named[@"title"] = meta[@"name"];
         NSArray *artists = artistsIn(meta[@"artist"] ?: meta[@"artists"]);
         if (artists.count) named[@"artists"] = artists;
-        if (status == 429 || status == 401 || status == 403 || status == 0) {
-            if (![track[@"lines"] count]) named[@"status"] = @"error";
-            [self commit:named headers:headers pauseForError:YES];
-        } else {
-            [self processLyrics:named headers:headers];
-        }
+        [self processLyrics:named headers:headers];
     }];
 }
 
 - (void)processLyrics:(NSDictionary *)track headers:(NSDictionary *)headers {
     if ([track[@"lines"] count]) {
-        [self commit:track headers:headers pauseForError:NO];
+        [self commit:track headers:headers retryLater:NO];
         return;
     }
     if (!_source) {
@@ -336,7 +419,7 @@ static NSURLSession *scanSession(void) {
             for (NSString *key in @[@"source", @"language", @"lines"]) record[key] = candidate[key];
             if (![record[@"title"] length]) record[@"title"] = candidate[@"title"];
             if (![record[@"artists"] count]) record[@"artists"] = candidate[@"artists"];
-            [self commit:record headers:headers pauseForError:NO];
+            [self commit:record headers:headers retryLater:NO];
         } else {
             [self fetchSpotifyOriginal:track headers:headers];
         }
@@ -348,18 +431,14 @@ static NSURLSession *scanSession(void) {
     NSArray<SGKaraokeLine *> *cached = SGKaraokeLinesForTrack(trackID);
     NSDictionary *original = SGLibraryOriginalFromLines(track, cached, SGLyricsCreditFor(trackID));
     if (original) {
-        [self commit:original headers:headers pauseForError:NO];
+        [self commit:original headers:headers retryLater:NO];
         return;
     }
     NSString *address = [NSString stringWithFormat:@"https://%@/color-lyrics/v2/track/%@?format=json&vocalRemoval=false&market=from_token", spotifyHost, trackID];
     [self request:[NSURL URLWithString:address] headers:headers done:^(id json, NSInteger status) {
         NSDictionary *record = SGLibrarySpotifyOriginal(track, json);
         if (record) {
-            [self commit:record headers:headers pauseForError:NO];
-            return;
-        }
-        if (status == 429 || status == 0 || status >= 500) {
-            [self finishMissing:track headers:headers status:status];
+            [self commit:record headers:headers retryLater:NO];
             return;
         }
         [self tryVitrineSources:track headers:headers status:status];
@@ -379,7 +458,7 @@ static NSURLSession *scanSession(void) {
     SGLyricsFetchForQuery(query, ^(SGLyricsResult *result) {
         if (generation != self->_generation) return;
         NSDictionary *record = SGLibraryOriginalFromLines(track, result.karaokeLines, result.provider ?: @"Vitrine");
-        if (record) [self commit:record headers:headers pauseForError:NO];
+        if (record) [self commit:record headers:headers retryLater:NO];
         else [self finishMissing:track headers:headers status:status];
     });
 }
@@ -387,13 +466,13 @@ static NSURLSession *scanSession(void) {
 - (void)finishMissing:(NSDictionary *)track headers:(NSDictionary *)headers status:(NSInteger)status {
     NSMutableDictionary *record = [track mutableCopy];
     record[@"status"] = status == 404 || status == 204 ? @"missing" : @"error";
-    [self commit:record headers:headers pauseForError:status == 0 || status == 429 || status >= 500];
+    [self commit:record headers:headers retryLater:transientStatus(status)];
 }
 
-- (void)commit:(NSDictionary *)track headers:(NSDictionary *)headers pauseForError:(BOOL)pauseForError {
+- (void)commit:(NSDictionary *)track headers:(NSDictionary *)headers retryLater:(BOOL)retryLater {
     NSUInteger generation = _generation;
     dispatch_async(SGLibraryQueue(), ^{
-        SGLibraryStore *store = SGLibraryLocalStore();
+        SGLibraryStore *store = [self store];
         NSError *error;
         NSDictionary *existing = [store track:track[@"trackId"] error:&error];
         // An import may have happened during the network request. Its original and translations take precedence.
@@ -401,29 +480,25 @@ static NSURLSession *scanSession(void) {
         BOOL saved = !error && candidate && ([candidate isEqual:existing] || [store save:candidate error:&error]);
         dispatch_async(dispatch_get_main_queue(), ^{
             if (generation != self->_generation) return;
-            [self finished:saved ? candidate : nil headers:headers pauseForError:pauseForError];
+            [self finished:saved ? candidate : nil headers:headers retryLater:retryLater];
         });
     });
 }
 
-- (void)finished:(NSDictionary *)track headers:(NSDictionary *)headers pauseForError:(BOOL)pauseForError {
+- (void)finished:(NSDictionary *)track headers:(NSDictionary *)headers retryLater:(BOOL)retryLater {
     _processed++;
     NSString *status = track[@"status"];
     if ([status isEqual:@"original"]) _original++;
     else if ([status isEqual:@"translated"]) _translated++;
     else if ([status isEqual:@"missing"]) _missing++;
     else _failed++;
-    if (pauseForError) {
-        [self stop:[NSString stringWithFormat:@"Đã tạm dừng do lỗi kết nối. Đã xử lý %lu/%lu bài. Chọn quét tiếp để thử lại.",
-                    (unsigned long)_processed, (unsigned long)_tracks.count]];
-        return;
-    }
+    if (retryLater && !_retrying && ![track[@"lines"] count]) [_deferred addObject:_tracks[_processed - 1]];
     if (_processed == 1 || _processed % 10 == 0) {
-        [self report:[NSString stringWithFormat:@"Đang lấy lời %lu/%lu bài · %lu có lời · %lu chưa tìm thấy · %lu lỗi",
-                      (unsigned long)_processed, (unsigned long)_tracks.count, (unsigned long)(_original + _translated),
+        [self report:[NSString stringWithFormat:@"%@ %lu/%lu bài · %lu có lời · %lu chưa tìm thấy · %lu lỗi",
+                      _retrying ? @"Đang thử lại" : @"Đang lấy lời", (unsigned long)_processed, (unsigned long)_tracks.count, (unsigned long)(_original + _translated),
                       (unsigned long)_missing, (unsigned long)_failed]];
         [NSNotificationCenter.defaultCenter postNotificationName:SGLibraryDidChange object:nil];
     }
-    [self processNextWithHeaders:headers];
+    [self after:0.75 perform:^{ [self processNextWithHeaders:headers]; }];
 }
 @end
